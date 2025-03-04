@@ -155,6 +155,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message || 'Failed to sign out',
         variant: 'destructive',
       });
+      throw error; // Important to throw error so we can catch it in the Header component
     } finally {
       setIsLoading(false);
     }
