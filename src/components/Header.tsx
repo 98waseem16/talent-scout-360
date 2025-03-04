@@ -1,15 +1,17 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { UserCircle, LogOut, Menu, X, Rocket, Briefcase } from 'lucide-react';
+import { toast } from 'sonner';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
   useEffect(() => {
@@ -28,6 +30,17 @@ const Header: React.FC = () => {
   }, [location.pathname]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      toast.success("Successfully signed out");
+      navigate('/');
+    } catch (error) {
+      console.error("Sign out error:", error);
+      toast.error("Failed to sign out. Please try again.");
+    }
+  };
 
   return (
     <header
@@ -68,7 +81,7 @@ const Header: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => signOut()}
+                onClick={handleSignOut}
                 className="flex items-center gap-2"
               >
                 <LogOut className="h-4 w-4" />
@@ -115,7 +128,7 @@ const Header: React.FC = () => {
               </Link>
               <Button
                 variant="outline"
-                onClick={() => signOut()}
+                onClick={handleSignOut}
                 className="flex items-center justify-center gap-2 mt-4"
               >
                 <LogOut className="h-4 w-4" />
