@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,7 +29,9 @@ import {
   Globe, 
   Calendar, 
   PlaneLanding, 
-  AlertCircle
+  AlertCircle,
+  X as XIcon,
+  Loader2
 } from 'lucide-react';
 
 const PostJob: React.FC = () => {
@@ -584,7 +585,7 @@ const PostJob: React.FC = () => {
                       onClick={() => removeListItem(index, 'responsibilities')}
                     >
                       <span className="sr-only">Remove</span>
-                      <X className="h-4 w-4" />
+                      <XIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
@@ -615,7 +616,7 @@ const PostJob: React.FC = () => {
                       onClick={() => removeListItem(index, 'requirements')}
                     >
                       <span className="sr-only">Remove</span>
-                      <X className="h-4 w-4" />
+                      <XIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
@@ -646,7 +647,7 @@ const PostJob: React.FC = () => {
                       onClick={() => removeListItem(index, 'benefits')}
                     >
                       <span className="sr-only">Remove</span>
-                      <X className="h-4 w-4" />
+                      <XIcon className="h-4 w-4" />
                     </Button>
                   </div>
                 ))}
