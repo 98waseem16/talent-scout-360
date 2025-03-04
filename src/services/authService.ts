@@ -1,11 +1,10 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { ToastAction } from '@/components/ui/toast';
 
 interface ToastOptions {
   title?: string;
   description?: string;
-  action?: ToastAction;
+  action?: React.ReactElement<typeof ToastAction>;
   variant?: 'default' | 'destructive';
 }
 
