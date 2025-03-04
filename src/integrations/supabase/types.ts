@@ -14,55 +14,91 @@ export type Database = {
           benefits: string[]
           company: string
           created_at: string
+          department: string | null
           description: string
+          equity: string | null
           featured: boolean | null
+          hiring_urgency: string | null
           id: string
+          investment_stage: string | null
+          job_type: string | null
           location: string
           logo: string
           posted: string
+          remote_onsite: string | null
           requirements: string[]
           responsibilities: string[]
+          revenue_model: string | null
           salary: string
+          salary_range: string | null
+          seniority_level: string | null
+          team_size: string | null
           title: string
           type: string
           updated_at: string
           user_id: string | null
+          visa_sponsorship: boolean | null
+          work_hours: string | null
         }
         Insert: {
           benefits: string[]
           company: string
           created_at?: string
+          department?: string | null
           description: string
+          equity?: string | null
           featured?: boolean | null
+          hiring_urgency?: string | null
           id?: string
+          investment_stage?: string | null
+          job_type?: string | null
           location: string
           logo: string
           posted?: string
+          remote_onsite?: string | null
           requirements: string[]
           responsibilities: string[]
+          revenue_model?: string | null
           salary: string
+          salary_range?: string | null
+          seniority_level?: string | null
+          team_size?: string | null
           title: string
           type: string
           updated_at?: string
           user_id?: string | null
+          visa_sponsorship?: boolean | null
+          work_hours?: string | null
         }
         Update: {
           benefits?: string[]
           company?: string
           created_at?: string
+          department?: string | null
           description?: string
+          equity?: string | null
           featured?: boolean | null
+          hiring_urgency?: string | null
           id?: string
+          investment_stage?: string | null
+          job_type?: string | null
           location?: string
           logo?: string
           posted?: string
+          remote_onsite?: string | null
           requirements?: string[]
           responsibilities?: string[]
+          revenue_model?: string | null
           salary?: string
+          salary_range?: string | null
+          seniority_level?: string | null
+          team_size?: string | null
           title?: string
           type?: string
           updated_at?: string
           user_id?: string | null
+          visa_sponsorship?: boolean | null
+          work_hours?: string | null
         }
         Relationships: []
       }

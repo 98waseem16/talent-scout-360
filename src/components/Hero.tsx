@@ -59,12 +59,22 @@ const Hero: React.FC = () => {
                 </div>
               </div>
               
-              <button
-                type="submit"
-                className="mt-4 w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors smooth-transition active:scale-[0.98]"
-              >
-                Find Startup Jobs
-              </button>
+              <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                <button
+                  type="submit"
+                  className="flex-1 bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors smooth-transition active:scale-[0.98]"
+                >
+                  Find Startup Jobs
+                </button>
+                
+                <button
+                  type="button"
+                  onClick={() => navigate('/post-job')}
+                  className="flex-1 bg-white border border-primary text-primary hover:bg-primary/5 font-medium py-3 px-6 rounded-lg transition-colors smooth-transition active:scale-[0.98]"
+                >
+                  Post a Startup Job
+                </button>
+              </div>
             </form>
           </div>
           
