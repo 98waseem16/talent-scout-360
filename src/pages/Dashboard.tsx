@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { UserCircle, Mail, Calendar } from "lucide-react";
+import { UserCircle, Mail, Calendar, Briefcase } from "lucide-react";
 import { format } from "date-fns";
 
 const Dashboard = () => {
