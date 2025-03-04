@@ -66,6 +66,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
+        console.log("Auth state changed:", event, newSession?.user?.id);
         setSession(newSession);
         setUser(newSession?.user || null);
         
@@ -135,10 +136,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      console.log("Attempting to sign out...");
       setIsLoading(true);
+      
       const { error } = await supabase.auth.signOut();
       
-      if (error) throw error;
+      if (error) {
+        console.error("Supabase sign out error:", error);
+        throw error;
+      }
+      
+      console.log("Supabase sign out successful");
       
       // Forcibly clear state
       setSession(null);
@@ -150,6 +158,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: 'You have been signed out',
       });
     } catch (error: any) {
+      console.error("Sign out error:", error);
       toast({
         title: 'Sign out Error',
         description: error.message || 'Failed to sign out',

@@ -33,11 +33,15 @@ const Header: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
+      console.log("Header: handleSignOut called");
       await signOut();
+      console.log("Header: Sign out completed successfully");
       toast.success("Successfully signed out");
-      navigate('/');
+      
+      // Force navigation to home page after signout
+      navigate('/', { replace: true });
     } catch (error) {
-      console.error("Sign out error:", error);
+      console.error("Header: Sign out error:", error);
       toast.error("Failed to sign out. Please try again.");
     }
   };
