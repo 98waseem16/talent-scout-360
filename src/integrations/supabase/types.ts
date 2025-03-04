@@ -9,45 +9,6 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      job_poster_profiles: {
-        Row: {
-          company_description: string | null
-          company_name: string
-          company_size: string | null
-          company_website: string | null
-          created_at: string
-          id: string
-          industry: string | null
-          logo_url: string | null
-          recruiter_title: string | null
-          updated_at: string
-        }
-        Insert: {
-          company_description?: string | null
-          company_name: string
-          company_size?: string | null
-          company_website?: string | null
-          created_at?: string
-          id: string
-          industry?: string | null
-          logo_url?: string | null
-          recruiter_title?: string | null
-          updated_at?: string
-        }
-        Update: {
-          company_description?: string | null
-          company_name?: string
-          company_size?: string | null
-          company_website?: string | null
-          created_at?: string
-          id?: string
-          industry?: string | null
-          logo_url?: string | null
-          recruiter_title?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       job_postings: {
         Row: {
           benefits: string[]
@@ -141,51 +102,6 @@ export type Database = {
         }
         Relationships: []
       }
-      job_seeker_profiles: {
-        Row: {
-          created_at: string
-          desired_salary_range: string | null
-          education: string | null
-          experience_years: number | null
-          id: string
-          job_title: string | null
-          preferred_industries: string[] | null
-          preferred_job_types: string[] | null
-          preferred_locations: string[] | null
-          resume_url: string | null
-          skills: string[] | null
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          desired_salary_range?: string | null
-          education?: string | null
-          experience_years?: number | null
-          id: string
-          job_title?: string | null
-          preferred_industries?: string[] | null
-          preferred_job_types?: string[] | null
-          preferred_locations?: string[] | null
-          resume_url?: string | null
-          skills?: string[] | null
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          desired_salary_range?: string | null
-          education?: string | null
-          experience_years?: number | null
-          id?: string
-          job_title?: string | null
-          preferred_industries?: string[] | null
-          preferred_job_types?: string[] | null
-          preferred_locations?: string[] | null
-          resume_url?: string | null
-          skills?: string[] | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -194,7 +110,6 @@ export type Database = {
           full_name: string | null
           id: string
           updated_at: string
-          user_type: string | null
           website: string | null
         }
         Insert: {
@@ -204,7 +119,6 @@ export type Database = {
           full_name?: string | null
           id: string
           updated_at?: string
-          user_type?: string | null
           website?: string | null
         }
         Update: {
@@ -214,7 +128,6 @@ export type Database = {
           full_name?: string | null
           id?: string
           updated_at?: string
-          user_type?: string | null
           website?: string | null
         }
         Relationships: []

@@ -3,18 +3,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
-import { createAuthService, AuthService } from '@/services/authService';
-import { useProfileFetch } from '@/hooks/useProfileFetch';
 
 interface AuthContextProps {
   session: Session | null;
   user: User | null;
   profile: any | null;
   isLoading: boolean;
-  signIn: AuthService['signIn'];
-  signInWithEmail: AuthService['signInWithEmail'];
-  signUp: AuthService['signUp'];
-  signOut: () => Promise<boolean>;
+  signIn: (provider: 'google' | 'apple' | 'twitter' | 'linkedin_oidc') => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signOut: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -25,20 +22,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const { fetchProfile } = useProfileFetch();
-  
-  const toastWrapper = (options: {
-    title?: string;
-    description?: string;
-    action?: React.ReactElement;
-    variant?: 'default' | 'destructive';
-  }) => {
-    toast(options);
-  };
-  
-  const authService = createAuthService({ toast: toastWrapper });
 
   useEffect(() => {
+    const fetchProfile = async (userId: string) => {
+      if (!userId) return null;
+      
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', userId)
+          .single();
+          
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+      }
+    };
+
     const getCurrentSession = async () => {
       try {
         const { data: { session }, error } = await supabase.auth.getSession();
@@ -49,8 +52,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user || null);
         
         if (session?.user) {
-          const userProfile = await fetchProfile(session.user.id);
-          setProfile(userProfile);
+          const profile = await fetchProfile(session.user.id);
+          setProfile(profile);
         }
       } catch (error) {
         console.error('Error getting session:', error);
@@ -63,13 +66,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        console.log('Auth state changed:', event, newSession?.user?.id);
         setSession(newSession);
         setUser(newSession?.user || null);
         
         if (newSession?.user) {
-          const userProfile = await fetchProfile(newSession.user.id);
-          setProfile(userProfile);
+          const profile = await fetchProfile(newSession.user.id);
+          setProfile(profile);
         } else {
           setProfile(null);
         }
@@ -81,51 +83,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => {
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, []);
 
-  const handleSignIn = async (provider: 'google' | 'apple' | 'twitter' | 'linkedin_oidc') => {
-    setIsLoading(true);
-    await authService.signIn(provider);
-    setIsLoading(false);
-  };
-
-  const handleSignInWithEmail = async (email: string, password: string) => {
-    setIsLoading(true);
+  const signIn = async (provider: 'google' | 'apple' | 'twitter' | 'linkedin_oidc') => {
     try {
-      await authService.signInWithEmail(email, password);
-    } catch (error) {
-      // Error is already handled in the service
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: 'Authentication Error',
+        description: error.message || 'Failed to sign in',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignUp = async (email: string, password: string) => {
-    setIsLoading(true);
+  const signInWithEmail = async (email: string, password: string) => {
     try {
-      await authService.signUp(email, password);
-    } catch (error) {
-      // Error is already handled in the service
+      setIsLoading(true);
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Sign in successful',
+        description: 'Welcome back!',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Authentication Error',
+        description: error.message || 'Failed to sign in',
+        variant: 'destructive',
+      });
+      throw error;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignOut = async (): Promise<boolean> => {
-    console.log('Handle sign out called');
-    setIsLoading(true);
-    const success = await authService.signOut();
-    
-    if (success) {
-      // Forcibly clear state even if there was an error
-      console.log('Forcibly clearing auth state');
+  const signOut = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signOut();
+      
+      if (error) throw error;
+      
+      // Forcibly clear state
       setSession(null);
       setUser(null);
       setProfile(null);
+      
+      toast({
+        title: 'Sign out successful',
+        description: 'You have been signed out',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Sign out Error',
+        description: error.message || 'Failed to sign out',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
-    return success;
   };
 
   return (
@@ -135,10 +167,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         user,
         profile,
         isLoading,
-        signIn: handleSignIn,
-        signInWithEmail: handleSignInWithEmail,
-        signUp: handleSignUp,
-        signOut: handleSignOut,
+        signIn,
+        signInWithEmail,
+        signOut,
       }}
     >
       {children}
