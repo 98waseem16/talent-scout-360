@@ -159,10 +159,11 @@ const JobPosterProfile: React.FC = () => {
           
         error = updateError;
       } else {
-        // Insert new profile
+        // Insert new profile - this is the line with the error
+        // Fix: Ensure company_name is provided and wrap values in a single object
         const { error: insertError } = await supabase
           .from('job_poster_profiles')
-          .insert([{ id: user.id, ...values }]);
+          .insert({ id: user.id, ...values });
           
         error = insertError;
       }
