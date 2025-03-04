@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
@@ -26,7 +25,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const { fetchProfile } = useProfileFetch();
-  const authService = createAuthService({ toast });
+  
+  const toastWrapper = (options: {
+    title?: string;
+    description?: string;
+    action?: React.ReactElement;
+    variant?: 'default' | 'destructive';
+  }) => {
+    toast(options);
+  };
+  
+  const authService = createAuthService({ toast: toastWrapper });
 
   useEffect(() => {
     const getCurrentSession = async () => {
