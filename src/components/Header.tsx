@@ -30,6 +30,7 @@ const Header: React.FC = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handlePostJob = () => {
+    // Navigate directly to /post-job
     navigate('/post-job');
   };
 
@@ -150,7 +151,7 @@ const Header: React.FC = () => {
                   Create Account
                 </Button>
               </Link>
-              <Link to="/auth" className="text-lg text-center hover:text-primary transition-colors">
+              <Link to="/auth">
                 <Button variant="outline" className="w-full flex items-center gap-2">
                   <LogIn className="h-4 w-4" />
                   Sign In
