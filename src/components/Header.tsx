@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { UserCircle, LogOut, Menu, X, Rocket, Briefcase, UserPlus } from 'lucide-react';
+import { UserCircle, LogOut, Menu, X, Rocket, Briefcase, UserPlus, LogIn } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -21,7 +21,6 @@ const Header: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Close mobile menu when route changes
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
@@ -36,7 +35,6 @@ const Header: React.FC = () => {
       )}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
-        {/* Logo */}
         <Link to="/" className="font-bold text-2xl text-primary flex items-center">
           <span className="bg-primary text-white p-1 rounded mr-2">
             <Briefcase className="h-5 w-5" />
@@ -44,7 +42,6 @@ const Header: React.FC = () => {
           Launchly
         </Link>
 
-        {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
           <Link to="/post-job">
             <Button 
@@ -90,13 +87,11 @@ const Header: React.FC = () => {
           )}
         </nav>
 
-        {/* Mobile Menu Button */}
         <button className="md:hidden text-foreground" onClick={toggleMenu}>
           {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
-      {/* Mobile Navigation */}
       <div
         className={cn(
           'fixed inset-0 bg-white z-40 pt-24 px-6 transition-transform duration-300 md:hidden',
