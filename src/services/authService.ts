@@ -1,6 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ToastOptions } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
+
+interface ToastOptions {
+  title?: string;
+  description?: string;
+  action?: ToastAction;
+  variant?: 'default' | 'destructive';
+}
 
 interface AuthServiceProps {
   toast: (options: ToastOptions) => void;
