@@ -30,7 +30,6 @@ const Header: React.FC = () => {
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handlePostJob = () => {
-    // Navigate directly to /post-job
     navigate('/post-job');
   };
 
@@ -38,6 +37,8 @@ const Header: React.FC = () => {
     try {
       const success = await signOut();
       if (success) {
+        // Clear any user data from localStorage
+        localStorage.removeItem('userData');
         navigate('/');
       }
     } catch (error) {
@@ -90,11 +91,9 @@ const Header: React.FC = () => {
             </div>
           ) : (
             <div className="flex items-center gap-3">
-              <Link to="/auth">
-                <Button variant="outline" size="sm" className="flex items-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  Sign In
-                </Button>
+              <Link to="/auth" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                <LogIn className="h-4 w-4" />
+                Sign In
               </Link>
               <Link to="/auth">
                 <Button className="flex items-center gap-2">
@@ -145,17 +144,14 @@ const Header: React.FC = () => {
             </>
           ) : (
             <>
-              <Link to="/auth">
+              <Link to="/auth" className="mt-4">
                 <Button className="w-full flex items-center gap-2">
                   <UserPlus className="h-5 w-5" />
                   Create Account
                 </Button>
               </Link>
-              <Link to="/auth">
-                <Button variant="outline" className="w-full flex items-center gap-2">
-                  <LogIn className="h-4 w-4" />
-                  Sign In
-                </Button>
+              <Link to="/auth?signin=true" className="text-lg text-center hover:text-primary transition-colors">
+                Already have an account? Sign In
               </Link>
             </>
           )}

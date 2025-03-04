@@ -5,7 +5,7 @@ import { ToastAction } from '@/components/ui/toast';
 interface ToastOptions {
   title?: string;
   description?: string;
-  action?: React.ReactElement<typeof ToastAction>;
+  action?: ToastAction;
   variant?: 'default' | 'destructive';
 }
 
