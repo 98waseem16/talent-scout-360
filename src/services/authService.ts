@@ -1,11 +1,11 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { ToastAction } from '@/components/ui/toast';
+import { ToastAction as ToastActionType } from '@/components/ui/toast';
 
 interface ToastOptions {
   title?: string;
   description?: string;
-  action?: ToastAction;
+  action?: typeof ToastActionType;
   variant?: 'default' | 'destructive';
 }
 
