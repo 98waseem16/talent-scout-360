@@ -42,6 +42,46 @@ const Header: React.FC = () => {
     }
   };
 
+  // Render authentication section based on auth state
+  const renderAuthSection = (isMobile = false) => {
+    if (isLoading) {
+      return <Skeleton className={isMobile ? "h-10 w-full" : "h-10 w-24"} />;
+    }
+    
+    if (user) {
+      return (
+        <>
+          <Link to="/dashboard">
+            <Button variant="ghost" size={isMobile ? "default" : "sm"} className="flex items-center gap-2">
+              <UserCircle className="h-5 w-5" />
+              Dashboard
+            </Button>
+          </Link>
+          <Button
+            variant="outline"
+            size={isMobile ? "default" : "sm"}
+            onClick={handleSignOut}
+            className="flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            Sign Out
+          </Button>
+        </>
+      );
+    }
+    
+    return (
+      <Link to="/auth">
+        <Button 
+          variant="default" 
+          className={isMobile ? "w-full" : "ml-4"}
+        >
+          Sign In
+        </Button>
+      </Link>
+    );
+  };
+
   return (
     <header
       className={cn(
@@ -70,31 +110,9 @@ const Header: React.FC = () => {
             </Button>
           </Link>
           
-          {isLoading ? (
-            <Skeleton className="h-10 w-24 rounded-md" />
-          ) : user ? (
-            <div className="flex items-center gap-3">
-              <Link to="/dashboard">
-                <Button variant="ghost" size="sm" className="flex items-center gap-2">
-                  <UserCircle className="h-5 w-5" />
-                  Dashboard
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleSignOut}
-                className="flex items-center gap-2"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
-            </div>
-          ) : (
-            <Link to="/auth">
-              <Button variant="default" className="ml-4">Sign In</Button>
-            </Link>
-          )}
+          <div className="flex items-center gap-3">
+            {renderAuthSection()}
+          </div>
         </nav>
 
         {/* Mobile Menu Button */}
@@ -120,30 +138,9 @@ const Header: React.FC = () => {
             </Button>
           </Link>
           
-          {isLoading ? (
-            <Skeleton className="h-10 w-full rounded-md" />
-          ) : user ? (
-            <>
-              <Link 
-                to="/dashboard"
-                className="text-lg hover:text-primary transition-colors"
-              >
-                Dashboard
-              </Link>
-              <Button
-                variant="outline"
-                onClick={handleSignOut}
-                className="flex items-center justify-center gap-2 mt-4"
-              >
-                <LogOut className="h-4 w-4" />
-                Sign Out
-              </Button>
-            </>
-          ) : (
-            <Link to="/auth" className="mt-4">
-              <Button className="w-full">Sign In</Button>
-            </Link>
-          )}
+          <div className="flex flex-col space-y-4">
+            {renderAuthSection(true)}
+          </div>
         </nav>
       </div>
     </header>

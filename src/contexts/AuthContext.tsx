@@ -44,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const getCurrentSession = async () => {
       try {
+        setIsLoading(true);
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (error) throw error;
@@ -66,7 +67,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
+        setIsLoading(true);
         console.log("Auth state changed:", event, newSession?.user?.id);
+        
         setSession(newSession);
         setUser(newSession?.user || null);
         
@@ -136,7 +139,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
-      console.log("Attempting to sign out...");
       setIsLoading(true);
       
       const { error } = await supabase.auth.signOut();
@@ -145,8 +147,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.error("Supabase sign out error:", error);
         throw error;
       }
-      
-      console.log("Supabase sign out successful");
       
       // Forcibly clear state
       setSession(null);
@@ -164,7 +164,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message || 'Failed to sign out',
         variant: 'destructive',
       });
-      throw error; // Important to throw error so we can catch it in the Header component
+      throw error;
     } finally {
       setIsLoading(false);
     }
