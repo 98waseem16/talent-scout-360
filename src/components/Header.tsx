@@ -17,8 +17,7 @@ const Header: React.FC = () => {
 
   useEffect(() => {
     const handleScroll = () => {
-      const scrollPosition = window.scrollY;
-      setIsScrolled(scrollPosition > 50);
+      setIsScrolled(window.scrollY > 50);
     };
 
     window.addEventListener('scroll', handleScroll);
@@ -34,15 +33,11 @@ const Header: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      console.log("Header: handleSignOut called");
       await signOut();
-      console.log("Header: Sign out completed successfully");
       toast.success("Successfully signed out");
-      
-      // Force navigation to home page after signout
       navigate('/', { replace: true });
     } catch (error) {
-      console.error("Header: Sign out error:", error);
+      console.error("Sign out error:", error);
       toast.error("Failed to sign out. Please try again.");
     }
   };
@@ -76,8 +71,7 @@ const Header: React.FC = () => {
           </Link>
           
           {isLoading ? (
-            // Show a skeleton loader while auth state is loading
-            <div className="h-10 w-20 bg-muted/30 animate-pulse rounded"></div>
+            <Skeleton className="h-10 w-24 rounded-md" />
           ) : user ? (
             <div className="flex items-center gap-3">
               <Link to="/dashboard">
@@ -98,7 +92,7 @@ const Header: React.FC = () => {
             </div>
           ) : (
             <Link to="/auth">
-              <Button>Sign In</Button>
+              <Button variant="default" className="ml-4">Sign In</Button>
             </Link>
           )}
         </nav>
@@ -127,8 +121,7 @@ const Header: React.FC = () => {
           </Link>
           
           {isLoading ? (
-            // Show a skeleton loader while auth state is loading
-            <div className="h-10 w-full bg-muted/30 animate-pulse rounded"></div>
+            <Skeleton className="h-10 w-full rounded-md" />
           ) : user ? (
             <>
               <Link 
