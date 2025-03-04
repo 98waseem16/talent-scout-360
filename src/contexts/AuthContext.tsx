@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
@@ -14,7 +13,7 @@ interface AuthContextProps {
   signIn: AuthService['signIn'];
   signInWithEmail: AuthService['signInWithEmail'];
   signUp: AuthService['signUp'];
-  signOut: AuthService['signOut'];
+  signOut: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -111,7 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = async (): Promise<boolean> => {
     console.log('Handle sign out called');
     setIsLoading(true);
     const success = await authService.signOut();
@@ -125,6 +124,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     setIsLoading(false);
+    return success;
   };
 
   return (
