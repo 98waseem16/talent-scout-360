@@ -78,9 +78,9 @@ export const createAuthService = ({ toast }: AuthServiceProps) => {
     }
   };
 
-  const signOut = async () => {
+  const signOut = async (): Promise<boolean> => {
     try {
-      console.log('Signing out...');
+      console.log('Signing out from authService...');
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -88,7 +88,7 @@ export const createAuthService = ({ toast }: AuthServiceProps) => {
         throw error;
       }
       
-      console.log('Sign out successful');
+      console.log('Sign out successful from authService');
       toast({
         title: 'Sign out successful',
         description: 'You have been signed out',

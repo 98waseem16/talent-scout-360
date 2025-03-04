@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -28,8 +29,22 @@ const Header: React.FC = () => {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
   
-  const handlePostJob = () => {
+  const handlePostJob = (e: React.MouseEvent) => {
+    e.preventDefault();
     navigate('/post-job');
+  };
+
+  const handleSignOut = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      const success = await signOut();
+      if (success) {
+        console.log('Sign out successful in Header');
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error signing out from Header:', error);
+    }
   };
 
   return (
@@ -68,7 +83,7 @@ const Header: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => signOut()}
+                onClick={handleSignOut}
                 className="flex items-center gap-2"
               >
                 <LogOut className="h-4 w-4" />
@@ -121,7 +136,7 @@ const Header: React.FC = () => {
               </Link>
               <Button
                 variant="outline"
-                onClick={() => signOut()}
+                onClick={handleSignOut}
                 className="flex items-center justify-center gap-2 mt-4"
               >
                 <LogOut className="h-4 w-4" />
