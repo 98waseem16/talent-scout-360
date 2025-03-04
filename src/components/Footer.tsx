@@ -16,10 +16,10 @@ const Footer: React.FC = () => {
                 <Briefcase className="h-5 w-5" />
               </span>
               <span className="text-xl font-bold">Launchly</span>
-              <span className="text-primary text-xl">Jobs</span>
+              <span className="text-primary text-xl">Startup Jobs</span>
             </Link>
             <p className="text-muted-foreground mt-4 max-w-xs">
-              Connecting talented individuals with the perfect career opportunities since 2023.
+              Connecting talented individuals with innovative startups and fast-growing companies since 2023.
             </p>
           </div>
           
@@ -28,12 +28,12 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li>
                 <Link to="/jobs" className="text-muted-foreground hover:text-primary transition-colors">
-                  Browse Jobs
+                  Browse Startup Jobs
                 </Link>
               </li>
               <li>
                 <Link to="/companies" className="text-muted-foreground hover:text-primary transition-colors">
-                  Companies
+                  Startups
                 </Link>
               </li>
               <li>
@@ -50,7 +50,7 @@ const Footer: React.FC = () => {
           </div>
           
           <div>
-            <h3 className="text-lg font-medium mb-4">For Employers</h3>
+            <h3 className="text-lg font-medium mb-4">For Startups</h3>
             <ul className="space-y-3">
               <li>
                 <Link to="/post-job" className="text-muted-foreground hover:text-primary transition-colors">
@@ -64,12 +64,12 @@ const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/resources" className="text-muted-foreground hover:text-primary transition-colors">
-                  Resources
+                  Startup Resources
                 </Link>
               </li>
               <li>
                 <Link to="/testimonials" className="text-muted-foreground hover:text-primary transition-colors">
-                  Testimonials
+                  Success Stories
                 </Link>
               </li>
             </ul>
@@ -80,8 +80,8 @@ const Footer: React.FC = () => {
             <ul className="space-y-3">
               <li className="flex items-center text-muted-foreground">
                 <Mail className="h-5 w-5 mr-2" />
-                <a href="mailto:hello@launchlyjobs.com" className="hover:text-primary transition-colors">
-                  hello@launchlyjobs.com
+                <a href="mailto:hello@launchlystartups.com" className="hover:text-primary transition-colors">
+                  hello@launchlystartups.com
                 </a>
               </li>
               <li className="flex items-center text-muted-foreground">
@@ -103,7 +103,7 @@ const Footer: React.FC = () => {
         
         <div className="border-t border-border mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
           <p className="text-muted-foreground text-sm">
-            &copy; {year} Launchly Jobs. All rights reserved.
+            &copy; {year} Launchly Startup Jobs. All rights reserved.
           </p>
           <div className="flex items-center space-x-6 mt-4 md:mt-0">
             <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">

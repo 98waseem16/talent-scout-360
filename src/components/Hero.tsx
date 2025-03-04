@@ -21,10 +21,10 @@ const Hero: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-10 items-center">
           <div className="space-y-6 md:pe-6">
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-balance">
-              Find your next career opportunity
+              Find your next role at a fast-growing startup
             </h1>
             <p className="text-xl text-muted-foreground max-w-md">
-              Discover thousands of job opportunities with all the information you need.
+              Discover thousands of startup job opportunities with companies disrupting industries and changing the world.
             </p>
             
             <form 
@@ -38,7 +38,7 @@ const Hero: React.FC = () => {
                   </div>
                   <input
                     type="text"
-                    placeholder="Job title or keyword"
+                    placeholder="Startup role or technology"
                     className="w-full pl-10 pr-4 py-3 rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
@@ -63,7 +63,7 @@ const Hero: React.FC = () => {
                 type="submit"
                 className="mt-4 w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors smooth-transition active:scale-[0.98]"
               >
-                Search Jobs
+                Find Startup Jobs
               </button>
             </form>
           </div>
@@ -72,7 +72,7 @@ const Hero: React.FC = () => {
             <div className="absolute top-0 right-0 -z-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
             <img 
               src="/placeholder.svg" 
-              alt="Job search illustration" 
+              alt="Startup job search illustration" 
               className="max-w-full rounded-xl shadow-2xl"
             />
           </div>

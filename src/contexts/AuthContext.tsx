@@ -140,6 +140,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
+      // Forcibly clear state
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+      
       toast({
         title: 'Sign out successful',
         description: 'You have been signed out',

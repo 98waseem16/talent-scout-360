@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { UserCircle, LogOut, Menu, X, Rocket } from 'lucide-react';
+import { UserCircle, LogOut, Menu, X, Rocket, Briefcase } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -38,29 +38,22 @@ const Header: React.FC = () => {
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
-        <Link to="/" className="font-bold text-2xl text-primary">
+        <Link to="/" className="font-bold text-2xl text-primary flex items-center">
+          <span className="bg-primary text-white p-1 rounded mr-2">
+            <Briefcase className="h-5 w-5" />
+          </span>
           Launchly
         </Link>
 
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center space-x-8">
-          <Link 
-            to="/"
-            className={cn(
-              'hover:text-primary transition-colors',
-              location.pathname === '/' ? 'text-primary font-medium' : 'text-foreground'
-            )}
-          >
-            Home
-          </Link>
-          
           <Link to="/post-job">
             <Button 
               variant="default" 
               className="flex items-center gap-2 animate-pulse hover:animate-none shadow-lg hover:shadow-xl bg-gradient-to-r from-primary/90 to-primary"
             >
               <Rocket className="h-5 w-5" />
-              Post a Job
+              Post a Startup Job
             </Button>
           </Link>
           
@@ -75,7 +68,7 @@ const Header: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={signOut}
+                onClick={() => signOut()}
                 className="flex items-center gap-2"
               >
                 <LogOut className="h-4 w-4" />
@@ -103,22 +96,12 @@ const Header: React.FC = () => {
         )}
       >
         <nav className="flex flex-col space-y-6">
-          <Link 
-            to="/"
-            className={cn(
-              'text-lg hover:text-primary transition-colors',
-              location.pathname === '/' ? 'text-primary font-medium' : 'text-foreground'
-            )}
-          >
-            Home
-          </Link>
-          
           <Link to="/post-job" className="mt-4">
             <Button 
               className="w-full flex items-center justify-center gap-2 animate-pulse hover:animate-none shadow-md hover:shadow-lg bg-gradient-to-r from-primary/90 to-primary"
             >
               <Rocket className="h-5 w-5" />
-              Post a Job
+              Post a Startup Job
             </Button>
           </Link>
           
@@ -132,7 +115,7 @@ const Header: React.FC = () => {
               </Link>
               <Button
                 variant="outline"
-                onClick={signOut}
+                onClick={() => signOut()}
                 className="flex items-center justify-center gap-2 mt-4"
               >
                 <LogOut className="h-4 w-4" />
