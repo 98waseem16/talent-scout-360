@@ -4,7 +4,7 @@ import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { UserCircle, LogOut, Menu, X } from 'lucide-react';
+import { UserCircle, LogOut, Menu, X, Rocket } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -53,14 +53,15 @@ const Header: React.FC = () => {
           >
             Home
           </Link>
-          <Link 
-            to="/jobs"
-            className={cn(
-              'hover:text-primary transition-colors',
-              location.pathname === '/jobs' ? 'text-primary font-medium' : 'text-foreground'
-            )}
-          >
-            Find Jobs
+          
+          <Link to="/post-job">
+            <Button 
+              variant="default" 
+              className="flex items-center gap-2 animate-pulse hover:animate-none shadow-lg hover:shadow-xl bg-gradient-to-r from-primary/90 to-primary"
+            >
+              <Rocket className="h-5 w-5" />
+              Post a Job
+            </Button>
           </Link>
           
           {user ? (
@@ -111,14 +112,14 @@ const Header: React.FC = () => {
           >
             Home
           </Link>
-          <Link 
-            to="/jobs"
-            className={cn(
-              'text-lg hover:text-primary transition-colors',
-              location.pathname === '/jobs' ? 'text-primary font-medium' : 'text-foreground'
-            )}
-          >
-            Find Jobs
+          
+          <Link to="/post-job" className="mt-4">
+            <Button 
+              className="w-full flex items-center justify-center gap-2 animate-pulse hover:animate-none shadow-md hover:shadow-lg bg-gradient-to-r from-primary/90 to-primary"
+            >
+              <Rocket className="h-5 w-5" />
+              Post a Job
+            </Button>
           </Link>
           
           {user ? (
