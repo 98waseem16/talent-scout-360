@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { UserCircle, LogOut, Menu, X, Rocket, Briefcase } from 'lucide-react';
+import { UserCircle, LogOut, Menu, X, Rocket, Briefcase, UserPlus } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -76,9 +75,18 @@ const Header: React.FC = () => {
               </Button>
             </div>
           ) : (
-            <Link to="/auth">
-              <Button>Sign In</Button>
-            </Link>
+            <div className="flex items-center gap-3">
+              <Link to="/auth" className="flex items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
+                <LogIn className="h-4 w-4" />
+                Sign In
+              </Link>
+              <Link to="/auth">
+                <Button className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  Create Account
+                </Button>
+              </Link>
+            </div>
           )}
         </nav>
 
@@ -123,9 +131,17 @@ const Header: React.FC = () => {
               </Button>
             </>
           ) : (
-            <Link to="/auth" className="mt-4">
-              <Button className="w-full">Sign In</Button>
-            </Link>
+            <>
+              <Link to="/auth" className="mt-4">
+                <Button className="w-full flex items-center gap-2">
+                  <UserPlus className="h-5 w-5" />
+                  Create Account
+                </Button>
+              </Link>
+              <Link to="/auth?signin=true" className="text-lg text-center hover:text-primary transition-colors">
+                Already have an account? Sign In
+              </Link>
+            </>
           )}
         </nav>
       </div>

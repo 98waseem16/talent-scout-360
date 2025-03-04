@@ -17,7 +17,7 @@ const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showManualAuth, setShowManualAuth] = useState(false);
-  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signin');
+  const [activeTab, setActiveTab] = useState<'signin' | 'signup'>('signup'); // Default to signup for new users
   
   useEffect(() => {
     // Redirect to home if user is already logged in
@@ -95,7 +95,7 @@ const Auth: React.FC = () => {
             <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as 'signin' | 'signup')} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
-                <TabsTrigger value="signup">Create Account</TabsTrigger>
+                <TabsTrigger value="signup" className="bg-primary/10 text-primary font-semibold">Create Account</TabsTrigger>
               </TabsList>
               
               <TabsContent value="signin">
@@ -126,6 +126,16 @@ const Auth: React.FC = () => {
                     <span>Sign In</span>
                   </Button>
                 </form>
+                <p className="text-sm text-center mt-4 text-muted-foreground">
+                  Don't have an account?{" "}
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveTab('signup')} 
+                    className="text-primary font-medium hover:underline"
+                  >
+                    Create one now
+                  </button>
+                </p>
               </TabsContent>
               
               <TabsContent value="signup">
@@ -150,12 +160,22 @@ const Auth: React.FC = () => {
                   </div>
                   <Button
                     type="submit"
-                    className="w-full flex items-center justify-center gap-2 py-6"
+                    className="w-full flex items-center justify-center gap-2 py-6 bg-primary hover:bg-primary/90"
                   >
                     <UserPlus className="h-5 w-5" />
                     <span>Create Account</span>
                   </Button>
                 </form>
+                <p className="text-sm text-center mt-4 text-muted-foreground">
+                  Already have an account?{" "}
+                  <button 
+                    type="button" 
+                    onClick={() => setActiveTab('signin')} 
+                    className="text-primary font-medium hover:underline"
+                  >
+                    Sign in
+                  </button>
+                </p>
               </TabsContent>
             </Tabs>
             
@@ -175,6 +195,31 @@ const Auth: React.FC = () => {
         ) : (
           <>
             <h1 className="text-2xl font-medium mb-6 text-center">Sign In or Create Account</h1>
+            
+            <div className="flex justify-center mb-6">
+              <div className="bg-primary/10 rounded-lg p-2 inline-block">
+                <Button 
+                  onClick={() => {
+                    setShowManualAuth(true);
+                    setActiveTab('signup');
+                  }}
+                  className="flex items-center gap-2 bg-primary hover:bg-primary/90 animate-pulse hover:animate-none"
+                >
+                  <UserPlus className="h-5 w-5" />
+                  <span>Create New Account</span>
+                </Button>
+              </div>
+            </div>
+            
+            <div className="relative mb-6">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300"></div>
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-muted-foreground">or continue with</span>
+              </div>
+            </div>
+            
             <div className="space-y-4">
               <Button
                 variant="outline"
@@ -215,10 +260,13 @@ const Auth: React.FC = () => {
               <Button
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2 py-6"
-                onClick={() => setShowManualAuth(true)}
+                onClick={() => {
+                  setShowManualAuth(true);
+                  setActiveTab('signin');
+                }}
               >
                 <Mail className="h-5 w-5" />
-                <span>Email & Password</span>
+                <span>Email & Password Sign In</span>
               </Button>
             </div>
             
