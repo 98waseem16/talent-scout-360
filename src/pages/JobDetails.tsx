@@ -1,14 +1,51 @@
 
 import React from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Briefcase, MapPin, DollarSign, Clock, ArrowLeft, Share2, Bookmark } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Briefcase, MapPin, DollarSign, Clock, ArrowLeft, Share2, Bookmark, Loader2 } from 'lucide-react';
 import { getJobById } from '@/lib/jobs';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const JobDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const job = getJobById(id || '');
+  const { user } = useAuth();
+  const { toast } = useToast();
   
-  if (!job) {
+  const { data: job, isLoading, error } = useQuery({
+    queryKey: ['job', id],
+    queryFn: () => getJobById(id || ''),
+    enabled: !!id
+  });
+
+  const handleApply = () => {
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to apply for this job",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Application submitted",
+        description: "Your application has been submitted successfully!"
+      });
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <main className="min-h-screen pt-32 pb-16 px-6 flex justify-center">
+        <div className="max-w-4xl w-full flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p>Loading job details...</p>
+        </div>
+      </main>
+    );
+  }
+  
+  if (error || !job) {
     return (
       <main className="min-h-screen pt-32 pb-16 px-6 text-center">
         <div className="max-w-3xl mx-auto">
@@ -82,7 +119,10 @@ const JobDetails: React.FC = () => {
               </div>
               
               <div className="flex flex-col sm:flex-row gap-3">
-                <button className="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-2.5 rounded-lg transition-colors active:scale-[0.98]">
+                <button 
+                  onClick={handleApply}
+                  className="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-2.5 rounded-lg transition-colors active:scale-[0.98]"
+                >
                   Apply Now
                 </button>
                 <a
@@ -131,64 +171,79 @@ const JobDetails: React.FC = () => {
             {/* Application Form */}
             <section className="bg-white rounded-xl border border-border shadow-sm p-6 md:p-8">
               <h2 className="text-xl font-medium mb-4">Quick Apply</h2>
-              <form className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {!user ? (
+                <div className="text-center py-6">
+                  <p className="text-muted-foreground mb-4">Please sign in to apply for this job</p>
+                  <Link 
+                    to="/auth" 
+                    className="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-2.5 rounded-lg transition-colors inline-block"
+                  >
+                    Sign In to Apply
+                  </Link>
+                </div>
+              ) : (
+                <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleApply(); }}>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="name" className="block text-sm font-medium mb-1">Full Name</label>
+                      <input
+                        type="text"
+                        id="name"
+                        className="w-full px-4 py-2 rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        placeholder="Your full name"
+                        defaultValue={user.user_metadata?.full_name || ''}
+                      />
+                    </div>
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
+                      <input
+                        type="email"
+                        id="email"
+                        className="w-full px-4 py-2 rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+                        placeholder="Your email address"
+                        value={user.email || ''}
+                        readOnly
+                      />
+                    </div>
+                  </div>
+                  
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium mb-1">Full Name</label>
-                    <input
-                      type="text"
-                      id="name"
-                      className="w-full px-4 py-2 rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                      placeholder="Your full name"
-                    />
+                    <label htmlFor="resume" className="block text-sm font-medium mb-1">Resume</label>
+                    <div className="border border-dashed border-input rounded-lg p-4 text-center">
+                      <p className="text-muted-foreground mb-2">Upload your resume (PDF, DOCX)</p>
+                      <input
+                        type="file"
+                        id="resume"
+                        className="hidden"
+                        accept=".pdf,.docx"
+                      />
+                      <label
+                        htmlFor="resume"
+                        className="inline-block bg-secondary hover:bg-secondary/80 text-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors"
+                      >
+                        Select File
+                      </label>
+                    </div>
                   </div>
+                  
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium mb-1">Email</label>
-                    <input
-                      type="email"
-                      id="email"
+                    <label htmlFor="coverLetter" className="block text-sm font-medium mb-1">Cover Letter (Optional)</label>
+                    <textarea
+                      id="coverLetter"
+                      rows={4}
                       className="w-full px-4 py-2 rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                      placeholder="Your email address"
-                    />
+                      placeholder="Why are you a good fit for this role?"
+                    ></textarea>
                   </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="resume" className="block text-sm font-medium mb-1">Resume</label>
-                  <div className="border border-dashed border-input rounded-lg p-4 text-center">
-                    <p className="text-muted-foreground mb-2">Upload your resume (PDF, DOCX)</p>
-                    <input
-                      type="file"
-                      id="resume"
-                      className="hidden"
-                      accept=".pdf,.docx"
-                    />
-                    <label
-                      htmlFor="resume"
-                      className="inline-block bg-secondary hover:bg-secondary/80 text-foreground px-4 py-2 rounded-lg cursor-pointer transition-colors"
-                    >
-                      Select File
-                    </label>
-                  </div>
-                </div>
-                
-                <div>
-                  <label htmlFor="coverLetter" className="block text-sm font-medium mb-1">Cover Letter (Optional)</label>
-                  <textarea
-                    id="coverLetter"
-                    rows={4}
-                    className="w-full px-4 py-2 rounded-lg border border-input focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-                    placeholder="Why are you a good fit for this role?"
-                  ></textarea>
-                </div>
-                
-                <button
-                  type="submit"
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-6 rounded-lg transition-colors active:scale-[0.98]"
-                >
-                  Submit Application
-                </button>
-              </form>
+                  
+                  <button
+                    type="submit"
+                    className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-6 rounded-lg transition-colors active:scale-[0.98]"
+                  >
+                    Submit Application
+                  </button>
+                </form>
+              )}
             </section>
           </div>
           

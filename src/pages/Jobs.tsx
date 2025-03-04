@@ -1,9 +1,11 @@
 
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Search, MapPin, Filter, X } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Search, MapPin, Filter, X, Loader2 } from 'lucide-react';
 import JobCard from '@/components/JobCard';
-import { jobs } from '@/lib/jobs';
+import { getJobs } from '@/lib/jobs';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Jobs: React.FC = () => {
   const location = useLocation();
@@ -15,6 +17,11 @@ const Jobs: React.FC = () => {
   const [locationQuery, setLocationQuery] = useState(initialLocation);
   const [jobType, setJobType] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+
+  const { data: jobs, isLoading, error } = useQuery({
+    queryKey: ['jobs'],
+    queryFn: getJobs,
+  });
 
   const toggleJobType = (type: string) => {
     setJobType(prev => 
@@ -30,7 +37,7 @@ const Jobs: React.FC = () => {
     setJobType([]);
   };
 
-  const filteredJobs = jobs.filter(job => {
+  const filteredJobs = jobs?.filter(job => {
     const matchesSearch = searchQuery === '' || 
       job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -43,7 +50,7 @@ const Jobs: React.FC = () => {
       jobType.includes(job.type);
       
     return matchesSearch && matchesLocation && matchesType;
-  });
+  }) || [];
 
   // Update URL with search params
   useEffect(() => {
@@ -141,9 +148,13 @@ const Jobs: React.FC = () => {
             
             {/* Results Count */}
             <div className="mb-6 flex justify-between items-center">
-              <h2 className="text-xl font-medium">
-                {filteredJobs.length} {filteredJobs.length === 1 ? 'Job' : 'Jobs'} Found
-              </h2>
+              {isLoading ? (
+                <Skeleton className="h-8 w-32" />
+              ) : (
+                <h2 className="text-xl font-medium">
+                  {filteredJobs.length} {filteredJobs.length === 1 ? 'Job' : 'Jobs'} Found
+                </h2>
+              )}
               
               {/* Active Filters */}
               {(searchQuery || locationQuery || jobType.length > 0) && (
@@ -191,20 +202,48 @@ const Jobs: React.FC = () => {
             </div>
             
             {/* Job Listings */}
-            <div className="space-y-6">
-              {filteredJobs.length > 0 ? (
-                filteredJobs.map((job, index) => (
-                  <JobCard key={job.id} job={job} index={index} />
-                ))
-              ) : (
-                <div className="text-center py-16">
-                  <h3 className="text-xl mb-2">No jobs found</h3>
-                  <p className="text-muted-foreground">
-                    Try adjusting your search criteria or filters
-                  </p>
-                </div>
-              )}
-            </div>
+            {isLoading ? (
+              <div className="space-y-6">
+                {[...Array(5)].map((_, index) => (
+                  <div key={index} className="bg-white shadow-sm border border-border rounded-xl p-6">
+                    <div className="flex items-start gap-4">
+                      <Skeleton className="h-12 w-12 rounded-md" />
+                      <div className="flex-1">
+                        <Skeleton className="h-6 w-3/4 mb-2" />
+                        <Skeleton className="h-4 w-1/2 mb-4" />
+                        <div className="flex flex-wrap gap-3">
+                          <Skeleton className="h-4 w-20" />
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-4 w-16" />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : error ? (
+              <div className="text-center py-16">
+                <h3 className="text-xl mb-2">Error loading jobs</h3>
+                <p className="text-muted-foreground">
+                  Please try refreshing the page
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {filteredJobs.length > 0 ? (
+                  filteredJobs.map((job, index) => (
+                    <JobCard key={job.id} job={job} index={index} />
+                  ))
+                ) : (
+                  <div className="text-center py-16">
+                    <h3 className="text-xl mb-2">No jobs found</h3>
+                    <p className="text-muted-foreground">
+                      Try adjusting your search criteria or filters
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

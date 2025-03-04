@@ -1,3 +1,4 @@
+import { supabase } from '@/integrations/supabase/client';
 
 export interface Job {
   id: string;
@@ -15,7 +16,7 @@ export interface Job {
   featured?: boolean;
 }
 
-export const jobs: Job[] = [
+export const staticJobs: Job[] = [
   {
     id: '1',
     title: 'Senior Frontend Developer',
@@ -191,14 +192,159 @@ export const jobs: Job[] = [
       'Flexible work arrangements',
       'Continuing education assistance'
     ],
-    logo: '/placeholder.svg'
+    logo: '/placeholder.svg',
+    featured: true
   }
 ];
 
-export const getTrendingJobs = () => {
-  return jobs.filter(job => job.featured);
+const formatPostedDate = (postedDate: string): string => {
+  const now = new Date();
+  const posted = new Date(postedDate);
+  const diffTime = Math.abs(now.getTime() - posted.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays === 0) {
+    return 'Today';
+  } else if (diffDays === 1) {
+    return '1 day ago';
+  } else if (diffDays < 7) {
+    return `${diffDays} days ago`;
+  } else if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return weeks === 1 ? '1 week ago' : `${weeks} weeks ago`;
+  } else {
+    const months = Math.floor(diffDays / 30);
+    return months === 1 ? '1 month ago' : `${months} months ago`;
+  }
 };
 
-export const getJobById = (id: string) => {
-  return jobs.find(job => job.id === id);
+export const getJobs = async (): Promise<Job[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('job_postings')
+      .select('*')
+      .order('posted', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching jobs:', error);
+      return staticJobs;
+    }
+
+    const jobs = data.map(job => ({
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      salary: job.salary,
+      type: job.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
+      posted: formatPostedDate(job.posted),
+      description: job.description,
+      responsibilities: job.responsibilities,
+      requirements: job.requirements,
+      benefits: job.benefits,
+      logo: job.logo,
+      featured: job.featured
+    }));
+
+    return jobs;
+  } catch (error) {
+    console.error('Error fetching jobs:', error);
+    return staticJobs;
+  }
+};
+
+export const getTrendingJobs = async (): Promise<Job[]> => {
+  try {
+    const { data, error } = await supabase
+      .from('job_postings')
+      .select('*')
+      .eq('featured', true)
+      .order('posted', { ascending: false })
+      .limit(3);
+
+    if (error) {
+      console.error('Error fetching trending jobs:', error);
+      return staticJobs.filter(job => job.featured);
+    }
+
+    const jobs = data.map(job => ({
+      id: job.id,
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      salary: job.salary,
+      type: job.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
+      posted: formatPostedDate(job.posted),
+      description: job.description,
+      responsibilities: job.responsibilities,
+      requirements: job.requirements,
+      benefits: job.benefits,
+      logo: job.logo,
+      featured: job.featured
+    }));
+
+    return jobs;
+  } catch (error) {
+    console.error('Error fetching trending jobs:', error);
+    return staticJobs.filter(job => job.featured);
+  }
+};
+
+export const getJobById = async (id: string): Promise<Job | undefined> => {
+  try {
+    const { data, error } = await supabase
+      .from('job_postings')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (error) {
+      console.error('Error fetching job by ID:', error);
+      return staticJobs.find(job => job.id === id);
+    }
+
+    return {
+      id: data.id,
+      title: data.title,
+      company: data.company,
+      location: data.location,
+      salary: data.salary,
+      type: data.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
+      posted: formatPostedDate(data.posted),
+      description: data.description,
+      responsibilities: data.responsibilities,
+      requirements: data.requirements,
+      benefits: data.benefits,
+      logo: data.logo,
+      featured: data.featured
+    };
+  } catch (error) {
+    console.error('Error fetching job by ID:', error);
+    return staticJobs.find(job => job.id === id);
+  }
+};
+
+export const seedJobs = async () => {
+  try {
+    const { error } = await supabase.from('job_postings').insert(
+      staticJobs.map(job => ({
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        salary: job.salary,
+        type: job.type,
+        description: job.description,
+        responsibilities: job.responsibilities,
+        requirements: job.requirements,
+        benefits: job.benefits,
+        logo: job.logo,
+        featured: job.featured
+      }))
+    );
+
+    if (error) throw error;
+    console.log('Sample jobs seeded successfully');
+  } catch (error) {
+    console.error('Error seeding jobs:', error);
+  }
 };

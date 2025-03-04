@@ -2,102 +2,147 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Briefcase, Search, User, Menu, X } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
+import { UserCircle, LogOut, Menu, X } from 'lucide-react';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, signOut } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
-      setIsScrolled(window.scrollY > 20);
+      const scrollPosition = window.scrollY;
+      setIsScrolled(scrollPosition > 50);
     };
 
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
-  
   // Close mobile menu when route changes
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
-  const navLinks = [
-    { name: 'Jobs', path: '/jobs', icon: <Briefcase className="mr-2 h-4 w-4" /> },
-    { name: 'Search', path: '/search', icon: <Search className="mr-2 h-4 w-4" /> },
-    { name: 'Account', path: '/account', icon: <User className="mr-2 h-4 w-4" /> },
-  ];
+  const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   return (
-    <header 
+    <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 py-4 px-6 transition-all duration-300 ease-in-out",
-        isScrolled ? "bg-white/90 backdrop-blur-lg shadow-sm" : "bg-transparent"
+        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
+        isScrolled ? 'bg-white shadow-md py-3' : 'bg-transparent py-5'
       )}
     >
-      <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link 
-          to="/" 
-          className="text-xl md:text-2xl font-medium flex items-center"
-        >
-          <span className="bg-primary text-white p-1 rounded mr-2">
-            <Briefcase className="h-5 w-5" />
-          </span>
-          <span className="font-bold">Launchly</span>
-          <span className="text-primary">Jobs</span>
+      <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
+        {/* Logo */}
+        <Link to="/" className="font-bold text-2xl text-primary">
+          Launchly
         </Link>
-        
+
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-1">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className={cn(
-                "px-4 py-2 rounded-md flex items-center transition-all hover:bg-secondary",
-                location.pathname === link.path ? "text-primary font-medium" : "text-foreground"
-              )}
-            >
-              {link.icon}
-              {link.name}
+        <nav className="hidden md:flex items-center space-x-8">
+          <Link 
+            to="/"
+            className={cn(
+              'hover:text-primary transition-colors',
+              location.pathname === '/' ? 'text-primary font-medium' : 'text-foreground'
+            )}
+          >
+            Home
+          </Link>
+          <Link 
+            to="/jobs"
+            className={cn(
+              'hover:text-primary transition-colors',
+              location.pathname === '/jobs' ? 'text-primary font-medium' : 'text-foreground'
+            )}
+          >
+            Find Jobs
+          </Link>
+          
+          {user ? (
+            <div className="flex items-center gap-3">
+              <Link to="/dashboard">
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <UserCircle className="h-5 w-5" />
+                  Dashboard
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={signOut}
+                className="flex items-center gap-2"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </div>
+          ) : (
+            <Link to="/auth">
+              <Button>Sign In</Button>
             </Link>
-          ))}
+          )}
         </nav>
-        
-        {/* Mobile Menu Toggle */}
-        <button 
-          className="md:hidden flex items-center text-foreground p-2"
-          onClick={toggleMenu}
-          aria-label="Toggle Menu"
-        >
-          {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+
+        {/* Mobile Menu Button */}
+        <button className="md:hidden text-foreground" onClick={toggleMenu}>
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
-      
+
       {/* Mobile Navigation */}
-      <div 
+      <div
         className={cn(
-          "md:hidden absolute top-full left-0 right-0 bg-white/95 backdrop-blur-lg shadow-lg transition-all duration-300 ease-in-out overflow-hidden px-6",
-          isMenuOpen ? "max-h-60 py-4" : "max-h-0 py-0"
+          'fixed inset-0 bg-white z-40 pt-24 px-6 transition-transform duration-300 md:hidden',
+          isMenuOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
-        <nav className="flex flex-col space-y-2">
-          {navLinks.map((link) => (
-            <Link
-              key={link.name}
-              to={link.path}
-              className={cn(
-                "px-4 py-3 rounded-md flex items-center transition-all hover:bg-secondary",
-                location.pathname === link.path ? "text-primary font-medium" : "text-foreground"
-              )}
-            >
-              {link.icon}
-              {link.name}
+        <nav className="flex flex-col space-y-6">
+          <Link 
+            to="/"
+            className={cn(
+              'text-lg hover:text-primary transition-colors',
+              location.pathname === '/' ? 'text-primary font-medium' : 'text-foreground'
+            )}
+          >
+            Home
+          </Link>
+          <Link 
+            to="/jobs"
+            className={cn(
+              'text-lg hover:text-primary transition-colors',
+              location.pathname === '/jobs' ? 'text-primary font-medium' : 'text-foreground'
+            )}
+          >
+            Find Jobs
+          </Link>
+          
+          {user ? (
+            <>
+              <Link 
+                to="/dashboard"
+                className="text-lg hover:text-primary transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Button
+                variant="outline"
+                onClick={signOut}
+                className="flex items-center justify-center gap-2 mt-4"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Link to="/auth" className="mt-4">
+              <Button className="w-full">Sign In</Button>
             </Link>
-          ))}
+          )}
         </nav>
       </div>
     </header>

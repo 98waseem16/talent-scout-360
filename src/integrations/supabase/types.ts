@@ -9,7 +9,93 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      job_postings: {
+        Row: {
+          benefits: string[]
+          company: string
+          created_at: string
+          description: string
+          featured: boolean | null
+          id: string
+          location: string
+          logo: string
+          posted: string
+          requirements: string[]
+          responsibilities: string[]
+          salary: string
+          title: string
+          type: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          benefits: string[]
+          company: string
+          created_at?: string
+          description: string
+          featured?: boolean | null
+          id?: string
+          location: string
+          logo: string
+          posted?: string
+          requirements: string[]
+          responsibilities: string[]
+          salary: string
+          title: string
+          type: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          benefits?: string[]
+          company?: string
+          created_at?: string
+          description?: string
+          featured?: boolean | null
+          id?: string
+          location?: string
+          logo?: string
+          posted?: string
+          requirements?: string[]
+          responsibilities?: string[]
+          salary?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          company: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          updated_at: string
+          website: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          updated_at?: string
+          website?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          company?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          updated_at?: string
+          website?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
