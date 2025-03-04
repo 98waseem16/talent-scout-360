@@ -13,6 +13,7 @@ import JobDetails from "./pages/JobDetails";
 import PostJob from "./pages/PostJob";
 import Auth from "./pages/Auth";
 import AuthCallback from "./pages/AuthCallback";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/post-job" element={<PostJob />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/callback" element={<AuthCallback />} />
+            <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <Footer />
