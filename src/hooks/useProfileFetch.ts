@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 
 export const useProfileFetch = () => {
@@ -14,9 +13,25 @@ export const useProfileFetch = () => {
         .single();
         
       if (error) throw error;
+      
+      // Cache profile data 
+      localStorage.setItem(`profile_${userId}`, JSON.stringify(data));
+      
       return data;
     } catch (error) {
       console.error('Error fetching profile:', error);
+      
+      // Try to get from cache if network request failed
+      const cachedProfile = localStorage.getItem(`profile_${userId}`);
+      if (cachedProfile) {
+        try {
+          return JSON.parse(cachedProfile);
+        } catch (e) {
+          // Invalid cached data
+          localStorage.removeItem(`profile_${userId}`);
+        }
+      }
+      
       return null;
     }
   };

@@ -14,7 +14,7 @@ interface AuthContextProps {
   signIn: AuthService['signIn'];
   signInWithEmail: AuthService['signInWithEmail'];
   signUp: AuthService['signUp'];
-  signOut: AuthService['signOut'];
+  signOut: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -28,6 +28,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { fetchProfile } = useProfileFetch();
   const authService = createAuthService({ toast });
 
+  // Check localStorage for cached user data on initial load
+  useEffect(() => {
+    const storedUser = localStorage.getItem('userData');
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error('Failed to parse stored user data:', error);
+        localStorage.removeItem('userData'); // Remove invalid data
+      }
+    }
+  }, []);
+
   useEffect(() => {
     const getCurrentSession = async () => {
       try {
@@ -39,6 +53,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user || null);
         
         if (session?.user) {
+          // Store user data in localStorage
+          localStorage.setItem('userData', JSON.stringify(session.user));
+          
           const userProfile = await fetchProfile(session.user.id);
           setProfile(userProfile);
         }
@@ -53,13 +70,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
+        console.log('Auth state changed:', event, newSession?.user?.id);
+        
         setSession(newSession);
         setUser(newSession?.user || null);
         
         if (newSession?.user) {
+          // Update localStorage when auth state changes
+          localStorage.setItem('userData', JSON.stringify(newSession.user));
+          
           const userProfile = await fetchProfile(newSession.user.id);
           setProfile(userProfile);
         } else {
+          // Clear localStorage on sign out
+          localStorage.removeItem('userData');
           setProfile(null);
         }
         
@@ -81,9 +105,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSignInWithEmail = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      await authService.signInWithEmail(email, password);
+      return await authService.signInWithEmail(email, password);
     } catch (error) {
       // Error is already handled in the service
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -92,22 +117,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSignUp = async (email: string, password: string) => {
     setIsLoading(true);
     try {
-      await authService.signUp(email, password);
+      return await authService.signUp(email, password);
     } catch (error) {
       // Error is already handled in the service
+      return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleSignOut = async () => {
+  const handleSignOut = async (): Promise<boolean> => {
     setIsLoading(true);
-    await authService.signOut();
-    // Forcibly clear state even if there was an error
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    setIsLoading(false);
+    try {
+      const success = await authService.signOut();
+      if (success) {
+        // Forcibly clear state even if there was an error
+        setSession(null);
+        setUser(null);
+        setProfile(null);
+        
+        // Ensure localStorage is cleared
+        localStorage.removeItem('userData');
+      }
+      return success;
+    } catch (error) {
+      console.error('Error in handleSignOut:', error);
+      return false;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (

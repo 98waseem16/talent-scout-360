@@ -1,5 +1,6 @@
+
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,7 @@ const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
   useEffect(() => {
@@ -27,6 +29,23 @@ const Header: React.FC = () => {
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
+  const handlePostJob = () => {
+    navigate('/post-job');
+  };
+
+  const handleSignOut = async () => {
+    try {
+      const success = await signOut();
+      if (success) {
+        // Clear any user data from localStorage
+        localStorage.removeItem('userData');
+        navigate('/');
+      }
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <header
       className={cn(
@@ -43,15 +62,14 @@ const Header: React.FC = () => {
         </Link>
 
         <nav className="hidden md:flex items-center space-x-8">
-          <Link to="/post-job">
-            <Button 
-              variant="default" 
-              className="flex items-center gap-2 animate-pulse hover:animate-none shadow-lg hover:shadow-xl bg-gradient-to-r from-primary/90 to-primary"
-            >
-              <Rocket className="h-5 w-5" />
-              Post a Startup Job
-            </Button>
-          </Link>
+          <Button 
+            variant="default" 
+            className="flex items-center gap-2 animate-pulse hover:animate-none shadow-lg hover:shadow-xl bg-gradient-to-r from-primary/90 to-primary"
+            onClick={handlePostJob}
+          >
+            <Rocket className="h-5 w-5" />
+            Post a Startup Job
+          </Button>
           
           {user ? (
             <div className="flex items-center gap-3">
@@ -64,7 +82,7 @@ const Header: React.FC = () => {
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => signOut()}
+                onClick={handleSignOut}
                 className="flex items-center gap-2"
               >
                 <LogOut className="h-4 w-4" />
@@ -99,14 +117,13 @@ const Header: React.FC = () => {
         )}
       >
         <nav className="flex flex-col space-y-6">
-          <Link to="/post-job" className="mt-4">
-            <Button 
-              className="w-full flex items-center justify-center gap-2 animate-pulse hover:animate-none shadow-md hover:shadow-lg bg-gradient-to-r from-primary/90 to-primary"
-            >
-              <Rocket className="h-5 w-5" />
-              Post a Startup Job
-            </Button>
-          </Link>
+          <Button 
+            className="w-full flex items-center justify-center gap-2 animate-pulse hover:animate-none shadow-md hover:shadow-lg bg-gradient-to-r from-primary/90 to-primary"
+            onClick={handlePostJob}
+          >
+            <Rocket className="h-5 w-5" />
+            Post a Startup Job
+          </Button>
           
           {user ? (
             <>
@@ -118,7 +135,7 @@ const Header: React.FC = () => {
               </Link>
               <Button
                 variant="outline"
-                onClick={() => signOut()}
+                onClick={handleSignOut}
                 className="flex items-center justify-center gap-2 mt-4"
               >
                 <LogOut className="h-4 w-4" />
