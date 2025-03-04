@@ -2,507 +2,355 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  Card, 
-  CardContent, 
-  CardDescription, 
-  CardHeader, 
-  CardTitle 
-} from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from '@/components/ui/select';
-import { 
-  Form, 
-  FormControl, 
-  FormDescription, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from '@/components/ui/form';
-import { 
-  Building, 
-  Users, 
-  Globe,
-  Upload, 
-  Briefcase, 
-  Loader2, 
-  Save,
-  X as XIcon
-} from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Loader2, Upload } from 'lucide-react';
 
-const formSchema = z.object({
-  company_name: z.string().min(2, {
-    message: "Company name must be at least 2 characters.",
-  }),
-  company_website: z.string().url({
-    message: "Please enter a valid URL.",
-  }).optional().or(z.literal('')),
-  company_size: z.string().optional(),
-  industry: z.string().optional(),
-  company_description: z.string().min(10, {
-    message: "Company description must be at least 10 characters.",
-  }),
-  recruiter_title: z.string().optional(),
-  logo_url: z.string().optional(),
-});
+const companySize = [
+  '1-10 employees',
+  '11-50 employees',
+  '51-200 employees',
+  '201-500 employees',
+  '501-1000 employees',
+  '1001-5000 employees',
+  '5001+ employees'
+];
 
-type FormValues = z.infer<typeof formSchema>;
+const industries = [
+  'Technology',
+  'Healthcare',
+  'Finance',
+  'Education',
+  'Retail',
+  'Manufacturing',
+  'Media',
+  'Hospitality',
+  'Transportation',
+  'Construction',
+  'Energy',
+  'Agriculture',
+  'Other'
+];
 
-const JobPosterProfile: React.FC = () => {
-  const { user, profile, isLoading } = useAuth();
+const JobPosterProfile = () => {
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [profileData, setProfileData] = useState<any>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [uploadingLogo, setUploadingLogo] = useState(false);
-  
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      company_name: '',
-      company_website: '',
-      company_size: '',
-      industry: '',
-      company_description: '',
-      recruiter_title: '',
-      logo_url: '',
-    },
+  const [loading, setLoading] = useState(false);
+  const [logoLoading, setLogoLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    company_name: '',
+    recruiter_title: '',
+    company_size: '',
+    industry: '',
+    company_website: '',
+    company_description: '',
+    logo_url: ''
   });
 
   useEffect(() => {
-    if (!isLoading && !user) {
+    if (!user) {
       navigate('/auth');
+      return;
     }
 
-    if (profile && !profile.user_type) {
-      navigate('/profile-type');
-    }
+    const fetchJobPosterProfile = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('job_poster_profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
 
-    if (profile?.user_type === 'job_seeker') {
-      navigate('/profile/job-seeker');
-    }
-
-    const fetchProfileData = async () => {
-      if (user) {
-        try {
-          const { data, error } = await supabase
-            .from('job_poster_profiles')
-            .select('*')
-            .eq('id', user.id)
-            .single();
-
-          if (error && error.code !== 'PGRST116') {
-            throw error;
-          }
-
-          if (data) {
-            setProfileData(data);
-            
-            form.reset({
-              company_name: data.company_name || '',
-              company_website: data.company_website || '',
-              company_size: data.company_size || '',
-              industry: data.industry || '',
-              company_description: data.company_description || '',
-              recruiter_title: data.recruiter_title || '',
-              logo_url: data.logo_url || '',
-            });
-          }
-        } catch (error: any) {
-          console.error('Error fetching profile data:', error.message);
+        if (error && error.code !== 'PGRST116') {
+          throw error;
         }
+
+        if (data) {
+          setFormData({
+            company_name: data.company_name || '',
+            recruiter_title: data.recruiter_title || '',
+            company_size: data.company_size || '',
+            industry: data.industry || '',
+            company_website: data.company_website || '',
+            company_description: data.company_description || '',
+            logo_url: data.logo_url || ''
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching job poster profile:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load profile information',
+          variant: 'destructive'
+        });
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchProfileData();
-  }, [user, profile, isLoading, navigate, form]);
+    fetchJobPosterProfile();
+  }, [user, navigate, toast]);
 
-  const onSubmit = async (values: FormValues) => {
-    if (!user) return;
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
-    setIsSubmitting(true);
-    try {
-      const { data: existingProfile } = await supabase
-        .from('job_poster_profiles')
-        .select('id')
-        .eq('id', user.id)
-        .single();
-
-      let error;
-      
-      if (existingProfile) {
-        const { error: updateError } = await supabase
-          .from('job_poster_profiles')
-          .update(values)
-          .eq('id', user.id);
-          
-        error = updateError;
-      } else {
-        const { error: insertError } = await supabase
-          .from('job_poster_profiles')
-          .insert({
-            id: user.id,
-            company_name: values.company_name,
-            company_website: values.company_website || null,
-            company_size: values.company_size || null,
-            industry: values.industry || null,
-            company_description: values.company_description || null,
-            recruiter_title: values.recruiter_title || null,
-            logo_url: values.logo_url || null,
-          });
-          
-        error = insertError;
-      }
-
-      if (error) throw error;
-
-      toast({
-        title: 'Profile saved',
-        description: 'Your company profile has been updated successfully.',
-      });
-
-      navigate('/post-job');
-    } catch (error: any) {
-      toast({
-        title: 'Error saving profile',
-        description: error.message || 'Failed to save profile',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) {
-      return;
-    }
-
+    if (!e.target.files || !e.target.files[0]) return;
+    
     const file = e.target.files[0];
     const fileExt = file.name.split('.').pop();
-    const allowedTypes = ['jpg', 'jpeg', 'png', 'svg'];
-    
-    if (!allowedTypes.includes(fileExt?.toLowerCase() || '')) {
-      toast({
-        title: 'Invalid file type',
-        description: 'Please upload a JPG, PNG or SVG image.',
-        variant: 'destructive',
-      });
-      return;
-    }
+    const fileName = `${user?.id}/${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `${fileName}`;
 
-    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+    try {
+      setLogoLoading(true);
+      
+      // Upload the file to Supabase storage
+      const { error: uploadError, data } = await supabase.storage
+        .from('logos')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      // Get the public URL
+      const { data: { publicUrl } } = supabase.storage
+        .from('logos')
+        .getPublicUrl(filePath);
+
+      // Update the logo URL in the form data
+      setFormData((prev) => ({ ...prev, logo_url: publicUrl }));
+      
       toast({
-        title: 'File too large',
-        description: 'Logo must be less than 2MB.',
-        variant: 'destructive',
+        title: 'Success',
+        description: 'Company logo uploaded successfully'
+      });
+    } catch (error) {
+      console.error('Error uploading logo:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to upload company logo',
+        variant: 'destructive'
+      });
+    } finally {
+      setLogoLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.company_name) {
+      toast({
+        title: 'Error',
+        description: 'Company name is required',
+        variant: 'destructive'
       });
       return;
     }
 
     try {
-      setUploadingLogo(true);
+      setLoading(true);
       
-      const fileName = `${user?.id}/logo_${new Date().getTime()}.${fileExt}`;
-      const { error: uploadError, data } = await supabase.storage
-        .from('logos')
-        .upload(fileName, file);
+      const { error } = await supabase
+        .from('job_poster_profiles')
+        .upsert({
+          id: user?.id,
+          ...formData,
+          updated_at: new Date().toISOString()
+        });
 
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = supabase.storage
-        .from('logos')
-        .getPublicUrl(fileName);
-
-      form.setValue('logo_url', urlData.publicUrl);
-
+      if (error) throw error;
+      
       toast({
-        title: 'Logo uploaded',
-        description: 'Your company logo has been uploaded successfully.',
+        title: 'Success',
+        description: 'Profile updated successfully'
       });
-    } catch (error: any) {
+      
+      // Redirect to jobs page after successful update
+      navigate('/jobs');
+    } catch (error) {
+      console.error('Error updating job poster profile:', error);
       toast({
-        title: 'Upload failed',
-        description: error.message || 'Failed to upload logo',
-        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to update profile',
+        variant: 'destructive'
       });
     } finally {
-      setUploadingLogo(false);
+      setLoading(false);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
-    <main className="min-h-screen pt-24 pb-16 px-6">
-      <div className="max-w-3xl mx-auto">
-        <h1 className="text-3xl font-semibold mb-4">Company Profile</h1>
-        <p className="text-muted-foreground mb-8">
-          Complete your company profile to attract the best candidates for your job postings.
-        </p>
-
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building className="h-5 w-5" />
-                  <span>Company Information</span>
-                </CardTitle>
-                <CardDescription>
-                  Tell us about your company
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex flex-col md:flex-row gap-4 items-start">
-                  <div className="w-full md:w-1/3">
-                    <div className="mb-4">
-                      <FormLabel>Company Logo</FormLabel>
-                      <div className="mt-2">
-                        {form.watch('logo_url') ? (
-                          <div className="relative w-32 h-32 rounded-md overflow-hidden border">
-                            <img 
-                              src={form.watch('logo_url')} 
-                              alt="Company logo" 
-                              className="w-full h-full object-contain" 
-                            />
-                            <Button
-                              type="button"
-                              variant="destructive"
-                              size="icon"
-                              className="absolute top-2 right-2 h-6 w-6 rounded-full"
-                              onClick={() => form.setValue('logo_url', '')}
-                            >
-                              <XIcon className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        ) : (
-                          <div 
-                            className="w-32 h-32 border border-dashed rounded-md flex items-center justify-center cursor-pointer"
-                            onClick={() => document.getElementById('logo-upload')?.click()}
-                          >
-                            <div className="text-center p-2">
-                              <Upload className="h-8 w-8 mx-auto mb-1 text-muted-foreground" />
-                              <p className="text-xs text-muted-foreground">Upload logo</p>
-                            </div>
-                          </div>
-                        )}
-                        <input
-                          id="logo-upload"
-                          type="file"
-                          accept=".jpg,.jpeg,.png,.svg"
-                          className="hidden"
-                          onChange={handleLogoUpload}
-                        />
-                      </div>
-                      <FormField
-                        control={form.control}
-                        name="logo_url"
-                        render={({ field }) => (
-                          <FormItem className="hidden">
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                          </FormItem>
-                        )}
-                      />
+    <main className="container max-w-4xl py-10">
+      <h1 className="text-3xl font-bold mb-8">Company Profile</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Company Information</CardTitle>
+          <CardDescription>
+            This information will be visible to job seekers when they view your job postings.
+          </CardDescription>
+        </CardHeader>
+        
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-6">
+            <div className="space-y-1">
+              <Label htmlFor="company_logo">Company Logo</Label>
+              <div className="flex items-center space-x-4 mt-2">
+                <Avatar className="h-20 w-20 border">
+                  <AvatarImage src={formData.logo_url} />
+                  <AvatarFallback className="text-lg">
+                    {formData.company_name?.substring(0, 2).toUpperCase() || 'CO'}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div>
+                  <Label htmlFor="logo-upload" className="cursor-pointer">
+                    <div className="flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90">
+                      {logoLoading ? (
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          <span>Uploading...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4" />
+                          <span>{formData.logo_url ? 'Change Logo' : 'Upload Logo'}</span>
+                        </>
+                      )}
                     </div>
-                  </div>
-                  <div className="w-full md:w-2/3 space-y-4">
-                    <FormField
-                      control={form.control}
-                      name="company_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. Acme Inc." {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="company_website"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Company Website</FormLabel>
-                          <FormControl>
-                            <Input placeholder="e.g. https://www.acme.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4">
-                  <FormField
-                    control={form.control}
-                    name="company_size"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Company Size</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select company size" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="1-10">1-10 employees</SelectItem>
-                            <SelectItem value="11-50">11-50 employees</SelectItem>
-                            <SelectItem value="51-200">51-200 employees</SelectItem>
-                            <SelectItem value="201-500">201-500 employees</SelectItem>
-                            <SelectItem value="501-1000">501-1000 employees</SelectItem>
-                            <SelectItem value="1001-5000">1001-5000 employees</SelectItem>
-                            <SelectItem value="5001+">5001+ employees</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
+                  </Label>
+                  <Input 
+                    id="logo-upload" 
+                    type="file" 
+                    className="hidden" 
+                    accept="image/*"
+                    onChange={handleLogoUpload}
+                    disabled={logoLoading}
                   />
-
-                  <FormField
-                    control={form.control}
-                    name="industry"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Industry</FormLabel>
-                        <Select
-                          onValueChange={field.onChange}
-                          value={field.value}
-                        >
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select industry" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Technology">Technology</SelectItem>
-                            <SelectItem value="Healthcare">Healthcare</SelectItem>
-                            <SelectItem value="Finance">Finance</SelectItem>
-                            <SelectItem value="Education">Education</SelectItem>
-                            <SelectItem value="Retail">Retail</SelectItem>
-                            <SelectItem value="Manufacturing">Manufacturing</SelectItem>
-                            <SelectItem value="Media">Media</SelectItem>
-                            <SelectItem value="Entertainment">Entertainment</SelectItem>
-                            <SelectItem value="Hospitality">Hospitality</SelectItem>
-                            <SelectItem value="Transportation">Transportation</SelectItem>
-                            <SelectItem value="Energy">Energy</SelectItem>
-                            <SelectItem value="Construction">Construction</SelectItem>
-                            <SelectItem value="Real Estate">Real Estate</SelectItem>
-                            <SelectItem value="Other">Other</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <p className="text-xs text-muted-foreground mt-1">Recommended: Square image, 512x512px</p>
                 </div>
-
-                <FormField
-                  control={form.control}
-                  name="company_description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Company Description</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Tell candidates about your company, mission, values, and culture" 
-                          className="min-h-32 resize-none" 
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Briefcase className="h-5 w-5" />
-                  <span>Recruiter Information</span>
-                </CardTitle>
-                <CardDescription>
-                  Tell us about your role at the company
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <FormField
-                  control={form.control}
-                  name="recruiter_title"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Your Title</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g. Talent Acquisition Manager, HR Director" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        This helps candidates understand who they'll be in contact with
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
-
-            <div className="flex justify-end gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => navigate('/post-job')}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-2 h-4 w-4" />
-                    Save Profile
-                  </>
-                )}
-              </Button>
+              </div>
             </div>
-          </form>
-        </Form>
-      </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="company_name">Company Name *</Label>
+              <Input
+                id="company_name"
+                name="company_name"
+                value={formData.company_name}
+                onChange={handleChange}
+                placeholder="Enter your company name"
+                required
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="recruiter_title">Your Position</Label>
+              <Input
+                id="recruiter_title"
+                name="recruiter_title"
+                value={formData.recruiter_title}
+                onChange={handleChange}
+                placeholder="e.g. HR Manager, Recruiter, CEO"
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <Label htmlFor="company_size">Company Size</Label>
+                <Select
+                  value={formData.company_size}
+                  onValueChange={(value) => handleSelectChange('company_size', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select company size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {companySize.map((size) => (
+                      <SelectItem key={size} value={size}>{size}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-1">
+                <Label htmlFor="industry">Industry</Label>
+                <Select
+                  value={formData.industry}
+                  onValueChange={(value) => handleSelectChange('industry', value)}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select industry" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {industries.map((industry) => (
+                      <SelectItem key={industry} value={industry}>{industry}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="company_website">Company Website</Label>
+              <Input
+                id="company_website"
+                name="company_website"
+                value={formData.company_website}
+                onChange={handleChange}
+                placeholder="https://example.com"
+                type="url"
+              />
+            </div>
+            
+            <div className="space-y-1">
+              <Label htmlFor="company_description">Company Description</Label>
+              <Textarea
+                id="company_description"
+                name="company_description"
+                value={formData.company_description}
+                onChange={handleChange}
+                placeholder="Tell potential candidates about your company"
+                className="min-h-[120px]"
+              />
+            </div>
+          </CardContent>
+          
+          <CardFooter className="flex justify-between">
+            <Button 
+              variant="outline" 
+              type="button"
+              onClick={() => navigate('/jobs')}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={loading}>
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
+                </>
+              ) : 'Save Profile'}
+            </Button>
+          </CardFooter>
+        </form>
+      </Card>
     </main>
   );
 };
