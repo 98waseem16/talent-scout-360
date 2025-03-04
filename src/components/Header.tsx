@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { UserCircle, LogOut, Menu, X, Rocket, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
