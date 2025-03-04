@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -84,22 +83,18 @@ const JobPosterProfile: React.FC = () => {
   });
 
   useEffect(() => {
-    // Redirect to login if not authenticated
     if (!isLoading && !user) {
       navigate('/auth');
     }
 
-    // Redirect to profile type selection if no user type
     if (profile && !profile.user_type) {
       navigate('/profile-type');
     }
 
-    // Redirect to job seeker profile if user is a job seeker
     if (profile?.user_type === 'job_seeker') {
       navigate('/profile/job-seeker');
     }
 
-    // Fetch job poster profile data
     const fetchProfileData = async () => {
       if (user) {
         try {
@@ -116,7 +111,6 @@ const JobPosterProfile: React.FC = () => {
           if (data) {
             setProfileData(data);
             
-            // Set form values
             form.reset({
               company_name: data.company_name || '',
               company_website: data.company_website || '',
@@ -141,7 +135,6 @@ const JobPosterProfile: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      // Check if profile exists
       const { data: existingProfile } = await supabase
         .from('job_poster_profiles')
         .select('id')
@@ -151,7 +144,6 @@ const JobPosterProfile: React.FC = () => {
       let error;
       
       if (existingProfile) {
-        // Update existing profile
         const { error: updateError } = await supabase
           .from('job_poster_profiles')
           .update(values)
@@ -159,11 +151,18 @@ const JobPosterProfile: React.FC = () => {
           
         error = updateError;
       } else {
-        // Insert new profile - this is the line with the error
-        // Fix: Ensure company_name is provided and wrap values in a single object
         const { error: insertError } = await supabase
           .from('job_poster_profiles')
-          .insert({ id: user.id, ...values });
+          .insert({
+            id: user.id,
+            company_name: values.company_name,
+            company_website: values.company_website || null,
+            company_size: values.company_size || null,
+            industry: values.industry || null,
+            company_description: values.company_description || null,
+            recruiter_title: values.recruiter_title || null,
+            logo_url: values.logo_url || null,
+          });
           
         error = insertError;
       }
@@ -175,7 +174,6 @@ const JobPosterProfile: React.FC = () => {
         description: 'Your company profile has been updated successfully.',
       });
 
-      // Redirect to post job page
       navigate('/post-job');
     } catch (error: any) {
       toast({
@@ -218,7 +216,6 @@ const JobPosterProfile: React.FC = () => {
     try {
       setUploadingLogo(true);
       
-      // Upload file to Supabase Storage
       const fileName = `${user?.id}/logo_${new Date().getTime()}.${fileExt}`;
       const { error: uploadError, data } = await supabase.storage
         .from('logos')
@@ -226,12 +223,10 @@ const JobPosterProfile: React.FC = () => {
 
       if (uploadError) throw uploadError;
 
-      // Get public URL for the file
       const { data: urlData } = supabase.storage
         .from('logos')
         .getPublicUrl(fileName);
 
-      // Set the URL in the form
       form.setValue('logo_url', urlData.publicUrl);
 
       toast({
