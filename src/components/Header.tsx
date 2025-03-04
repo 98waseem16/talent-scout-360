@@ -12,7 +12,7 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut } = useAuth();
+  const { user, signOut, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -74,7 +74,10 @@ const Header: React.FC = () => {
             </Button>
           </Link>
           
-          {user ? (
+          {isLoading ? (
+            // Show a skeleton loader while auth state is loading
+            <div className="h-10 w-20 bg-muted/30 animate-pulse rounded"></div>
+          ) : user ? (
             <div className="flex items-center gap-3">
               <Link to="/dashboard">
                 <Button variant="ghost" size="sm" className="flex items-center gap-2">
@@ -122,7 +125,10 @@ const Header: React.FC = () => {
             </Button>
           </Link>
           
-          {user ? (
+          {isLoading ? (
+            // Show a skeleton loader while auth state is loading
+            <div className="h-10 w-full bg-muted/30 animate-pulse rounded"></div>
+          ) : user ? (
             <>
               <Link 
                 to="/dashboard"
