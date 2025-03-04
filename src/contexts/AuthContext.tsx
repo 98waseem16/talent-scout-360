@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User } from '@supabase/supabase-js';
@@ -62,6 +63,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
+        console.log('Auth state changed:', event, newSession?.user?.id);
         setSession(newSession);
         setUser(newSession?.user || null);
         
@@ -110,12 +112,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const handleSignOut = async () => {
+    console.log('Handle sign out called');
     setIsLoading(true);
-    await authService.signOut();
-    // Forcibly clear state even if there was an error
-    setSession(null);
-    setUser(null);
-    setProfile(null);
+    const success = await authService.signOut();
+    
+    if (success) {
+      // Forcibly clear state even if there was an error
+      console.log('Forcibly clearing auth state');
+      setSession(null);
+      setUser(null);
+      setProfile(null);
+    }
+    
     setIsLoading(false);
   };
 

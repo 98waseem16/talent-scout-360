@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, signOut } = useAuth();
 
   useEffect(() => {
@@ -26,6 +27,10 @@ const Header: React.FC = () => {
   }, [location.pathname]);
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+  
+  const handlePostJob = () => {
+    navigate('/post-job');
+  };
 
   return (
     <header
@@ -43,15 +48,14 @@ const Header: React.FC = () => {
         </Link>
 
         <nav className="hidden md:flex items-center space-x-8">
-          <Link to="/post-job">
-            <Button 
-              variant="default" 
-              className="flex items-center gap-2 animate-pulse hover:animate-none shadow-lg hover:shadow-xl bg-gradient-to-r from-primary/90 to-primary"
-            >
-              <Rocket className="h-5 w-5" />
-              Post a Startup Job
-            </Button>
-          </Link>
+          <Button 
+            variant="default" 
+            className="flex items-center gap-2 animate-pulse hover:animate-none shadow-lg hover:shadow-xl bg-gradient-to-r from-primary/90 to-primary"
+            onClick={handlePostJob}
+          >
+            <Rocket className="h-5 w-5" />
+            Post a Startup Job
+          </Button>
           
           {user ? (
             <div className="flex items-center gap-3">
@@ -99,14 +103,13 @@ const Header: React.FC = () => {
         )}
       >
         <nav className="flex flex-col space-y-6">
-          <Link to="/post-job" className="mt-4">
-            <Button 
-              className="w-full flex items-center justify-center gap-2 animate-pulse hover:animate-none shadow-md hover:shadow-lg bg-gradient-to-r from-primary/90 to-primary"
-            >
-              <Rocket className="h-5 w-5" />
-              Post a Startup Job
-            </Button>
-          </Link>
+          <Button 
+            className="w-full flex items-center justify-center gap-2 animate-pulse hover:animate-none shadow-md hover:shadow-lg bg-gradient-to-r from-primary/90 to-primary"
+            onClick={handlePostJob}
+          >
+            <Rocket className="h-5 w-5" />
+            Post a Startup Job
+          </Button>
           
           {user ? (
             <>
