@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -26,13 +26,25 @@ import {
   Globe, 
   X as XIcon,
   Loader2,
-  Zap
+  Zap,
+  AlertTriangle
 } from 'lucide-react';
 
 const PostJob: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  useEffect(() => {
+    if (!isLoading && !user) {
+      toast({
+        title: "Authentication Required",
+        description: "You need to sign in to post a job",
+        icon: <AlertTriangle className="h-5 w-5" />,
+      });
+      navigate('/auth', { state: { returnTo: '/post-job' } });
+    }
+  }, [user, isLoading, navigate]);
   
   const [formData, setFormData] = useState({
     title: '',
@@ -100,7 +112,6 @@ const PostJob: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Basic validation
     if (!formData.title || !formData.company || !formData.location) {
       toast.error("Please fill in all required fields");
       return;
@@ -109,14 +120,13 @@ const PostJob: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Filter out empty list items
       const dataToSubmit = {
         ...formData,
         responsibilities: formData.responsibilities.filter(r => r.trim()),
         requirements: formData.requirements.filter(r => r.trim()),
         benefits: formData.benefits.filter(b => b.trim()),
-        user_id: user?.id || null,
-        type: formData.job_type || formData.type // Ensure type is set
+        user_id: user?.id,
+        type: formData.job_type || formData.type
       };
       
       console.log("Submitting job data:", dataToSubmit);
@@ -133,7 +143,7 @@ const PostJob: React.FC = () => {
       
       console.log("Job posted successfully:", data);
       toast.success("Job posted successfully!");
-      navigate('/jobs');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error posting job:', error);
       toast.error("Failed to post job. Please try again.");
@@ -141,6 +151,19 @@ const PostJob: React.FC = () => {
       setIsSubmitting(false);
     }
   };
+  
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 px-6 flex items-center justify-center">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!user) return null;
   
   return (
     <main className="min-h-screen pt-24 pb-16 px-6">
@@ -151,7 +174,6 @@ const PostJob: React.FC = () => {
             Reach thousands of qualified candidates looking to join innovative startups
           </p>
           
-          {/* Benefits of posting */}
           <div className="grid md:grid-cols-3 gap-4 mb-8">
             <div className="bg-primary/5 p-4 rounded-lg">
               <div className="bg-primary/10 rounded-full w-10 h-10 flex items-center justify-center mb-3">
@@ -184,7 +206,6 @@ const PostJob: React.FC = () => {
             </div>
           </div>
           
-          {/* Job Posting Form */}
           <form onSubmit={handleSubmit} className="grid gap-6">
             <div className="space-y-1">
               <h2 className="text-xl font-medium">Basic Information</h2>
@@ -231,7 +252,6 @@ const PostJob: React.FC = () => {
               </div>
             </div>
             
-            {/* Company Logo Upload */}
             <div className="space-y-2">
               <label htmlFor="logo" className="block text-sm font-medium">
                 Company Logo
@@ -294,7 +314,6 @@ const PostJob: React.FC = () => {
               />
             </div>
             
-            {/* Startup Information */}
             <div className="space-y-1 pt-4 border-t">
               <h2 className="text-xl font-medium">Startup Information</h2>
               <p className="text-sm text-muted-foreground">
@@ -371,7 +390,6 @@ const PostJob: React.FC = () => {
               </div>
             </div>
             
-            {/* Role Information */}
             <div className="space-y-1 pt-4 border-t">
               <h2 className="text-xl font-medium">Role Information</h2>
               <p className="text-sm text-muted-foreground">
@@ -454,7 +472,6 @@ const PostJob: React.FC = () => {
               </div>
             </div>
             
-            {/* Compensation & Work Details */}
             <div className="space-y-1 pt-4 border-t">
               <h2 className="text-xl font-medium">Compensation & Work Details</h2>
               <p className="text-sm text-muted-foreground">
@@ -578,7 +595,6 @@ const PostJob: React.FC = () => {
               </div>
             </div>
             
-            {/* Responsibilities, Requirements, and Benefits */}
             <div className="space-y-1 pt-4 border-t">
               <h2 className="text-xl font-medium">Job Details</h2>
               <p className="text-sm text-muted-foreground">
@@ -586,7 +602,6 @@ const PostJob: React.FC = () => {
               </p>
             </div>
             
-            {/* Responsibilities */}
             <div className="space-y-3">
               <label className="block text-sm font-medium">Key Responsibilities</label>
               {formData.responsibilities.map((item, index) => (
@@ -617,7 +632,6 @@ const PostJob: React.FC = () => {
               </Button>
             </div>
             
-            {/* Requirements */}
             <div className="space-y-3">
               <label className="block text-sm font-medium">Requirements</label>
               {formData.requirements.map((item, index) => (
@@ -648,7 +662,6 @@ const PostJob: React.FC = () => {
               </Button>
             </div>
             
-            {/* Benefits */}
             <div className="space-y-3">
               <label className="block text-sm font-medium">Benefits</label>
               {formData.benefits.map((item, index) => (

@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -15,13 +14,16 @@ const AuthCallback: React.FC = () => {
         
         if (error) throw error;
         
-        // If we have a session, redirect to home page
-        if (data.session) {
-          navigate('/');
-        } else {
-          // If no session, redirect to auth page
-          navigate('/auth');
-        }
+        // Extract returnTo from URL if present
+        const url = new URL(window.location.href);
+        const returnTo = url.searchParams.get('returnTo');
+        const redirectPath = returnTo || '/dashboard';
+        
+        // Clear stored return path
+        localStorage.removeItem('authReturnPath');
+        
+        // Navigate to the return path or dashboard
+        navigate(redirectPath, { replace: true });
       } catch (error) {
         console.error('Error during authentication callback:', error);
         navigate('/auth');

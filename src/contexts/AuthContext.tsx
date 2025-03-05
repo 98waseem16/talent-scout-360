@@ -99,10 +99,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (provider: 'google' | 'apple' | 'twitter' | 'linkedin_oidc') => {
     try {
+      // Get the return URL from localStorage if it exists
+      const returnTo = localStorage.getItem('authReturnPath') || `${window.location.origin}/dashboard`;
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`,
         },
       });
       
@@ -142,12 +145,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signUp = async (options: SignUpOptions) => {
     try {
+      // Get the return URL from localStorage if it exists
+      const returnTo = localStorage.getItem('authReturnPath') || `${window.location.origin}/dashboard`;
+      
       const { error } = await supabase.auth.signUp({
         email: options.email,
         password: options.password,
         options: {
           data: options.options?.data,
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?returnTo=${encodeURIComponent(returnTo)}`,
         },
       });
       

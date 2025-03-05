@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -39,6 +38,17 @@ const Auth: React.FC = () => {
       navigate('/');
     }
   }, [user, isLoading, navigate]);
+
+  useEffect(() => {
+    // Store the return path if provided in location state
+    const { state } = location;
+    if (state && state.returnTo) {
+      localStorage.setItem('authReturnPath', state.returnTo);
+    } else {
+      // Clear any existing return path if not provided
+      localStorage.removeItem('authReturnPath');
+    }
+  }, [location]);
 
   const handleSignIn = async (provider: 'google' | 'apple' | 'twitter' | 'linkedin_oidc') => {
     setIsOAuthSigningIn(provider);
