@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
@@ -269,17 +268,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       });
       throw error;
     }
-  };
-
-  const resetState = () => {
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    setIsLoading(false);
-    
-    localStorage.removeItem('supabase.auth.token');
-    
-    window.location.href = '/';
   };
 
   return (
