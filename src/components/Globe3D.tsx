@@ -163,13 +163,15 @@ const Globe3D: React.FC = () => {
         touchAction: 'pan-left, pan-right, pan-up, pan-down',
       }}
     >
-      <style jsx>{`
-        div :global(canvas) {
-          width: 300px !important;
-          height: 300px !important;
-          clip-path: circle(calc(50% - 1px));
-        }
-      `}</style>
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          canvas {
+            width: 300px !important;
+            height: 300px !important;
+            clip-path: circle(calc(50% - 1px));
+          }
+        `
+      }} />
     </div>
   );
 };
