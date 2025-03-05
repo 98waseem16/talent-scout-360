@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin } from 'lucide-react';
+import { Button as MovingBorderButton } from '@/components/ui/moving-border';
 
 const Hero: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -60,12 +61,14 @@ const Hero: React.FC = () => {
               </div>
               
               <div className="mt-4">
-                <button
+                <MovingBorderButton
                   type="submit"
-                  className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-3 px-6 rounded-lg transition-colors smooth-transition active:scale-[0.98]"
+                  containerClassName="w-full h-14"
+                  borderClassName="bg-[radial-gradient(var(--sky-500)_40%,transparent_60%)]"
+                  className="bg-primary/90 hover:bg-primary text-white border-primary/10 w-full h-full text-base font-medium"
                 >
                   Find Startup Jobs
-                </button>
+                </MovingBorderButton>
               </div>
             </form>
           </div>
