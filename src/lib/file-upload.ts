@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { v4 as uuidv4 } from '@supabase/supabase-js';
+import { v4 as uuidv4 } from 'uuid';
 
 export type FileUploadOptions = {
   maxWidth?: number;

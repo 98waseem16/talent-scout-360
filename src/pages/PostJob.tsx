@@ -235,7 +235,7 @@ const PostJob: React.FC = () => {
                   Company Logo
                 </label>
                 <LogoUpload 
-                  currentLogo={formData.logo} 
+                  initialLogo={formData.logo} 
                   onLogoChange={handleLogoChange} 
                 />
               </div>
