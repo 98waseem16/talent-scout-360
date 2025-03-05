@@ -3,6 +3,7 @@ import React from 'react';
 import Hero from '@/components/Hero';
 import TrendingJobs from '@/components/TrendingJobs';
 import { CheckCircle, Download, BarChart4 } from 'lucide-react';
+import { AnimatedTooltipPreview } from '@/components/ui/code-demo';
 
 const Index: React.FC = () => {
   const features = [
@@ -30,30 +31,7 @@ const Index: React.FC = () => {
       
       {/* How It Works Section */}
       <section className="py-16 md:py-24 px-6 bg-secondary">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl md:text-4xl font-medium mb-4">How Launchly Startup Jobs Works</h2>
-            <p className="text-muted-foreground text-lg">
-              We've simplified the process to help you find and land your dream role at innovative startups.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <div 
-                key={index}
-                className="bg-white p-8 rounded-xl shadow-sm border border-border hover-scale"
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-6">
-                  {feature.icon}
-                </div>
-                <h3 className="text-xl font-medium mb-3">{feature.title}</h3>
-                <p className="text-muted-foreground">{feature.description}</p>
-              </div>
-            ))}
-          </div>
-        </div>
+        <AnimatedTooltipPreview />
       </section>
       
       {/* CTA Section */}
