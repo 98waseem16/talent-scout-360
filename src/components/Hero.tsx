@@ -64,8 +64,8 @@ const Hero: React.FC = () => {
                 <MovingBorderButton
                   type="submit"
                   containerClassName="w-full h-14"
-                  borderClassName="bg-[radial-gradient(var(--sky-500)_40%,transparent_60%)]"
-                  className="bg-primary/90 hover:bg-primary text-white border-primary/10 w-full h-full text-base font-medium"
+                  borderClassName="bg-[radial-gradient(#0EA5E9_40%,transparent_60%)]"
+                  className="bg-white border-primary/10 text-primary w-full h-full text-base font-medium"
                 >
                   Find Startup Jobs
                 </MovingBorderButton>
