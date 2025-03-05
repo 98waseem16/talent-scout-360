@@ -1,5 +1,4 @@
-
-import { Job, JobDatabaseFields } from '../../types/job.types';
+import { Job, JobDatabaseFields, JobFormData } from '../../types/job.types';
 import { formatPostedDate } from '../../utils/dateUtils';
 
 /**
@@ -98,5 +97,37 @@ export const mapJobToDatabaseRecord = (job: Partial<Job>): JobDatabaseFields => 
     work_hours: job.work_hours,
     visa_sponsorship: job.visa_sponsorship,
     hiring_urgency: job.hiring_urgency
+  };
+};
+
+/**
+ * Maps the job form data to database fields
+ */
+export const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDatabaseFields => {
+  return {
+    title: formData.title || '',
+    company: formData.company || '',
+    location: formData.location || '',
+    type: formData.type || 'Full-time',
+    salary: formData.salary || '',
+    description: formData.description || '',
+    responsibilities: formData.responsibilities || [],
+    requirements: formData.requirements || [],
+    benefits: formData.benefits || [],
+    logo: formData.logo || '/placeholder.svg',
+    featured: formData.featured || false,
+    user_id: formData.user_id,
+    investment_stage: formData.investment_stage,
+    team_size: formData.team_size,
+    revenue_model: formData.revenue_model,
+    department: formData.department,
+    seniority_level: formData.seniority_level,
+    job_type: formData.job_type,
+    salary_range: formData.salary_range,
+    equity: formData.equity,
+    remote_onsite: formData.remote_onsite,
+    work_hours: formData.work_hours,
+    visa_sponsorship: formData.visa_sponsorship,
+    hiring_urgency: formData.hiring_urgency
   };
 };
