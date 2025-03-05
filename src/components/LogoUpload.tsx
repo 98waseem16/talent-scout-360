@@ -23,6 +23,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ onLogoChange, initialLogo = '/p
     // Only accept image files
     if (!file.type.startsWith('image/')) {
       setError('Please select an image file (PNG, JPG, GIF, etc.)');
+      toast.error('Please select an image file');
       return;
     }
 
@@ -30,7 +31,9 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ onLogoChange, initialLogo = '/p
     setError(null);
 
     try {
+      console.log("Uploading logo:", file.name);
       const logoUrl = await uploadCompanyLogo(file);
+      console.log("Logo uploaded successfully:", logoUrl);
       setLogo(logoUrl);
       onLogoChange(logoUrl);
       toast.success('Logo uploaded successfully');
@@ -38,6 +41,10 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ onLogoChange, initialLogo = '/p
       console.error('Error uploading logo:', error);
       setError((error as Error).message || 'Failed to upload logo');
       toast.error('Failed to upload logo');
+      // Reset the file input
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } finally {
       setIsUploading(false);
     }
@@ -46,10 +53,13 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ onLogoChange, initialLogo = '/p
   const handleRemoveLogo = () => {
     setLogo('/placeholder.svg');
     onLogoChange('/placeholder.svg');
+    toast.success('Logo removed');
   };
 
   const handleButtonClick = () => {
-    fileInputRef.current?.click();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
   };
 
   return (
@@ -61,6 +71,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ onLogoChange, initialLogo = '/p
             alt="Company logo" 
             className="w-32 h-32 object-contain rounded-md border border-gray-200 bg-gray-50"
             onError={(e) => {
+              console.log("Error loading image, using placeholder");
               (e.target as HTMLImageElement).src = '/placeholder.svg';
             }}
           />
