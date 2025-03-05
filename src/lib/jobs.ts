@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { uploadFile } from './file-upload';
 
 export interface Job {
   id: string;
@@ -321,6 +322,22 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
   } catch (error) {
     console.error('Error fetching job by ID:', error);
     return staticJobs.find(job => job.id === id);
+  }
+};
+
+export const uploadCompanyLogo = async (file: File): Promise<string> => {
+  try {
+    const publicUrl = await uploadFile(file, 'company-logos', {
+      maxWidth: 400,
+      maxHeight: 400,
+      maxSizeInMB: 2,
+      quality: 0.8
+    });
+    
+    return publicUrl;
+  } catch (error) {
+    console.error('Error uploading company logo:', error);
+    throw error;
   }
 };
 

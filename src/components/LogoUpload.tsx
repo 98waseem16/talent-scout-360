@@ -1,172 +1,119 @@
 
 import React, { useState } from 'react';
-import { Upload, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/integrations/supabase/client';
+import { Upload, Check, X } from 'lucide-react';
+import { uploadCompanyLogo } from '@/lib/jobs';
 import { toast } from 'sonner';
 
 interface LogoUploadProps {
-  currentLogo: string;
-  onLogoChange: (url: string) => void;
+  onLogoChange: (logoUrl: string) => void;
+  initialLogo?: string;
 }
 
-const LogoUpload: React.FC<LogoUploadProps> = ({ currentLogo, onLogoChange }) => {
+const LogoUpload: React.FC<LogoUploadProps> = ({ onLogoChange, initialLogo = '/placeholder.svg' }) => {
+  const [logo, setLogo] = useState<string>(initialLogo);
   const [isUploading, setIsUploading] = useState(false);
-  
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const [error, setError] = useState<string | null>(null);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-    
-    // Validate file type
+
+    // Only accept image files
     if (!file.type.startsWith('image/')) {
-      toast.error('Please upload an image file');
+      setError('Please select an image file (PNG, JPG, GIF, etc.)');
       return;
     }
-    
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast.error('Logo file size must be less than 2MB');
-      return;
-    }
-    
+
     setIsUploading(true);
-    
+    setError(null);
+
     try {
-      // Resize image before upload
-      const resizedImage = await resizeImage(file, 400, 400);
-      
-      // Create a unique filename
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`;
-      
-      // Upload to Supabase Storage
-      const { data, error } = await supabase.storage
-        .from('company-logos')
-        .upload(fileName, resizedImage, {
-          contentType: file.type,
-          cacheControl: '3600',
-          upsert: false
-        });
-      
-      if (error) throw error;
-      
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('company-logos')
-        .getPublicUrl(fileName);
-      
-      // Call the onLogoChange callback with the new URL
-      onLogoChange(publicUrl);
+      const logoUrl = await uploadCompanyLogo(file);
+      setLogo(logoUrl);
+      onLogoChange(logoUrl);
       toast.success('Logo uploaded successfully');
     } catch (error) {
       console.error('Error uploading logo:', error);
-      toast.error('Failed to upload logo. Please try again.');
+      setError((error as Error).message || 'Failed to upload logo');
+      toast.error('Failed to upload logo');
     } finally {
       setIsUploading(false);
     }
   };
-  
-  // Helper function to resize image
-  const resizeImage = (file: File, maxWidth: number, maxHeight: number): Promise<Blob> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (readerEvent) => {
-        const image = new Image();
-        image.onload = () => {
-          // Calculate new dimensions
-          let width = image.width;
-          let height = image.height;
-          
-          if (width > maxWidth || height > maxHeight) {
-            const ratio = Math.min(maxWidth / width, maxHeight / height);
-            width = width * ratio;
-            height = height * ratio;
-          }
-          
-          // Create canvas and draw resized image
-          const canvas = document.createElement('canvas');
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(image, 0, 0, width, height);
-          
-          // Convert to blob
-          canvas.toBlob((blob) => {
-            if (blob) {
-              resolve(blob);
-            }
-          }, file.type, 0.85); // 85% quality
-        };
-        image.src = readerEvent.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-  
-  // Remove the current logo
-  const removeLogo = () => {
+
+  const handleRemoveLogo = () => {
+    setLogo('/placeholder.svg');
     onLogoChange('/placeholder.svg');
-    toast.success('Logo removed');
   };
-  
+
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        <div className="h-16 w-16 rounded-md bg-secondary/50 flex items-center justify-center overflow-hidden border">
-          {currentLogo && (
-            <img 
-              src={currentLogo} 
-              alt="Company logo" 
-              className="h-full w-full object-contain"
-            />
-          )}
-        </div>
-        
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            className="relative"
-            disabled={isUploading}
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Logo
-              </>
-            )}
-            <input
-              type="file"
-              className="absolute inset-0 opacity-0 cursor-pointer"
-              onChange={handleFileChange}
-              accept="image/*"
-              disabled={isUploading}
-            />
-          </Button>
-          
-          {currentLogo !== '/placeholder.svg' && (
-            <Button
+      <div className="flex flex-col items-center">
+        <div className="relative">
+          <img 
+            src={logo} 
+            alt="Company logo" 
+            className="w-32 h-32 object-contain rounded-md border border-gray-200 bg-gray-50"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = '/placeholder.svg';
+            }}
+          />
+          {logo !== '/placeholder.svg' && (
+            <button
               type="button"
-              variant="outline"
-              size="sm"
-              onClick={removeLogo}
-              disabled={isUploading}
+              onClick={handleRemoveLogo}
+              className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
+              aria-label="Remove logo"
             >
-              <X className="h-4 w-4 mr-2" />
-              Remove
-            </Button>
+              <X className="h-4 w-4" />
+            </button>
           )}
         </div>
       </div>
-      <p className="text-xs text-muted-foreground">
-        Recommended size: 400x400px. Max file size: 2MB. Formats: PNG, JPG, SVG.
-      </p>
+
+      <div className="flex flex-col gap-2">
+        <label htmlFor="logo-upload" className="w-full">
+          <Button 
+            type="button" 
+            variant="outline" 
+            className="w-full cursor-pointer"
+            disabled={isUploading}
+          >
+            {isUploading ? (
+              <span className="flex items-center gap-2">
+                <svg className="animate-spin h-4 w-4 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Uploading...
+              </span>
+            ) : logo === '/placeholder.svg' ? (
+              <span className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Upload Logo
+              </span>
+            ) : (
+              <span className="flex items-center gap-2">
+                <Upload className="h-4 w-4" />
+                Change Logo
+              </span>
+            )}
+          </Button>
+        </label>
+        <input
+          id="logo-upload"
+          type="file"
+          accept="image/*"
+          onChange={handleFileChange}
+          disabled={isUploading}
+          className="hidden"
+        />
+        {error && <p className="text-sm text-red-500">{error}</p>}
+        <p className="text-xs text-gray-500">
+          Upload a company logo (max 2MB). The image will be resized to a maximum of 400x400 pixels.
+        </p>
+      </div>
     </div>
   );
 };
