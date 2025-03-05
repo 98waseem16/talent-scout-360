@@ -1,8 +1,18 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import type { Session, User } from '@supabase/supabase-js';
+import type { Session, User, AuthError } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
+
+interface SignUpOptions {
+  email: string;
+  password: string;
+  options?: {
+    data?: {
+      full_name?: string;
+    };
+  };
+}
 
 interface AuthContextProps {
   session: Session | null;
@@ -11,6 +21,7 @@ interface AuthContextProps {
   isLoading: boolean;
   signIn: (provider: 'google' | 'apple' | 'twitter' | 'linkedin_oidc') => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
+  signUp: (options: SignUpOptions) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -137,6 +148,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signUp = async (options: SignUpOptions) => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.signUp({
+        email: options.email,
+        password: options.password,
+        options: {
+          data: options.options?.data,
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Registration successful',
+        description: 'Please check your email for verification',
+      });
+    } catch (error: any) {
+      toast({
+        title: 'Registration Error',
+        description: error.message || 'Failed to create account',
+        variant: 'destructive',
+      });
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const signOut = async () => {
     try {
       setIsLoading(true);
@@ -179,6 +220,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         signIn,
         signInWithEmail,
+        signUp,
         signOut,
       }}
     >
