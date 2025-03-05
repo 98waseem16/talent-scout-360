@@ -78,8 +78,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
-        setIsLoading(true);
-        console.log("Auth state changed:", event, newSession?.user?.id);
+        console.info("Auth state changed:", event, newSession?.user?.id);
         
         setSession(newSession);
         setUser(newSession?.user || null);
@@ -90,8 +89,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setProfile(null);
         }
-        
-        setIsLoading(false);
       }
     );
 
@@ -102,7 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (provider: 'google' | 'apple' | 'twitter' | 'linkedin_oidc') => {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
@@ -117,14 +113,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: error.message || 'Failed to sign in',
         variant: 'destructive',
       });
-    } finally {
-      setIsLoading(false);
+      throw error;
     }
   };
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -143,14 +137,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: 'destructive',
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const signUp = async (options: SignUpOptions) => {
     try {
-      setIsLoading(true);
       const { error } = await supabase.auth.signUp({
         email: options.email,
         password: options.password,
@@ -173,15 +164,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: 'destructive',
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
-      setIsLoading(true);
-      
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -206,8 +193,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         variant: 'destructive',
       });
       throw error;
-    } finally {
-      setIsLoading(false);
     }
   };
 

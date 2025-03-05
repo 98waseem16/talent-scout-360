@@ -28,6 +28,11 @@ const Auth: React.FC = () => {
   const [showManualAuth, setShowManualAuth] = useState(false);
   const [authMode, setAuthMode] = useState<'signIn' | 'signUp'>('signIn');
   
+  // Local loading states to prevent showing skeletons everywhere
+  const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isSigningUp, setIsSigningUp] = useState(false);
+  const [isOAuthSigningIn, setIsOAuthSigningIn] = useState<string | null>(null);
+
   useEffect(() => {
     // Redirect to home if user is already logged in
     if (user && !isLoading) {
@@ -36,7 +41,14 @@ const Auth: React.FC = () => {
   }, [user, isLoading, navigate]);
 
   const handleSignIn = async (provider: 'google' | 'apple' | 'twitter' | 'linkedin_oidc') => {
-    await signIn(provider);
+    setIsOAuthSigningIn(provider);
+    try {
+      await signIn(provider);
+    } catch (error) {
+      console.error("Error signing in:", error);
+    } finally {
+      setIsOAuthSigningIn(null);
+    }
   };
 
   const handleManualSignIn = async (e: React.FormEvent) => {
@@ -50,6 +62,7 @@ const Auth: React.FC = () => {
       return;
     }
     
+    setIsSigningIn(true);
     try {
       await signInWithEmail(email, password);
     } catch (error: any) {
@@ -58,6 +71,8 @@ const Auth: React.FC = () => {
         description: error.message || "Failed to sign in",
         variant: "destructive"
       });
+    } finally {
+      setIsSigningIn(false);
     }
   };
 
@@ -91,6 +106,7 @@ const Auth: React.FC = () => {
       return;
     }
 
+    setIsSigningUp(true);
     try {
       await signUp({
         email: signUpEmail,
@@ -112,10 +128,13 @@ const Auth: React.FC = () => {
         description: error.message || "Failed to create account",
         variant: "destructive"
       });
+    } finally {
+      setIsSigningUp(false);
     }
   };
 
-  if (isLoading) {
+  // Show global loading indicator only when checking initial auth state
+  if (isLoading && !user && !isSigningIn && !isSigningUp && isOAuthSigningIn === null) {
     return (
       <div className="min-h-screen pt-24 pb-16 px-6 flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -171,8 +190,13 @@ const Auth: React.FC = () => {
                   <Button
                     type="submit"
                     className="w-full flex items-center justify-center gap-2 py-6"
+                    disabled={isSigningIn}
                   >
-                    <LogIn className="h-5 w-5" />
+                    {isSigningIn ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <LogIn className="h-5 w-5" />
+                    )}
                     <span>Sign In</span>
                   </Button>
                 </form>
@@ -217,8 +241,13 @@ const Auth: React.FC = () => {
                   <Button
                     type="submit"
                     className="w-full flex items-center justify-center gap-2 py-6"
+                    disabled={isSigningUp}
                   >
-                    <UserPlus className="h-5 w-5" />
+                    {isSigningUp ? (
+                      <Loader2 className="h-5 w-5 animate-spin" />
+                    ) : (
+                      <UserPlus className="h-5 w-5" />
+                    )}
                     <span>Create Account</span>
                   </Button>
                 </form>
@@ -250,8 +279,13 @@ const Auth: React.FC = () => {
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2 py-6"
                 onClick={() => handleSignIn('google')}
+                disabled={isOAuthSigningIn !== null}
               >
-                <FaGoogle className="h-5 w-5" />
+                {isOAuthSigningIn === 'google' ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <FaGoogle className="h-5 w-5" />
+                )}
                 <span>Continue with Google</span>
               </Button>
               
@@ -259,8 +293,13 @@ const Auth: React.FC = () => {
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2 py-6"
                 onClick={() => handleSignIn('apple')}
+                disabled={isOAuthSigningIn !== null}
               >
-                <FaApple className="h-5 w-5" />
+                {isOAuthSigningIn === 'apple' ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <FaApple className="h-5 w-5" />
+                )}
                 <span>Continue with Apple</span>
               </Button>
               
@@ -268,8 +307,13 @@ const Auth: React.FC = () => {
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2 py-6"
                 onClick={() => handleSignIn('linkedin_oidc')}
+                disabled={isOAuthSigningIn !== null}
               >
-                <FaLinkedin className="h-5 w-5" />
+                {isOAuthSigningIn === 'linkedin_oidc' ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <FaLinkedin className="h-5 w-5" />
+                )}
                 <span>Continue with LinkedIn</span>
               </Button>
               
@@ -277,8 +321,13 @@ const Auth: React.FC = () => {
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2 py-6"
                 onClick={() => handleSignIn('twitter')}
+                disabled={isOAuthSigningIn !== null}
               >
-                <FaTwitter className="h-5 w-5" />
+                {isOAuthSigningIn === 'twitter' ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : (
+                  <FaTwitter className="h-5 w-5" />
+                )}
                 <span>Continue with Twitter</span>
               </Button>
 
@@ -286,6 +335,7 @@ const Auth: React.FC = () => {
                 variant="outline"
                 className="w-full flex items-center justify-center gap-2 py-6"
                 onClick={() => setShowManualAuth(true)}
+                disabled={isOAuthSigningIn !== null}
               >
                 <Mail className="h-5 w-5" />
                 <span>Email & Password</span>
