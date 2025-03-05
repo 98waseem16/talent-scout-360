@@ -1,366 +1,146 @@
-import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { FaGoogle, FaApple, FaTwitter, FaLinkedin } from 'react-icons/fa';
-import { Loader2, LogIn, Mail, UserPlus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/hooks/use-toast';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'sonner';
 
 const Auth: React.FC = () => {
-  const { signIn, signInWithEmail, signUp, user, isLoading } = useAuth();
-  const navigate = useNavigate();
-  const { toast } = useToast();
-
-  // Sign In states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const { signIn, signUp, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
   
-  // Sign Up states
-  const [signUpEmail, setSignUpEmail] = useState('');
-  const [signUpPassword, setSignUpPassword] = useState('');
-  const [signUpConfirmPassword, setSignUpConfirmPassword] = useState('');
-  const [fullName, setFullName] = useState('');
-  
-  const [showManualAuth, setShowManualAuth] = useState(false);
-  const [authMode, setAuthMode] = useState<'signIn' | 'signUp'>('signIn');
-  
-  // Local loading states to prevent showing skeletons everywhere
-  const [isSigningIn, setIsSigningIn] = useState(false);
-  const [isSigningUp, setIsSigningUp] = useState(false);
-  const [isOAuthSigningIn, setIsOAuthSigningIn] = useState<string | null>(null);
+  // Safely access location.state with type checking
+  const returnTo = location.state && (location.state as any).returnTo 
+    ? (location.state as any).returnTo 
+    : '/dashboard';
 
   useEffect(() => {
-    // Redirect to home if user is already logged in
-    if (user && !isLoading) {
-      navigate('/');
+    // If user is already logged in, redirect them
+    if (user) {
+      navigate(returnTo, { replace: true });
     }
-  }, [user, isLoading, navigate]);
+  }, [user, navigate, returnTo]);
 
-  useEffect(() => {
-    // Store the return path if provided in location state
-    const { state } = location;
-    if (state && state.returnTo) {
-      localStorage.setItem('authReturnPath', state.returnTo);
-    } else {
-      // Clear any existing return path if not provided
-      localStorage.removeItem('authReturnPath');
-    }
-  }, [location]);
-
-  const handleSignIn = async (provider: 'google' | 'apple' | 'twitter' | 'linkedin_oidc') => {
-    setIsOAuthSigningIn(provider);
-    try {
-      await signIn(provider);
-    } catch (error) {
-      console.error("Error signing in:", error);
-    } finally {
-      setIsOAuthSigningIn(null);
-    }
-  };
-
-  const handleManualSignIn = async (e: React.FormEvent) => {
+  const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      toast({
-        title: "Error",
-        description: "Please enter both email and password",
-        variant: "destructive"
-      });
-      return;
-    }
+    setLoading(true);
     
-    setIsSigningIn(true);
     try {
-      await signInWithEmail(email, password);
-    } catch (error: any) {
-      toast({
-        title: "Authentication Error",
-        description: error.message || "Failed to sign in",
-        variant: "destructive"
-      });
+      await signIn(email, password);
+      toast.success('Signed in successfully');
+      navigate(returnTo, { replace: true });
+    } catch (error) {
+      console.error('Sign in error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to sign in');
     } finally {
-      setIsSigningIn(false);
+      setLoading(false);
     }
   };
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    if (!signUpEmail || !signUpPassword || !signUpConfirmPassword || !fullName) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (signUpPassword !== signUpConfirmPassword) {
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    if (signUpPassword.length < 6) {
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive"
-      });
-      return;
-    }
-
-    setIsSigningUp(true);
+    setLoading(true);
+    
     try {
-      await signUp({
-        email: signUpEmail,
-        password: signUpPassword,
-        options: {
-          data: {
-            full_name: fullName,
-          }
-        }
-      });
-      
-      toast({
-        title: "Account created",
-        description: "Please check your email to confirm your account",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Registration Error",
-        description: error.message || "Failed to create account",
-        variant: "destructive"
-      });
+      await signUp(email, password);
+      toast.success('Account created successfully! Please check your email to confirm your account.');
+    } catch (error) {
+      console.error('Sign up error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to create account');
     } finally {
-      setIsSigningUp(false);
+      setLoading(false);
     }
   };
 
-  // Show global loading indicator only when checking initial auth state
-  if (isLoading && !user && !isSigningIn && !isSigningUp && isOAuthSigningIn === null) {
-    return (
-      <div className="min-h-screen pt-24 pb-16 px-6 flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-
   return (
-    <main className="min-h-screen pt-24 pb-16 px-6">
-      <div className="max-w-md mx-auto">
-        {showManualAuth ? (
-          <Card>
-            <CardHeader>
-              <Tabs defaultValue={authMode} onValueChange={(v) => setAuthMode(v as 'signIn' | 'signUp')}>
-                <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="signIn">Sign In</TabsTrigger>
-                  <TabsTrigger value="signUp">Create Account</TabsTrigger>
-                </TabsList>
-              
-                <TabsContent value="signIn" className="mt-4">
-                  <CardTitle>Sign In</CardTitle>
-                  <CardDescription>Enter your credentials to access your account</CardDescription>
-                </TabsContent>
-                
-                <TabsContent value="signUp" className="mt-4">
-                  <CardTitle>Create Account</CardTitle>
-                  <CardDescription>Enter your details to create a new account</CardDescription>
-                </TabsContent>
-              </Tabs>
-            </CardHeader>
-            
-            <CardContent>
-              {authMode === 'signIn' ? (
-                <form onSubmit={handleManualSignIn} className="space-y-4">
-                  <div>
-                    <Input
-                      type="email"
-                      placeholder="Email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      type="password"
-                      placeholder="Password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full flex items-center justify-center gap-2 py-6"
-                    disabled={isSigningIn}
-                  >
-                    {isSigningIn ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <LogIn className="h-5 w-5" />
-                    )}
-                    <span>Sign In</span>
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
+      <Card className="w-full max-w-md p-4">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center">Authentication</CardTitle>
+          <CardDescription className="text-center">Sign in or create an account</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Tabs defaultvalue="sign-in" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="sign-in">Sign In</TabsTrigger>
+              <TabsTrigger value="sign-up">Sign Up</TabsTrigger>
+            </TabsList>
+            <TabsContent value="sign-in">
+              <form onSubmit={handleSignIn} className="space-y-4">
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    type="email"
+                    id="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    type="password"
+                    id="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <CardFooter>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Signing In...' : 'Sign In'}
                   </Button>
-                </form>
-              ) : (
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div>
-                    <Input
-                      type="text"
-                      placeholder="Full Name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      type="email"
-                      placeholder="Email"
-                      value={signUpEmail}
-                      onChange={(e) => setSignUpEmail(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      type="password"
-                      placeholder="Password"
-                      value={signUpPassword}
-                      onChange={(e) => setSignUpPassword(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  <div>
-                    <Input
-                      type="password"
-                      placeholder="Confirm Password"
-                      value={signUpConfirmPassword}
-                      onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                      className="w-full"
-                    />
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full flex items-center justify-center gap-2 py-6"
-                    disabled={isSigningUp}
-                  >
-                    {isSigningUp ? (
-                      <Loader2 className="h-5 w-5 animate-spin" />
-                    ) : (
-                      <UserPlus className="h-5 w-5" />
-                    )}
-                    <span>Create Account</span>
+                </CardFooter>
+              </form>
+            </TabsContent>
+            <TabsContent value="sign-up">
+              <form onSubmit={handleSignUp} className="space-y-4">
+                <div>
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    type="email"
+                    id="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    type="password"
+                    id="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+                <CardFooter>
+                  <Button type="submit" className="w-full" disabled={loading}>
+                    {loading ? 'Creating Account...' : 'Sign Up'}
                   </Button>
-                </form>
-              )}
-            </CardContent>
-            
-            <CardFooter>
-              <Button
-                type="button"
-                variant="ghost"
-                className="w-full"
-                onClick={() => setShowManualAuth(false)}
-              >
-                Back to options
-              </Button>
-            </CardFooter>
-          </Card>
-        ) : (
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl font-medium text-center">Welcome to Launchly</CardTitle>
-              <CardDescription className="text-center">
-                Sign in or create an account to start your journey
-              </CardDescription>
-            </CardHeader>
-            
-            <CardContent className="space-y-4">
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center gap-2 py-6"
-                onClick={() => handleSignIn('google')}
-                disabled={isOAuthSigningIn !== null}
-              >
-                {isOAuthSigningIn === 'google' ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <FaGoogle className="h-5 w-5" />
-                )}
-                <span>Continue with Google</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center gap-2 py-6"
-                onClick={() => handleSignIn('apple')}
-                disabled={isOAuthSigningIn !== null}
-              >
-                {isOAuthSigningIn === 'apple' ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <FaApple className="h-5 w-5" />
-                )}
-                <span>Continue with Apple</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center gap-2 py-6"
-                onClick={() => handleSignIn('linkedin_oidc')}
-                disabled={isOAuthSigningIn !== null}
-              >
-                {isOAuthSigningIn === 'linkedin_oidc' ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <FaLinkedin className="h-5 w-5" />
-                )}
-                <span>Continue with LinkedIn</span>
-              </Button>
-              
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center gap-2 py-6"
-                onClick={() => handleSignIn('twitter')}
-                disabled={isOAuthSigningIn !== null}
-              >
-                {isOAuthSigningIn === 'twitter' ? (
-                  <Loader2 className="h-5 w-5 animate-spin" />
-                ) : (
-                  <FaTwitter className="h-5 w-5" />
-                )}
-                <span>Continue with Twitter</span>
-              </Button>
-
-              <Button
-                variant="outline"
-                className="w-full flex items-center justify-center gap-2 py-6"
-                onClick={() => setShowManualAuth(true)}
-                disabled={isOAuthSigningIn !== null}
-              >
-                <Mail className="h-5 w-5" />
-                <span>Email & Password</span>
-              </Button>
-            </CardContent>
-            
-            <CardFooter className="flex justify-center">
-              <p className="text-sm text-muted-foreground text-center">
-                By signing in, you agree to our Terms of Service and Privacy Policy
-              </p>
-            </CardFooter>
-          </Card>
-        )}
-      </div>
-    </main>
+                </CardFooter>
+              </form>
+            </TabsContent>
+          </Tabs>
+        </CardContent>
+      </Card>
+    </div>
   );
 };
 
