@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Job, JobFormData, JobDatabaseFields } from '../types/job.types';
 import { staticJobs } from '../data/staticJobs';
@@ -41,24 +42,24 @@ const mapDatabaseRecordToJob = (record: any): Job => {
  * Maps our frontend model to database fields
  */
 const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDatabaseFields => {
-  // Format the requirements and benefits as arrays
-  const requirementsArray = formData.requirements 
-    ? (typeof formData.requirements === 'string' 
+  // Fixed type handling for array fields
+  const requirementsArray = Array.isArray(formData.requirements) 
+    ? formData.requirements 
+    : (typeof formData.requirements === 'string' 
         ? formData.requirements.split('\n').filter(Boolean) 
-        : formData.requirements)
-    : [];
+        : []);
   
-  const benefitsArray = formData.benefits 
-    ? (typeof formData.benefits === 'string' 
+  const benefitsArray = Array.isArray(formData.benefits) 
+    ? formData.benefits 
+    : (typeof formData.benefits === 'string' 
         ? formData.benefits.split('\n').filter(Boolean) 
-        : formData.benefits)
-    : [];
+        : []);
     
-  const responsibilitiesArray = formData.responsibilities 
-    ? (typeof formData.responsibilities === 'string' 
+  const responsibilitiesArray = Array.isArray(formData.responsibilities) 
+    ? formData.responsibilities 
+    : (typeof formData.responsibilities === 'string' 
         ? formData.responsibilities.split('\n').filter(Boolean) 
-        : formData.responsibilities)
-    : [];
+        : []);
 
   return {
     title: formData.title,
