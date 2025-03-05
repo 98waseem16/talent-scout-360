@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
-import { useToast } from '@/hooks/use-toast';
+import { toast } from 'sonner';
 
 interface SignUpOptions {
   email: string;
@@ -32,7 +32,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
 
   useEffect(() => {
     const fetchProfile = async (userId: string) => {
@@ -111,11 +110,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
     } catch (error: any) {
-      toast({
-        title: 'Authentication Error',
-        description: error.message || 'Failed to sign in',
-        variant: 'destructive',
-      });
+      toast.error('Authentication Error: ' + (error.message || 'Failed to sign in'));
       throw error;
     }
   };
@@ -129,16 +124,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      toast({
-        title: 'Sign in successful',
-        description: 'Welcome back!',
-      });
+      toast.success('Sign in successful');
     } catch (error: any) {
-      toast({
-        title: 'Authentication Error',
-        description: error.message || 'Failed to sign in',
-        variant: 'destructive',
-      });
+      toast.error('Authentication Error: ' + (error.message || 'Failed to sign in'));
       throw error;
     }
   };
@@ -159,16 +147,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       if (error) throw error;
       
-      toast({
-        title: 'Registration successful',
-        description: 'Please check your email for verification',
-      });
+      toast.success('Registration successful! Please check your email for verification');
     } catch (error: any) {
-      toast({
-        title: 'Registration Error',
-        description: error.message || 'Failed to create account',
-        variant: 'destructive',
-      });
+      toast.error('Registration Error: ' + (error.message || 'Failed to create account'));
       throw error;
     }
   };
@@ -187,17 +168,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setProfile(null);
       
-      toast({
-        title: 'Sign out successful',
-        description: 'You have been signed out',
-      });
+      toast.success('Sign out successful');
     } catch (error: any) {
       console.error("Sign out error:", error);
-      toast({
-        title: 'Sign out Error',
-        description: error.message || 'Failed to sign out',
-        variant: 'destructive',
-      });
+      toast.error('Sign out Error: ' + (error.message || 'Failed to sign out'));
       throw error;
     }
   };

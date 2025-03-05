@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,7 +31,7 @@ const Dashboard: React.FC = () => {
     try {
       if (user) {
         const { data: jobsData, error } = await supabase
-          .from('jobs')
+          .from('job_postings')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
@@ -40,7 +41,25 @@ const Dashboard: React.FC = () => {
         }
 
         if (jobsData) {
-          setJobs(jobsData);
+          // Transform database records to match our Job type
+          const transformedJobs: Job[] = jobsData.map(job => ({
+            id: job.id,
+            title: job.title,
+            company: job.company,
+            location: job.location || '',
+            salary: `${job.salary_min || ''}-${job.salary_max || ''} ${job.salary_currency || 'USD'}`,
+            type: job.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
+            posted: new Date(job.created_at).toLocaleDateString(),
+            description: job.description,
+            responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
+            requirements: Array.isArray(job.requirements) ? job.requirements : [],
+            benefits: Array.isArray(job.benefits) ? job.benefits : [],
+            logo: job.logo_url || '',
+            featured: job.is_featured || false,
+            user_id: job.user_id
+          }));
+          
+          setJobs(transformedJobs);
         }
       }
     } catch (error: any) {
@@ -53,7 +72,7 @@ const Dashboard: React.FC = () => {
   const handleDeleteJob = async (jobId: string) => {
     try {
       const { error } = await supabase
-        .from('jobs')
+        .from('job_postings')
         .delete()
         .eq('id', jobId)
         .eq('user_id', user?.id);

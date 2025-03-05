@@ -1,8 +1,10 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
@@ -11,14 +13,13 @@ const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const { signIn, signUp, user } = useAuth();
+  const { signInWithEmail, signUp, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
   // Safely access location.state with type checking
-  const returnTo = location.state && (location.state as any).returnTo 
-    ? (location.state as any).returnTo 
-    : '/dashboard';
+  const state = location.state as { returnTo?: string } | null;
+  const returnTo = state?.returnTo || '/dashboard';
 
   useEffect(() => {
     // If user is already logged in, redirect them
@@ -32,7 +33,7 @@ const Auth: React.FC = () => {
     setLoading(true);
     
     try {
-      await signIn(email, password);
+      await signInWithEmail(email, password);
       toast.success('Signed in successfully');
       navigate(returnTo, { replace: true });
     } catch (error) {
@@ -48,7 +49,7 @@ const Auth: React.FC = () => {
     setLoading(true);
     
     try {
-      await signUp(email, password);
+      await signUp({ email, password });
       toast.success('Account created successfully! Please check your email to confirm your account.');
     } catch (error) {
       console.error('Sign up error:', error);
@@ -66,7 +67,7 @@ const Auth: React.FC = () => {
           <CardDescription className="text-center">Sign in or create an account</CardDescription>
         </CardHeader>
         <CardContent>
-          <Tabs defaultvalue="sign-in" className="w-full">
+          <Tabs defaultValue="sign-in" className="w-full">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="sign-in">Sign In</TabsTrigger>
               <TabsTrigger value="sign-up">Sign Up</TabsTrigger>
