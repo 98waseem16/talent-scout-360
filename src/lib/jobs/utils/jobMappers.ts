@@ -43,21 +43,21 @@ export const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDataba
   // Handle array types properly with proper type checks
   let requirementsArray: string[] = [];
   if (Array.isArray(formData.requirements)) {
-    requirementsArray = formData.requirements;
+    requirementsArray = formData.requirements.filter(item => typeof item === 'string');
   } else if (typeof formData.requirements === 'string') {
     requirementsArray = formData.requirements.split('\n').filter(Boolean);
   }
   
   let benefitsArray: string[] = [];
   if (Array.isArray(formData.benefits)) {
-    benefitsArray = formData.benefits;
+    benefitsArray = formData.benefits.filter(item => typeof item === 'string');
   } else if (typeof formData.benefits === 'string') {
     benefitsArray = formData.benefits.split('\n').filter(Boolean);
   }
     
   let responsibilitiesArray: string[] = [];
   if (Array.isArray(formData.responsibilities)) {
-    responsibilitiesArray = formData.responsibilities;
+    responsibilitiesArray = formData.responsibilities.filter(item => typeof item === 'string');
   } else if (typeof formData.responsibilities === 'string') {
     responsibilitiesArray = formData.responsibilities.split('\n').filter(Boolean);
   }
