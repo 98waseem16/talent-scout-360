@@ -47,16 +47,25 @@ const Dashboard: React.FC = () => {
             title: job.title,
             company: job.company,
             location: job.location || '',
-            salary: `${job.salary_min || ''}-${job.salary_max || ''} ${job.salary_currency || 'USD'}`,
+            salary: job.salary || `${job.salary_min || ''}-${job.salary_max || ''} ${job.salary_currency || 'USD'}`,
             type: job.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
             posted: new Date(job.created_at).toLocaleDateString(),
             description: job.description,
             responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
             requirements: Array.isArray(job.requirements) ? job.requirements : [],
             benefits: Array.isArray(job.benefits) ? job.benefits : [],
-            logo: job.logo_url || '',
-            featured: job.is_featured || false,
-            user_id: job.user_id
+            logo: job.logo || job.logo_url || '',
+            featured: job.featured || job.is_featured || false,
+            user_id: job.user_id,
+            // Additional fields
+            salary_min: job.salary_min?.toString() || '',
+            salary_max: job.salary_max?.toString() || '',
+            salary_currency: job.salary_currency || 'USD',
+            application_url: job.application_url || '',
+            contact_email: job.contact_email || '',
+            logo_url: job.logo_url || job.logo || '',
+            is_remote: job.is_remote || false,
+            is_featured: job.is_featured || job.featured || false
           }));
           
           setJobs(transformedJobs);

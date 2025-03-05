@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,8 +32,7 @@ const PostJob: React.FC = () => {
       
       // Show error toast
       toast.error("Authentication Required", {
-        description: "You need to sign in to post a job",
-        icon: <AlertTriangle className="h-5 w-5" />,
+        description: "You need to sign in to post a job"
       });
     }
   }, [user, navigate]);
@@ -74,13 +74,21 @@ const PostJob: React.FC = () => {
               salary_max: jobData.salary_max?.toString() || '',
               salary_currency: jobData.salary_currency || 'USD',
               description: jobData.description || '',
-              requirements: jobData.requirements || '',
-              benefits: jobData.benefits || '',
+              requirements: Array.isArray(jobData.requirements) 
+                ? jobData.requirements.join('\n') 
+                : typeof jobData.requirements === 'string' 
+                  ? jobData.requirements 
+                  : '',
+              benefits: Array.isArray(jobData.benefits) 
+                ? jobData.benefits.join('\n') 
+                : typeof jobData.benefits === 'string' 
+                  ? jobData.benefits 
+                  : '',
               application_url: jobData.application_url || '',
               contact_email: jobData.contact_email || '',
-              logo_url: jobData.logo_url || '',
+              logo_url: jobData.logo_url || jobData.logo || '',
               is_remote: jobData.is_remote || false,
-              is_featured: jobData.is_featured || false,
+              is_featured: jobData.is_featured || jobData.featured || false,
             });
           }
         } catch (error) {
@@ -136,12 +144,10 @@ const PostJob: React.FC = () => {
         logoUrl = urlData.publicUrl;
       }
       
-      // Prepare job data
-      const jobData = {
+      // Prepare job data with user_id
+      const jobData: JobFormData = {
         ...formData,
         logo_url: logoUrl,
-        salary_min: formData.salary_min ? parseInt(formData.salary_min) : null,
-        salary_max: formData.salary_max ? parseInt(formData.salary_max) : null,
         user_id: user.id
       };
       

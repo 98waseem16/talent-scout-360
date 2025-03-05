@@ -14,6 +14,15 @@ export interface Job {
   logo: string;
   featured?: boolean;
   user_id?: string;
+  // Additional fields used in the application
+  salary_min?: string;
+  salary_max?: string;
+  salary_currency?: string;
+  application_url?: string;
+  contact_email?: string;
+  logo_url?: string;
+  is_remote?: boolean;
+  is_featured?: boolean;
 }
 
 export interface JobFormData {
@@ -32,4 +41,5 @@ export interface JobFormData {
   logo_url: string;
   is_remote: boolean;
   is_featured: boolean;
+  user_id?: string;
 }
