@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import LogoUpload from '@/components/LogoUpload';
 import { 
   Select, 
   SelectContent, 
@@ -75,6 +76,10 @@ const PostJob: React.FC = () => {
   
   const handleSwitchChange = (name: string, checked: boolean) => {
     setFormData(prev => ({ ...prev, [name]: checked }));
+  };
+  
+  const handleLogoChange = (logoUrl: string) => {
+    setFormData(prev => ({ ...prev, logo: logoUrl }));
   };
   
   const handleListChange = (index: number, value: string, field: 'responsibilities' | 'requirements' | 'benefits') => {
@@ -222,6 +227,17 @@ const PostJob: React.FC = () => {
                     />
                   </div>
                 </div>
+              </div>
+              
+              {/* Company Logo Upload */}
+              <div className="space-y-2">
+                <label htmlFor="logo" className="block text-sm font-medium">
+                  Company Logo
+                </label>
+                <LogoUpload 
+                  currentLogo={formData.logo} 
+                  onLogoChange={handleLogoChange} 
+                />
               </div>
               
               <div className="grid md:grid-cols-2 gap-4">
