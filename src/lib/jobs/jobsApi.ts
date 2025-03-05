@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Job, JobFormData, JobDatabaseFields } from '../types/job.types';
 import { staticJobs } from '../data/staticJobs';
@@ -22,7 +21,19 @@ const mapDatabaseRecordToJob = (record: any): Job => {
     benefits: Array.isArray(record.benefits) ? record.benefits : [],
     logo: record.logo || '',
     featured: record.featured || false,
-    user_id: record.user_id
+    user_id: record.user_id,
+    investment_stage: record.investment_stage || '',
+    team_size: record.team_size || '',
+    revenue_model: record.revenue_model || '',
+    department: record.department || '',
+    seniority_level: record.seniority_level || '',
+    job_type: record.job_type || '',
+    salary_range: record.salary_range || '',
+    equity: record.equity || '',
+    remote_onsite: record.remote_onsite || '',
+    work_hours: record.work_hours || '',
+    visa_sponsorship: record.visa_sponsorship || false,
+    hiring_urgency: record.hiring_urgency || ''
   };
 };
 
@@ -46,7 +57,7 @@ const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDatabaseField
   const responsibilitiesArray = formData.responsibilities 
     ? (typeof formData.responsibilities === 'string' 
         ? formData.responsibilities.split('\n').filter(Boolean) 
-        : [])
+        : formData.responsibilities)
     : [];
 
   return {
@@ -61,7 +72,19 @@ const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDatabaseField
     responsibilities: responsibilitiesArray,
     logo: formData.logo || '',
     featured: formData.featured || false,
-    user_id: formData.user_id
+    user_id: formData.user_id,
+    investment_stage: formData.investment_stage,
+    team_size: formData.team_size,
+    revenue_model: formData.revenue_model,
+    department: formData.department,
+    seniority_level: formData.seniority_level,
+    job_type: formData.job_type,
+    salary_range: formData.salary_range,
+    equity: formData.equity,
+    remote_onsite: formData.remote_onsite,
+    work_hours: formData.work_hours,
+    visa_sponsorship: formData.visa_sponsorship,
+    hiring_urgency: formData.hiring_urgency
   };
 };
 

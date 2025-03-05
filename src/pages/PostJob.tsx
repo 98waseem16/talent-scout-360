@@ -11,8 +11,20 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
-import { AlertTriangle } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { 
+  Briefcase, 
+  Building, 
+  DollarSign, 
+  MapPin, 
+  BarChart4, 
+  Users, 
+  Clock, 
+  Globe, 
+  X as XIcon,
+  Loader2,
+  Zap
+} from 'lucide-react';
 import { createJobListing, updateJobListing, getJobById } from '@/lib/jobs/jobsApi';
 import { JobFormData } from '@/lib/types/job.types';
 
@@ -21,6 +33,7 @@ const PostJob: React.FC = () => {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const isEditMode = !!id;
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Check if user is authenticated
   useEffect(() => {
@@ -43,16 +56,26 @@ const PostJob: React.FC = () => {
     location: '',
     type: 'Full-time',
     description: '',
-    requirements: '',
-    benefits: '',
-    application_url: '',
-    contact_email: '',
-    logo: '',
-    featured: false,
+    responsibilities: [''],
+    requirements: [''],
+    benefits: [''],
+    logo: '/placeholder.svg',
     salary: '',
+    investment_stage: '',
+    team_size: '',
+    revenue_model: '',
+    department: '',
+    seniority_level: '',
+    job_type: '',
+    salary_range: '',
+    equity: '',
+    remote_onsite: '',
+    work_hours: '',
+    visa_sponsorship: false,
+    hiring_urgency: '',
+    featured: false,
   });
 
-  const [loading, setLoading] = useState(false);
   const [logoFile, setLogoFile] = useState<File | null>(null);
 
   // Fetch job data if in edit mode
@@ -68,20 +91,24 @@ const PostJob: React.FC = () => {
               location: jobData.location || '',
               type: jobData.type || 'Full-time',
               description: jobData.description || '',
-              requirements: Array.isArray(jobData.requirements) 
-                ? jobData.requirements.join('\n') 
-                : '',
-              benefits: Array.isArray(jobData.benefits) 
-                ? jobData.benefits.join('\n') 
-                : '',
-              responsibilities: Array.isArray(jobData.responsibilities)
-                ? jobData.responsibilities.join('\n')
-                : '',
-              application_url: '', // These fields aren't in the DB schema
-              contact_email: '',   // These fields aren't in the DB schema
-              logo: jobData.logo || '',
+              requirements: jobData.requirements || [''],
+              benefits: jobData.benefits || [''],
+              responsibilities: jobData.responsibilities || [''],
+              logo: jobData.logo || '/placeholder.svg',
               featured: jobData.featured || false,
               salary: jobData.salary || '',
+              investment_stage: jobData.investment_stage || '',
+              team_size: jobData.team_size || '',
+              revenue_model: jobData.revenue_model || '',
+              department: jobData.department || '',
+              seniority_level: jobData.seniority_level || '',
+              job_type: jobData.job_type || '',
+              salary_range: jobData.salary_range || '',
+              equity: jobData.equity || '',
+              remote_onsite: jobData.remote_onsite || '',
+              work_hours: jobData.work_hours || '',
+              visa_sponsorship: jobData.visa_sponsorship || false,
+              hiring_urgency: jobData.hiring_urgency || '',
             });
           }
         } catch (error) {
@@ -94,13 +121,37 @@ const PostJob: React.FC = () => {
     }
   }, [id, isEditMode]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleCheckboxChange = (name: string, checked: boolean) => {
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSwitchChange = (name: string, checked: boolean) => {
     setFormData(prev => ({ ...prev, [name]: checked }));
+  };
+  
+  const handleListChange = (index: number, value: string, field: 'responsibilities' | 'requirements' | 'benefits') => {
+    const newList = [...(formData[field] as string[])];
+    newList[index] = value;
+    setFormData(prev => ({ ...prev, [field]: newList }));
+  };
+  
+  const addListItem = (field: 'responsibilities' | 'requirements' | 'benefits') => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: [...(prev[field] as string[]), '']
+    }));
+  };
+  
+  const removeListItem = (index: number, field: 'responsibilities' | 'requirements' | 'benefits') => {
+    if ((formData[field] as string[]).length <= 1) return;
+    const newList = [...(formData[field] as string[])];
+    newList.splice(index, 1);
+    setFormData(prev => ({ ...prev, [field]: newList }));
   };
 
   const handleLogoChange = (file: File | null) => {
@@ -115,7 +166,7 @@ const PostJob: React.FC = () => {
       return;
     }
     
-    setLoading(true);
+    setIsSubmitting(true);
     
     try {
       // Upload logo if provided
@@ -158,7 +209,7 @@ const PostJob: React.FC = () => {
       console.error('Error saving job:', error);
       toast.error('Failed to save job listing');
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -166,215 +217,365 @@ const PostJob: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-grow container max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">
-            {isEditMode ? 'Edit Job Listing' : 'Post a New Job'}
-          </h1>
-          <p className="text-muted-foreground">
-            {isEditMode 
-              ? 'Update your job listing with the latest information'
-              : 'Fill out the form below to post your job to our platform'}
-          </p>
-        </div>
-        
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* Basic Information */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Basic Information</h2>
+      <main className="flex-grow pt-24 pb-16 px-6">
+        <div className="max-w-4xl mx-auto">
+          <div className="bg-white rounded-xl border border-border shadow-sm p-8 mb-8">
+            <h1 className="text-3xl font-medium mb-2">
+              {isEditMode ? 'Edit Job Listing' : 'Post a Startup Job'}
+            </h1>
+            <p className="text-muted-foreground mb-6">
+              {isEditMode 
+                ? 'Update your job listing with the latest information'
+                : 'Reach thousands of qualified candidates looking to join innovative startups'}
+            </p>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="title">Job Title *</Label>
-                <Input 
-                  id="title" 
-                  name="title" 
-                  value={formData.title} 
-                  onChange={handleChange} 
-                  required 
-                  placeholder="e.g. Senior Frontend Developer"
-                />
+            {/* Benefits of posting */}
+            {!isEditMode && (
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div className="flex items-start space-x-3">
+                  <Users className="h-6 w-6 text-primary mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Reach Top Talent</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Connect with motivated candidates actively seeking startup opportunities
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Clock className="h-6 w-6 text-primary mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Quick Setup</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Create and publish your job posting in just a few minutes
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3">
+                  <Globe className="h-6 w-6 text-primary mt-0.5" />
+                  <div>
+                    <h3 className="font-medium">Wide Distribution</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Your job will be shared across our partner networks for maximum visibility
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Job Posting Form */}
+            <form onSubmit={handleSubmit} className="grid gap-6">
+              {/* Basic Information */}
+              <div className="space-y-1 pt-4 border-t">
+                <h2 className="text-xl font-medium">Basic Information</h2>
+                <p className="text-sm text-muted-foreground">
+                  Essential details about the position and company
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label htmlFor="title" className="flex items-center space-x-2 text-sm font-medium">
+                    <Briefcase className="h-5 w-5 text-muted-foreground" />
+                    <span>Job Title*</span>
+                  </label>
+                  <Input 
+                    id="title" 
+                    name="title" 
+                    value={formData.title} 
+                    onChange={handleInputChange} 
+                    required 
+                    placeholder="e.g. Senior Frontend Developer"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="company" className="flex items-center space-x-2 text-sm font-medium">
+                    <Building className="h-5 w-5 text-muted-foreground" />
+                    <span>Company Name*</span>
+                  </label>
+                  <Input 
+                    id="company" 
+                    name="company" 
+                    value={formData.company} 
+                    onChange={handleInputChange} 
+                    required 
+                    placeholder="e.g. Acme Inc."
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="location" className="flex items-center space-x-2 text-sm font-medium">
+                    <MapPin className="h-5 w-5 text-muted-foreground" />
+                    <span>Location</span>
+                  </label>
+                  <Input 
+                    id="location" 
+                    name="location" 
+                    value={formData.location} 
+                    onChange={handleInputChange} 
+                    placeholder="e.g. New York, NY (or Remote)"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="salary" className="flex items-center space-x-2 text-sm font-medium">
+                    <DollarSign className="h-5 w-5 text-muted-foreground" />
+                    <span>Salary Range</span>
+                  </label>
+                  <Input 
+                    id="salary" 
+                    name="salary" 
+                    value={formData.salary} 
+                    onChange={handleInputChange} 
+                    placeholder="e.g. $80,000 - $120,000"
+                  />
+                </div>
+              </div>
+              
+              {/* Startup Specific Information */}
+              <div className="space-y-1 pt-4 border-t">
+                <h2 className="text-xl font-medium">Startup Details</h2>
+                <p className="text-sm text-muted-foreground">
+                  Help candidates understand your company's stage and culture
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label htmlFor="investment_stage" className="flex items-center space-x-2 text-sm font-medium">
+                    <BarChart4 className="h-5 w-5 text-muted-foreground" />
+                    <span>Investment Stage</span>
+                  </label>
+                  <Input 
+                    id="investment_stage" 
+                    name="investment_stage" 
+                    value={formData.investment_stage} 
+                    onChange={handleInputChange} 
+                    placeholder="e.g. Seed, Series A, Bootstrapped"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="team_size" className="flex items-center space-x-2 text-sm font-medium">
+                    <Users className="h-5 w-5 text-muted-foreground" />
+                    <span>Team Size</span>
+                  </label>
+                  <Input 
+                    id="team_size" 
+                    name="team_size" 
+                    value={formData.team_size} 
+                    onChange={handleInputChange} 
+                    placeholder="e.g. 1-10, 11-50, 51-200"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="revenue_model" className="flex items-center space-x-2 text-sm font-medium">
+                    <DollarSign className="h-5 w-5 text-muted-foreground" />
+                    <span>Revenue Model</span>
+                  </label>
+                  <Input 
+                    id="revenue_model" 
+                    name="revenue_model" 
+                    value={formData.revenue_model} 
+                    onChange={handleInputChange} 
+                    placeholder="e.g. SaaS, Marketplace, E-commerce"
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="type" className="flex items-center space-x-2 text-sm font-medium">
+                    <Briefcase className="h-5 w-5 text-muted-foreground" />
+                    <span>Job Type*</span>
+                  </label>
+                  <select
+                    id="type"
+                    name="type"
+                    value={formData.type}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full rounded-md border border-input bg-background px-3 py-2"
+                  >
+                    <option value="Full-time">Full-time</option>
+                    <option value="Part-time">Part-time</option>
+                    <option value="Contract">Contract</option>
+                    <option value="Remote">Remote</option>
+                  </select>
+                </div>
+              </div>
+              
+              {/* Job Details */}
+              <div className="space-y-1 pt-4 border-t">
+                <h2 className="text-xl font-medium">Job Details</h2>
+                <p className="text-sm text-muted-foreground">
+                  Describe the role, responsibilities, and qualifications
+                </p>
+              </div>
+              
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <label htmlFor="description" className="text-sm font-medium">Job Description*</label>
+                  <Textarea 
+                    id="description" 
+                    name="description" 
+                    value={formData.description} 
+                    onChange={handleInputChange} 
+                    required 
+                    placeholder="Provide a detailed description of the role and company..."
+                    className="min-h-[150px]"
+                  />
+                </div>
+                
+                {/* Responsibilities */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Responsibilities</label>
+                  {(formData.responsibilities as string[]).map((item, index) => (
+                    <div key={`resp-${index}`} className="flex space-x-2">
+                      <Input 
+                        value={item} 
+                        onChange={(e) => handleListChange(index, e.target.value, 'responsibilities')}
+                        placeholder="Enter a responsibility"
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => removeListItem(index, 'responsibilities')}
+                        className="p-2 text-muted-foreground hover:text-destructive rounded-md"
+                      >
+                        <XIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  ))}
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => addListItem('responsibilities')}
+                  >
+                    Add Responsibility
+                  </Button>
+                </div>
+                
+                {/* Requirements */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Requirements</label>
+                  {(formData.requirements as string[]).map((item, index) => (
+                    <div key={`req-${index}`} className="flex space-x-2">
+                      <Input 
+                        value={item} 
+                        onChange={(e) => handleListChange(index, e.target.value, 'requirements')}
+                        placeholder="Enter a requirement"
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => removeListItem(index, 'requirements')}
+                        className="p-2 text-muted-foreground hover:text-destructive rounded-md"
+                      >
+                        <XIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  ))}
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => addListItem('requirements')}
+                  >
+                    Add Requirement
+                  </Button>
+                </div>
+                
+                {/* Benefits */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Benefits</label>
+                  {(formData.benefits as string[]).map((item, index) => (
+                    <div key={`benefit-${index}`} className="flex space-x-2">
+                      <Input 
+                        value={item} 
+                        onChange={(e) => handleListChange(index, e.target.value, 'benefits')}
+                        placeholder="Enter a benefit"
+                      />
+                      <button 
+                        type="button" 
+                        onClick={() => removeListItem(index, 'benefits')}
+                        className="p-2 text-muted-foreground hover:text-destructive rounded-md"
+                      >
+                        <XIcon className="h-5 w-5" />
+                      </button>
+                    </div>
+                  ))}
+                  <Button 
+                    type="button" 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => addListItem('benefits')}
+                  >
+                    Add Benefit
+                  </Button>
+                </div>
+              </div>
+              
+              {/* Company Logo */}
+              <div className="space-y-1 pt-4 border-t">
+                <h2 className="text-xl font-medium">Company Logo</h2>
+                <p className="text-sm text-muted-foreground">
+                  Upload your company logo
+                </p>
+              </div>
+              
+              <LogoUpload 
+                currentLogoUrl={formData.logo} 
+                onLogoChange={handleLogoChange} 
+              />
+              
+              {/* Featured Job Option */}
+              <div className="space-y-1 pt-4 border-t">
+                <h2 className="text-xl font-medium">Visibility Options</h2>
+                <p className="text-sm text-muted-foreground">
+                  Control how your job posting appears on our platform
+                </p>
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="company">Company Name *</Label>
-                <Input 
-                  id="company" 
-                  name="company" 
-                  value={formData.company} 
-                  onChange={handleChange} 
-                  required 
-                  placeholder="e.g. Acme Inc."
-                />
+                <label htmlFor="featured-job" className="flex items-center space-x-2 text-sm font-medium">
+                  <Zap className="h-5 w-5 text-amber-500" />
+                  <span>Feature this job in the Trending Section</span>
+                  <span className="ml-2 text-xs px-2 py-1 bg-amber-100 text-amber-700 rounded-full">Premium</span>
+                </label>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="featured-job"
+                    checked={formData.featured}
+                    onCheckedChange={(checked) => handleSwitchChange('featured', checked)}
+                  />
+                  <span className="text-sm text-muted-foreground">
+                    {formData.featured ? 'Your job will appear in the Trending Jobs section' : 'Standard job visibility'}
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Featured jobs receive up to 5x more visibility and applicants.
+                </p>
               </div>
               
-              <div className="space-y-2">
-                <Label htmlFor="location">Location</Label>
-                <Input 
-                  id="location" 
-                  name="location" 
-                  value={formData.location} 
-                  onChange={handleChange} 
-                  placeholder="e.g. New York, NY"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="type">Job Type *</Label>
-                <select
-                  id="type"
-                  name="type"
-                  value={formData.type}
-                  onChange={handleChange}
-                  required
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
+              <div className="pt-6">
+                <Button 
+                  type="submit" 
+                  className="w-full md:w-auto" 
+                  size="lg"
+                  disabled={isSubmitting}
                 >
-                  <option value="Full-time">Full-time</option>
-                  <option value="Part-time">Part-time</option>
-                  <option value="Contract">Contract</option>
-                  <option value="Freelance">Freelance</option>
-                  <option value="Internship">Internship</option>
-                </select>
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      {isEditMode ? 'Updating Job...' : 'Posting Job...'}
+                    </>
+                  ) : isEditMode ? "Update Job" : "Post Job"}
+                </Button>
               </div>
-            </div>
+            </form>
           </div>
-          
-          {/* Salary Information */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Salary Information</h2>
-            
-            <div className="space-y-2">
-              <Label htmlFor="salary">Salary</Label>
-              <Input 
-                id="salary" 
-                name="salary" 
-                value={formData.salary} 
-                onChange={handleChange} 
-                placeholder="e.g. $50,000 - $80,000"
-              />
-            </div>
-          </div>
-          
-          {/* Job Details */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Job Details</h2>
-            
-            <div className="space-y-2">
-              <Label htmlFor="description">Job Description *</Label>
-              <Textarea 
-                id="description" 
-                name="description" 
-                value={formData.description} 
-                onChange={handleChange} 
-                required 
-                placeholder="Describe the role, responsibilities, and ideal candidate"
-                className="min-h-[150px]"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="requirements">Requirements</Label>
-              <Textarea 
-                id="requirements" 
-                name="requirements" 
-                value={formData.requirements} 
-                onChange={handleChange} 
-                placeholder="List the skills, qualifications, and experience required"
-                className="min-h-[100px]"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="benefits">Benefits</Label>
-              <Textarea 
-                id="benefits" 
-                name="benefits" 
-                value={formData.benefits} 
-                onChange={handleChange} 
-                placeholder="Describe the benefits, perks, and company culture"
-                className="min-h-[100px]"
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="responsibilities">Responsibilities</Label>
-              <Textarea 
-                id="responsibilities" 
-                name="responsibilities" 
-                value={formData.responsibilities} 
-                onChange={handleChange} 
-                placeholder="List the key responsibilities for this role"
-                className="min-h-[100px]"
-              />
-            </div>
-          </div>
-          
-          {/* Application Details */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Application Details</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="application_url">Application URL *</Label>
-                <Input 
-                  id="application_url" 
-                  name="application_url" 
-                  type="url" 
-                  value={formData.application_url} 
-                  onChange={handleChange} 
-                  required 
-                  placeholder="e.g. https://yourcompany.com/careers/apply"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="contact_email">Contact Email</Label>
-                <Input 
-                  id="contact_email" 
-                  name="contact_email" 
-                  type="email" 
-                  value={formData.contact_email} 
-                  onChange={handleChange} 
-                  placeholder="e.g. jobs@yourcompany.com"
-                />
-              </div>
-            </div>
-          </div>
-          
-          {/* Company Logo */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Company Logo</h2>
-            <LogoUpload 
-              currentLogoUrl={formData.logo} 
-              onLogoChange={handleLogoChange} 
-            />
-          </div>
-          
-          {/* Featured Option */}
-          <div className="space-y-4">
-            <h2 className="text-xl font-semibold">Listing Options</h2>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="featured" 
-                checked={formData.featured} 
-                onCheckedChange={(checked) => 
-                  handleCheckboxChange('featured', checked as boolean)
-                } 
-              />
-              <Label htmlFor="featured">
-                Feature this job listing (additional fee applies)
-              </Label>
-            </div>
-          </div>
-          
-          {/* Submit Button */}
-          <div className="pt-4">
-            <Button type="submit" disabled={loading} className="w-full md:w-auto">
-              {loading ? 'Saving...' : isEditMode ? 'Update Job Listing' : 'Post Job Listing'}
-            </Button>
-          </div>
-        </form>
+        </div>
       </main>
       
       <Footer />
