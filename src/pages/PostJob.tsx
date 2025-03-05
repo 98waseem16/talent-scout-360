@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -70,20 +69,16 @@ const PostJob: React.FC = () => {
               company: jobData.company || '',
               location: jobData.location || '',
               type: jobData.type || 'Full-time',
-              salary_min: jobData.salary_min?.toString() || '',
-              salary_max: jobData.salary_max?.toString() || '',
+              salary_min: jobData.salary_min || '',
+              salary_max: jobData.salary_max || '',
               salary_currency: jobData.salary_currency || 'USD',
               description: jobData.description || '',
               requirements: Array.isArray(jobData.requirements) 
                 ? jobData.requirements.join('\n') 
-                : typeof jobData.requirements === 'string' 
-                  ? jobData.requirements 
-                  : '',
+                : '',
               benefits: Array.isArray(jobData.benefits) 
                 ? jobData.benefits.join('\n') 
-                : typeof jobData.benefits === 'string' 
-                  ? jobData.benefits 
-                  : '',
+                : '',
               application_url: jobData.application_url || '',
               contact_email: jobData.contact_email || '',
               logo_url: jobData.logo_url || jobData.logo || '',
@@ -145,17 +140,17 @@ const PostJob: React.FC = () => {
       }
       
       // Prepare job data with user_id
-      const jobData: JobFormData = {
+      const jobDataToSubmit: JobFormData = {
         ...formData,
         logo_url: logoUrl,
         user_id: user.id
       };
       
       if (isEditMode && id) {
-        await updateJobListing(id, jobData);
+        await updateJobListing(id, jobDataToSubmit);
         toast.success('Job listing updated successfully!');
       } else {
-        await createJobListing(jobData);
+        await createJobListing(jobDataToSubmit);
         toast.success('Job listing created successfully!');
       }
       

@@ -1,8 +1,77 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Job, JobFormData } from '../types/job.types';
+import { Job, JobFormData, JobDatabaseFields } from '../types/job.types';
 import { staticJobs } from '../data/staticJobs';
 import { formatPostedDate } from '../utils/dateUtils';
+
+/**
+ * Maps database record to our frontend Job model
+ */
+const mapDatabaseRecordToJob = (record: any): Job => {
+  return {
+    id: record.id,
+    title: record.title,
+    company: record.company,
+    location: record.location || '',
+    salary: record.salary || '',
+    type: record.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
+    posted: formatPostedDate(record.posted || record.created_at),
+    description: record.description,
+    responsibilities: Array.isArray(record.responsibilities) ? record.responsibilities : [],
+    requirements: Array.isArray(record.requirements) ? record.requirements : [],
+    benefits: Array.isArray(record.benefits) ? record.benefits : [],
+    logo: record.logo || '',
+    featured: record.featured || false,
+    user_id: record.user_id,
+    // Add our frontend-specific fields
+    salary_min: '',
+    salary_max: '',
+    salary_currency: 'USD',
+    application_url: '',
+    contact_email: '',
+    logo_url: record.logo || '',
+    is_remote: false,
+    is_featured: record.featured || false
+  };
+};
+
+/**
+ * Maps our frontend model to database fields
+ */
+const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDatabaseFields => {
+  // Format the requirements and benefits as arrays
+  const requirementsArray = formData.requirements 
+    ? (typeof formData.requirements === 'string' 
+        ? formData.requirements.split('\n').filter(Boolean) 
+        : formData.requirements)
+    : [];
+  
+  const benefitsArray = formData.benefits 
+    ? (typeof formData.benefits === 'string' 
+        ? formData.benefits.split('\n').filter(Boolean) 
+        : formData.benefits)
+    : [];
+
+  // Calculate salary string from min/max values
+  const salary = formData.salary_min || formData.salary_max 
+    ? `${formData.salary_min || ''}-${formData.salary_max || ''} ${formData.salary_currency || 'USD'}`
+    : '';
+
+  return {
+    title: formData.title,
+    company: formData.company,
+    location: formData.location,
+    type: formData.type,
+    salary: salary,
+    description: formData.description,
+    requirements: requirementsArray,
+    benefits: benefitsArray,
+    responsibilities: [], // Default empty array since we don't have a field for this
+    logo: formData.logo_url || '',
+    featured: formData.is_featured,
+    user_id: formData.user_id
+  };
+};
 
 /**
  * Fetches all jobs from the database
@@ -12,39 +81,15 @@ export const getJobs = async (): Promise<Job[]> => {
     const { data, error } = await supabase
       .from('job_postings')
       .select('*')
-      .order('posted', { ascending: false });
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error fetching jobs:', error);
       return staticJobs;
     }
 
-    const jobs = data.map(job => ({
-      id: job.id,
-      title: job.title,
-      company: job.company,
-      location: job.location,
-      salary: job.salary || `${job.salary_min || ''}-${job.salary_max || ''} ${job.salary_currency || 'USD'}`,
-      type: job.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
-      posted: formatPostedDate(job.posted),
-      description: job.description,
-      responsibilities: job.responsibilities || [],
-      requirements: job.requirements || [],
-      benefits: job.benefits || [],
-      logo: job.logo || job.logo_url || '',
-      featured: job.featured || job.is_featured || false,
-      user_id: job.user_id,
-      // Additional fields
-      salary_min: job.salary_min?.toString() || '',
-      salary_max: job.salary_max?.toString() || '',
-      salary_currency: job.salary_currency || 'USD',
-      application_url: job.application_url || '',
-      contact_email: job.contact_email || '',
-      logo_url: job.logo_url || job.logo || '',
-      is_remote: job.is_remote || false,
-      is_featured: job.is_featured || job.featured || false
-    }));
-
+    // Map database records to our frontend Job model
+    const jobs = data.map(record => mapDatabaseRecordToJob(record));
     return jobs;
   } catch (error) {
     console.error('Error fetching jobs:', error);
@@ -61,7 +106,7 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
       .from('job_postings')
       .select('*')
       .eq('featured', true)
-      .order('posted', { ascending: false })
+      .order('created_at', { ascending: false })
       .limit(3);
 
     if (error) {
@@ -69,33 +114,8 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
       return staticJobs.filter(job => job.featured);
     }
 
-    // Using the same mapping function as getJobs
-    const jobs = data.map(job => ({
-      id: job.id,
-      title: job.title,
-      company: job.company,
-      location: job.location,
-      salary: job.salary || `${job.salary_min || ''}-${job.salary_max || ''} ${job.salary_currency || 'USD'}`,
-      type: job.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
-      posted: formatPostedDate(job.posted),
-      description: job.description,
-      responsibilities: job.responsibilities || [],
-      requirements: job.requirements || [],
-      benefits: job.benefits || [],
-      logo: job.logo || job.logo_url || '',
-      featured: job.featured || job.is_featured || false,
-      user_id: job.user_id,
-      // Additional fields
-      salary_min: job.salary_min?.toString() || '',
-      salary_max: job.salary_max?.toString() || '',
-      salary_currency: job.salary_currency || 'USD',
-      application_url: job.application_url || '',
-      contact_email: job.contact_email || '',
-      logo_url: job.logo_url || job.logo || '',
-      is_remote: job.is_remote || false,
-      is_featured: job.is_featured || job.featured || false
-    }));
-
+    // Map database records to our frontend Job model
+    const jobs = data.map(record => mapDatabaseRecordToJob(record));
     return jobs;
   } catch (error) {
     console.error('Error fetching trending jobs:', error);
@@ -119,31 +139,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       return staticJobs.find(job => job.id === id);
     }
 
-    return {
-      id: data.id,
-      title: data.title,
-      company: data.company,
-      location: data.location,
-      salary: data.salary || `${data.salary_min || ''}-${data.salary_max || ''} ${data.salary_currency || 'USD'}`,
-      type: data.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
-      posted: formatPostedDate(data.posted),
-      description: data.description,
-      responsibilities: data.responsibilities || [],
-      requirements: data.requirements || [],
-      benefits: data.benefits || [],
-      logo: data.logo || data.logo_url || '',
-      featured: data.featured || data.is_featured || false,
-      user_id: data.user_id,
-      // Additional fields
-      salary_min: data.salary_min?.toString() || '',
-      salary_max: data.salary_max?.toString() || '',
-      salary_currency: data.salary_currency || 'USD',
-      application_url: data.application_url || '',
-      contact_email: data.contact_email || '',
-      logo_url: data.logo_url || data.logo || '',
-      is_remote: data.is_remote || false,
-      is_featured: data.is_featured || data.featured || false
-    };
+    return mapDatabaseRecordToJob(data);
   } catch (error) {
     console.error('Error fetching job by ID:', error);
     return staticJobs.find(job => job.id === id);
@@ -155,37 +151,12 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
  */
 export const createJobListing = async (jobData: JobFormData): Promise<string> => {
   try {
-    // Format the requirements and benefits as arrays
-    const requirementsArray = jobData.requirements 
-      ? jobData.requirements.split('\n').filter(Boolean) 
-      : [];
-    
-    const benefitsArray = jobData.benefits 
-      ? jobData.benefits.split('\n').filter(Boolean) 
-      : [];
+    // Map frontend data to database fields
+    const dbFields = mapJobFormDataToDatabaseFields(jobData);
     
     const { data, error } = await supabase
       .from('job_postings')
-      .insert({
-        title: jobData.title,
-        company: jobData.company,
-        location: jobData.location,
-        type: jobData.type,
-        salary_min: jobData.salary_min ? jobData.salary_min : null,
-        salary_max: jobData.salary_max ? jobData.salary_max : null,
-        salary_currency: jobData.salary_currency,
-        description: jobData.description,
-        requirements: requirementsArray,
-        benefits: benefitsArray,
-        logo: jobData.logo_url || null,
-        logo_url: jobData.logo_url || null, 
-        application_url: jobData.application_url,
-        contact_email: jobData.contact_email,
-        is_remote: jobData.is_remote,
-        featured: jobData.is_featured,
-        is_featured: jobData.is_featured,
-        user_id: jobData.user_id
-      })
+      .insert(dbFields)
       .select();
 
     if (error) throw error;
@@ -201,37 +172,18 @@ export const createJobListing = async (jobData: JobFormData): Promise<string> =>
  */
 export const updateJobListing = async (id: string, jobData: JobFormData): Promise<void> => {
   try {
-    // Format the requirements and benefits as arrays
-    const requirementsArray = jobData.requirements 
-      ? jobData.requirements.split('\n').filter(Boolean) 
-      : [];
+    // Map frontend data to database fields
+    const dbFields = mapJobFormDataToDatabaseFields(jobData);
     
-    const benefitsArray = jobData.benefits 
-      ? jobData.benefits.split('\n').filter(Boolean) 
-      : [];
+    // Add updated_at field
+    const fieldsWithTimestamp = {
+      ...dbFields,
+      updated_at: new Date().toISOString()
+    };
     
     const { error } = await supabase
       .from('job_postings')
-      .update({
-        title: jobData.title,
-        company: jobData.company,
-        location: jobData.location,
-        type: jobData.type,
-        salary_min: jobData.salary_min ? jobData.salary_min : null,
-        salary_max: jobData.salary_max ? jobData.salary_max : null,
-        salary_currency: jobData.salary_currency,
-        description: jobData.description,
-        requirements: requirementsArray,
-        benefits: benefitsArray,
-        logo: jobData.logo_url || null,
-        logo_url: jobData.logo_url || null,
-        application_url: jobData.application_url,
-        contact_email: jobData.contact_email,
-        is_remote: jobData.is_remote,
-        featured: jobData.is_featured,
-        is_featured: jobData.is_featured,
-        updated_at: new Date().toISOString()
-      })
+      .update(fieldsWithTimestamp)
       .eq('id', id);
 
     if (error) throw error;
@@ -246,21 +198,23 @@ export const updateJobListing = async (id: string, jobData: JobFormData): Promis
  */
 export const seedJobs = async () => {
   try {
-    const { error } = await supabase.from('job_postings').insert(
-      staticJobs.map(job => ({
-        title: job.title,
-        company: job.company,
-        location: job.location,
-        salary: job.salary,
-        type: job.type,
-        description: job.description,
-        responsibilities: job.responsibilities,
-        requirements: job.requirements,
-        benefits: job.benefits,
-        logo: job.logo,
-        featured: job.featured
-      }))
-    );
+    const dbRecords = staticJobs.map(job => ({
+      title: job.title,
+      company: job.company,
+      location: job.location,
+      salary: job.salary,
+      type: job.type,
+      description: job.description,
+      responsibilities: job.responsibilities,
+      requirements: job.requirements,
+      benefits: job.benefits,
+      logo: job.logo,
+      featured: job.featured
+    }));
+
+    const { error } = await supabase
+      .from('job_postings')
+      .insert(dbRecords);
 
     if (error) throw error;
     console.log('Sample jobs seeded successfully');

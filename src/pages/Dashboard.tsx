@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +10,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Zap, Plus, Edit, Trash } from 'lucide-react';
 import { Job } from '@/lib/types/job.types';
+import { formatPostedDate } from '@/lib/utils/dateUtils';
 
 const Dashboard: React.FC = () => {
   const { user, signOut } = useAuth();
@@ -47,25 +47,25 @@ const Dashboard: React.FC = () => {
             title: job.title,
             company: job.company,
             location: job.location || '',
-            salary: job.salary || `${job.salary_min || ''}-${job.salary_max || ''} ${job.salary_currency || 'USD'}`,
+            salary: job.salary || '',
             type: job.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
-            posted: new Date(job.created_at).toLocaleDateString(),
+            posted: formatPostedDate(job.created_at),
             description: job.description,
             responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
             requirements: Array.isArray(job.requirements) ? job.requirements : [],
             benefits: Array.isArray(job.benefits) ? job.benefits : [],
-            logo: job.logo || job.logo_url || '',
-            featured: job.featured || job.is_featured || false,
+            logo: job.logo || '',
+            featured: job.featured || false,
             user_id: job.user_id,
-            // Additional fields
-            salary_min: job.salary_min?.toString() || '',
-            salary_max: job.salary_max?.toString() || '',
-            salary_currency: job.salary_currency || 'USD',
-            application_url: job.application_url || '',
-            contact_email: job.contact_email || '',
-            logo_url: job.logo_url || job.logo || '',
-            is_remote: job.is_remote || false,
-            is_featured: job.is_featured || job.featured || false
+            // Additional fields, derived from existing data
+            salary_min: '',
+            salary_max: '',
+            salary_currency: 'USD',
+            application_url: '',
+            contact_email: '',
+            logo_url: job.logo || '',
+            is_remote: false,
+            is_featured: job.featured || false
           }));
           
           setJobs(transformedJobs);
