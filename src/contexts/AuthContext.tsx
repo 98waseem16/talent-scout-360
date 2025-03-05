@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
@@ -23,6 +22,7 @@ interface AuthContextProps {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUp: (options: SignUpOptions) => Promise<void>;
   signOut: () => Promise<void>;
+  resetState: () => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -176,10 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       
-      // Forcibly clear state
-      setSession(null);
-      setUser(null);
-      setProfile(null);
+      resetState();
       
       toast({
         title: 'Sign out successful',
@@ -196,6 +193,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resetState = () => {
+    setSession(null);
+    setUser(null);
+    setProfile(null);
+    setIsLoading(false);
+    
+    localStorage.removeItem('supabase.auth.token');
+    
+    window.location.href = '/';
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -207,6 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithEmail,
         signUp,
         signOut,
+        resetState,
       }}
     >
       {children}

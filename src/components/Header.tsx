@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { UserCircle, LogOut, Menu, X, Rocket, Briefcase } from 'lucide-react';
+import { UserCircle, LogOut, Menu, X, Rocket, Briefcase, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -13,7 +13,7 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, isLoading } = useAuth();
+  const { user, signOut, isLoading, resetState } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -42,10 +42,28 @@ const Header: React.FC = () => {
     }
   };
 
+  const handleResetState = () => {
+    resetState();
+    toast.success("Session has been reset");
+  };
+
   // Render authentication section based on auth state
   const renderAuthSection = (isMobile = false) => {
     if (isLoading) {
-      return <Skeleton className={isMobile ? "h-10 w-full" : "h-10 w-24"} />;
+      return (
+        <>
+          <Skeleton className={isMobile ? "h-10 w-full mb-3" : "h-10 w-24"} />
+          <Button 
+            variant="destructive" 
+            size={isMobile ? "default" : "sm"} 
+            onClick={handleResetState}
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" />
+            Reset Session
+          </Button>
+        </>
+      );
     }
     
     if (user) {
@@ -71,14 +89,25 @@ const Header: React.FC = () => {
     }
     
     return (
-      <Link to="/auth">
+      <>
+        <Link to="/auth">
+          <Button 
+            variant="default" 
+            className={isMobile ? "w-full mb-3" : "ml-4"}
+          >
+            Sign In
+          </Button>
+        </Link>
         <Button 
-          variant="default" 
-          className={isMobile ? "w-full" : "ml-4"}
+          variant="destructive" 
+          size={isMobile ? "default" : "sm"} 
+          onClick={handleResetState}
+          className="flex items-center gap-2"
         >
-          Sign In
+          <RefreshCw className="h-4 w-4" />
+          Reset Session
         </Button>
-      </Link>
+      </>
     );
   };
 
