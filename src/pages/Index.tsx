@@ -31,6 +31,9 @@ const Index: React.FC = () => {
       
       {/* How It Works Section */}
       <section className="py-16 md:py-24 px-6 bg-secondary">
+        <div className="max-w-7xl mx-auto text-center mb-10">
+          <h2 className="text-3xl md:text-4xl font-medium mb-6">Trusted by some of the best talent out there</h2>
+        </div>
         <AnimatedTooltipPreview />
       </section>
       
