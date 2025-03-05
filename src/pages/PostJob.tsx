@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -41,17 +42,14 @@ const PostJob: React.FC = () => {
     company: '',
     location: '',
     type: 'Full-time',
-    salary_min: '',
-    salary_max: '',
-    salary_currency: 'USD',
     description: '',
     requirements: '',
     benefits: '',
     application_url: '',
     contact_email: '',
-    logo_url: '',
-    is_remote: false,
-    is_featured: false,
+    logo: '',
+    featured: false,
+    salary: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -69,9 +67,6 @@ const PostJob: React.FC = () => {
               company: jobData.company || '',
               location: jobData.location || '',
               type: jobData.type || 'Full-time',
-              salary_min: jobData.salary_min || '',
-              salary_max: jobData.salary_max || '',
-              salary_currency: jobData.salary_currency || 'USD',
               description: jobData.description || '',
               requirements: Array.isArray(jobData.requirements) 
                 ? jobData.requirements.join('\n') 
@@ -79,11 +74,14 @@ const PostJob: React.FC = () => {
               benefits: Array.isArray(jobData.benefits) 
                 ? jobData.benefits.join('\n') 
                 : '',
-              application_url: jobData.application_url || '',
-              contact_email: jobData.contact_email || '',
-              logo_url: jobData.logo_url || jobData.logo || '',
-              is_remote: jobData.is_remote || false,
-              is_featured: jobData.is_featured || jobData.featured || false,
+              responsibilities: Array.isArray(jobData.responsibilities)
+                ? jobData.responsibilities.join('\n')
+                : '',
+              application_url: '', // These fields aren't in the DB schema
+              contact_email: '',   // These fields aren't in the DB schema
+              logo: jobData.logo || '',
+              featured: jobData.featured || false,
+              salary: jobData.salary || '',
             });
           }
         } catch (error) {
@@ -121,7 +119,7 @@ const PostJob: React.FC = () => {
     
     try {
       // Upload logo if provided
-      let logoUrl = formData.logo_url;
+      let logoUrl = formData.logo;
       
       if (logoFile) {
         const fileName = `${user.id}-${Date.now()}-${logoFile.name}`;
@@ -142,7 +140,7 @@ const PostJob: React.FC = () => {
       // Prepare job data with user_id
       const jobDataToSubmit: JobFormData = {
         ...formData,
-        logo_url: logoUrl,
+        logo: logoUrl,
         user_id: user.id
       };
       
@@ -239,65 +237,21 @@ const PostJob: React.FC = () => {
                 </select>
               </div>
             </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="is_remote" 
-                checked={formData.is_remote} 
-                onCheckedChange={(checked) => 
-                  handleCheckboxChange('is_remote', checked as boolean)
-                } 
-              />
-              <Label htmlFor="is_remote">This is a remote position</Label>
-            </div>
           </div>
           
           {/* Salary Information */}
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Salary Information</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="salary_min">Minimum Salary</Label>
-                <Input 
-                  id="salary_min" 
-                  name="salary_min" 
-                  type="number" 
-                  value={formData.salary_min} 
-                  onChange={handleChange} 
-                  placeholder="e.g. 50000"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="salary_max">Maximum Salary</Label>
-                <Input 
-                  id="salary_max" 
-                  name="salary_max" 
-                  type="number" 
-                  value={formData.salary_max} 
-                  onChange={handleChange} 
-                  placeholder="e.g. 80000"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label htmlFor="salary_currency">Currency</Label>
-                <select
-                  id="salary_currency"
-                  name="salary_currency"
-                  value={formData.salary_currency}
-                  onChange={handleChange}
-                  className="w-full rounded-md border border-input bg-background px-3 py-2"
-                >
-                  <option value="USD">USD</option>
-                  <option value="EUR">EUR</option>
-                  <option value="GBP">GBP</option>
-                  <option value="CAD">CAD</option>
-                  <option value="AUD">AUD</option>
-                  <option value="JPY">JPY</option>
-                </select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="salary">Salary</Label>
+              <Input 
+                id="salary" 
+                name="salary" 
+                value={formData.salary} 
+                onChange={handleChange} 
+                placeholder="e.g. $50,000 - $80,000"
+              />
             </div>
           </div>
           
@@ -341,6 +295,18 @@ const PostJob: React.FC = () => {
                 className="min-h-[100px]"
               />
             </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="responsibilities">Responsibilities</Label>
+              <Textarea 
+                id="responsibilities" 
+                name="responsibilities" 
+                value={formData.responsibilities} 
+                onChange={handleChange} 
+                placeholder="List the key responsibilities for this role"
+                className="min-h-[100px]"
+              />
+            </div>
           </div>
           
           {/* Application Details */}
@@ -379,7 +345,7 @@ const PostJob: React.FC = () => {
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">Company Logo</h2>
             <LogoUpload 
-              currentLogoUrl={formData.logo_url} 
+              currentLogoUrl={formData.logo} 
               onLogoChange={handleLogoChange} 
             />
           </div>
@@ -390,13 +356,13 @@ const PostJob: React.FC = () => {
             
             <div className="flex items-center space-x-2">
               <Checkbox 
-                id="is_featured" 
-                checked={formData.is_featured} 
+                id="featured" 
+                checked={formData.featured} 
                 onCheckedChange={(checked) => 
-                  handleCheckboxChange('is_featured', checked as boolean)
+                  handleCheckboxChange('featured', checked as boolean)
                 } 
               />
-              <Label htmlFor="is_featured">
+              <Label htmlFor="featured">
                 Feature this job listing (additional fee applies)
               </Label>
             </div>

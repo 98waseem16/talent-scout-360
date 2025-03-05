@@ -22,16 +22,7 @@ const mapDatabaseRecordToJob = (record: any): Job => {
     benefits: Array.isArray(record.benefits) ? record.benefits : [],
     logo: record.logo || '',
     featured: record.featured || false,
-    user_id: record.user_id,
-    // Add our frontend-specific fields
-    salary_min: '',
-    salary_max: '',
-    salary_currency: 'USD',
-    application_url: '',
-    contact_email: '',
-    logo_url: record.logo || '',
-    is_remote: false,
-    is_featured: record.featured || false
+    user_id: record.user_id
   };
 };
 
@@ -51,24 +42,25 @@ const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDatabaseField
         ? formData.benefits.split('\n').filter(Boolean) 
         : formData.benefits)
     : [];
-
-  // Calculate salary string from min/max values
-  const salary = formData.salary_min || formData.salary_max 
-    ? `${formData.salary_min || ''}-${formData.salary_max || ''} ${formData.salary_currency || 'USD'}`
-    : '';
+    
+  const responsibilitiesArray = formData.responsibilities 
+    ? (typeof formData.responsibilities === 'string' 
+        ? formData.responsibilities.split('\n').filter(Boolean) 
+        : [])
+    : [];
 
   return {
     title: formData.title,
     company: formData.company,
     location: formData.location,
     type: formData.type,
-    salary: salary,
+    salary: formData.salary,
     description: formData.description,
     requirements: requirementsArray,
     benefits: benefitsArray,
-    responsibilities: [], // Default empty array since we don't have a field for this
-    logo: formData.logo_url || '',
-    featured: formData.is_featured,
+    responsibilities: responsibilitiesArray,
+    logo: formData.logo || '',
+    featured: formData.featured || false,
     user_id: formData.user_id
   };
 };

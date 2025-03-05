@@ -104,9 +104,7 @@ const Dashboard: React.FC = () => {
               <h1 className="text-3xl font-bold text-balance">Dashboard</h1>
               <p className="text-muted-foreground mt-1">Manage your job postings and account</p>
             </div>
-            <Button onClick={() => navigate('/post-job')} className="hover-scale">
-              <Plus className="mr-2 h-4 w-4" /> Post a New Job
-            </Button>
+            {/* Removed Post a New Job button */}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
