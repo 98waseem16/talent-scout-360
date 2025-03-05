@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin } from 'lucide-react';
+import Globe3D from './Globe3D';
 
 const Hero: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -78,13 +79,9 @@ const Hero: React.FC = () => {
             </form>
           </div>
           
-          <div className="hidden md:block relative">
+          <div className="hidden md:flex justify-center items-center relative">
             <div className="absolute top-0 right-0 -z-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-            <img 
-              src="/placeholder.svg" 
-              alt="Startup job search illustration" 
-              className="max-w-full rounded-xl shadow-2xl"
-            />
+            <Globe3D />
           </div>
         </div>
       </div>
