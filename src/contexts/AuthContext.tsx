@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { Session, User, AuthError } from '@supabase/supabase-js';
@@ -22,7 +23,6 @@ interface AuthContextProps {
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUp: (options: SignUpOptions) => Promise<void>;
   signOut: () => Promise<void>;
-  resetState: () => void;
 }
 
 const AuthContext = createContext<AuthContextProps | undefined>(undefined);
@@ -32,66 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastActivity, setLastActivity] = useState<number>(Date.now());
   const { toast } = useToast();
-
-  // Reset auth state and redirect to home
-  const resetState = () => {
-    console.log("Resetting auth state");
-    setSession(null);
-    setUser(null);
-    setProfile(null);
-    setIsLoading(false);
-    
-    // Clear any auth tokens from localStorage
-    localStorage.removeItem('supabase.auth.token');
-    sessionStorage.removeItem('supabase.auth.token');
-    
-    // Hard redirect to clear any potential corrupt state
-    window.location.href = '/';
-  };
-
-  // Monitor user activity to detect potential stuck states
-  useEffect(() => {
-    const activityEvents = ['click', 'keydown', 'mousemove', 'scroll'];
-    
-    const updateLastActivity = () => {
-      setLastActivity(Date.now());
-    };
-    
-    // Add event listeners for user activity
-    activityEvents.forEach(event => {
-      window.addEventListener(event, updateLastActivity);
-    });
-    
-    // Check for inactive but perpetually loading states
-    const checkInactiveLoading = setInterval(() => {
-      const currentTime = Date.now();
-      const inactiveTime = currentTime - lastActivity;
-      
-      // If app has been loading for over 15 seconds with no user activity for 10 seconds
-      if (isLoading && inactiveTime > 10000) {
-        console.warn("Detected inactive loading state for", inactiveTime, "ms");
-        
-        // If inactive and loading for too long, auto-reset
-        if (inactiveTime > 15000) {
-          console.warn("Auto-resetting after inactive loading state");
-          resetState();
-          toast({
-            title: 'Session Reset',
-            description: 'The app was automatically reset after detecting a stuck state',
-          });
-        }
-      }
-    }, 5000);
-    
-    return () => {
-      activityEvents.forEach(event => {
-        window.removeEventListener(event, updateLastActivity);
-      });
-      clearInterval(checkInactiveLoading);
-    };
-  }, [isLoading, lastActivity]);
 
   useEffect(() => {
     const fetchProfile = async (userId: string) => {
@@ -117,10 +58,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setIsLoading(true);
         const { data: { session }, error } = await supabase.auth.getSession();
         
-        if (error) {
-          console.error('Error getting session:', error);
-          throw error;
-        }
+        if (error) throw error;
         
         setSession(session);
         setUser(session?.user || null);
@@ -131,24 +69,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       } catch (error) {
         console.error('Error getting session:', error);
-        // Auto-reset on critical errors
-        if (error instanceof Error && error.message.includes('token')) {
-          resetState();
-        }
       } finally {
         setIsLoading(false);
       }
     };
 
     getCurrentSession();
-
-    // Set a timeout to prevent indefinite loading
-    const loadingTimeoutId = setTimeout(() => {
-      if (isLoading) {
-        console.warn("Auth provider still loading after timeout, forcing state reset");
-        resetState();
-      }
-    }, 15000);
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, newSession) => {
@@ -163,14 +89,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setProfile(null);
         }
-        
-        setIsLoading(false); // Ensure loading state is cleared on auth state change
       }
     );
 
     return () => {
       subscription.unsubscribe();
-      clearTimeout(loadingTimeoutId);
     };
   }, []);
 
@@ -253,7 +176,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
       
-      resetState();
+      // Forcibly clear state
+      setSession(null);
+      setUser(null);
+      setProfile(null);
       
       toast({
         title: 'Sign out successful',
@@ -281,7 +207,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         signInWithEmail,
         signUp,
         signOut,
-        resetState,
       }}
     >
       {children}

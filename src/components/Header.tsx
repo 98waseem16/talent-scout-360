@@ -1,19 +1,19 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { UserCircle, LogOut, Menu, X, Rocket, Briefcase, RefreshCw } from 'lucide-react';
+import { UserCircle, LogOut, Menu, X, Rocket, Briefcase } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const Header: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [loadingTimeout, setLoadingTimeout] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, signOut, isLoading, resetState } = useAuth();
+  const { user, signOut, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,34 +29,6 @@ const Header: React.FC = () => {
     setIsMenuOpen(false);
   }, [location.pathname]);
 
-  // Detect potential stuck loading states
-  useEffect(() => {
-    let timeoutId: number;
-    
-    if (isLoading) {
-      // If loading persists for more than 8 seconds, consider it stuck
-      timeoutId = window.setTimeout(() => {
-        setLoadingTimeout(true);
-        console.warn("Detected potentially stuck loading state in Header");
-        
-        // Auto-reset after additional delay if still loading
-        const autoResetId = window.setTimeout(() => {
-          if (isLoading) {
-            console.warn("Auto-resetting after prolonged loading state");
-            resetState();
-            toast.info("Session was automatically reset due to a stuck state");
-          }
-        }, 5000);
-        
-        return () => window.clearTimeout(autoResetId);
-      }, 8000);
-    } else {
-      setLoadingTimeout(false);
-    }
-    
-    return () => window.clearTimeout(timeoutId);
-  }, [isLoading, resetState]);
-
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleSignOut = async () => {
@@ -67,35 +39,13 @@ const Header: React.FC = () => {
     } catch (error) {
       console.error("Sign out error:", error);
       toast.error("Failed to sign out. Please try again.");
-      // Auto-reset on sign out error
-      resetState();
     }
-  };
-
-  const handleResetState = () => {
-    resetState();
-    toast.success("Session has been reset");
   };
 
   // Render authentication section based on auth state
   const renderAuthSection = (isMobile = false) => {
     if (isLoading) {
-      return (
-        <>
-          <Skeleton className={isMobile ? "h-10 w-full mb-3" : "h-10 w-24"} />
-          {loadingTimeout && (
-            <Button 
-              variant="destructive" 
-              size={isMobile ? "default" : "sm"} 
-              onClick={handleResetState}
-              className="flex items-center gap-2"
-            >
-              <RefreshCw className="h-4 w-4" />
-              Reset Session
-            </Button>
-          )}
-        </>
-      );
+      return <Skeleton className={isMobile ? "h-10 w-full" : "h-10 w-24"} />;
     }
     
     if (user) {
@@ -121,16 +71,14 @@ const Header: React.FC = () => {
     }
     
     return (
-      <>
-        <Link to="/auth">
-          <Button 
-            variant="default" 
-            className={isMobile ? "w-full mb-3" : "ml-4"}
-          >
-            Sign In
-          </Button>
-        </Link>
-      </>
+      <Link to="/auth">
+        <Button 
+          variant="default" 
+          className={isMobile ? "w-full" : "ml-4"}
+        >
+          Sign In
+        </Button>
+      </Link>
     );
   };
 
