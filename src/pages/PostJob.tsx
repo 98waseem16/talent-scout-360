@@ -179,16 +179,23 @@ const PostJob: React.FC = () => {
     setIsSubmitting(true);
     
     try {
+      console.log('Submitting job form data:', formData);
+      
       // Upload logo if provided
       let logoUrl = formData.logo;
       
       if (logoFile) {
         const fileName = `${user.id}-${Date.now()}-${logoFile.name}`;
+        console.log('Uploading logo file:', fileName);
+        
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('logos')
           .upload(fileName, logoFile);
           
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Error uploading logo:', uploadError);
+          throw uploadError;
+        }
         
         // Get public URL
         const { data: urlData } = supabase.storage
@@ -196,6 +203,7 @@ const PostJob: React.FC = () => {
           .getPublicUrl(fileName);
           
         logoUrl = urlData.publicUrl;
+        console.log('Logo uploaded successfully, URL:', logoUrl);
       }
       
       // Prepare job data with user_id
@@ -204,6 +212,8 @@ const PostJob: React.FC = () => {
         logo: logoUrl,
         user_id: user.id
       };
+      
+      console.log('Final job data to submit:', jobDataToSubmit);
       
       if (isEditMode && id) {
         await updateJobListing(id, jobDataToSubmit);

@@ -42,7 +42,7 @@ const mapDatabaseRecordToJob = (record: any): Job => {
  * Maps our frontend model to database fields
  */
 const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDatabaseFields => {
-  // Handle array types properly
+  // Handle array types properly with proper type checks
   let requirementsArray: string[] = [];
   if (Array.isArray(formData.requirements)) {
     requirementsArray = formData.requirements;
@@ -170,6 +170,8 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
  */
 export const createJobListing = async (jobData: JobFormData): Promise<string> => {
   try {
+    console.log('Creating job with data:', jobData);
+    
     // Map frontend data to database fields
     const dbFields = mapJobFormDataToDatabaseFields(jobData);
     
@@ -178,7 +180,12 @@ export const createJobListing = async (jobData: JobFormData): Promise<string> =>
       .insert(dbFields)
       .select();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error creating job:', error);
+      throw error;
+    }
+    
+    console.log('Job created successfully:', data);
     return data[0].id;
   } catch (error) {
     console.error('Error creating job:', error);
@@ -191,6 +198,8 @@ export const createJobListing = async (jobData: JobFormData): Promise<string> =>
  */
 export const updateJobListing = async (id: string, jobData: JobFormData): Promise<void> => {
   try {
+    console.log('Updating job ID:', id, 'with data:', jobData);
+    
     // Map frontend data to database fields
     const dbFields = mapJobFormDataToDatabaseFields(jobData);
     
@@ -205,7 +214,12 @@ export const updateJobListing = async (id: string, jobData: JobFormData): Promis
       .update(fieldsWithTimestamp)
       .eq('id', id);
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error updating job:', error);
+      throw error;
+    }
+    
+    console.log('Job updated successfully');
   } catch (error) {
     console.error('Error updating job:', error);
     throw error;
