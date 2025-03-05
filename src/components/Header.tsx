@@ -84,12 +84,7 @@ const Header: React.FC = () => {
 
   return (
     <header
-      className={cn(
-        'fixed top-0 left-0 right-0 z-50 transition-all duration-300',
-        isScrolled 
-          ? 'bg-white/80 backdrop-blur-md shadow-sm py-3' 
-          : 'bg-transparent py-5'
-      )}
+      className="fixed top-0 left-0 right-0 z-50 transition-all duration-300 bg-transparent py-5"
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
@@ -126,7 +121,7 @@ const Header: React.FC = () => {
       {/* Mobile Navigation */}
       <div
         className={cn(
-          'fixed inset-0 bg-white/80 backdrop-blur-md z-40 pt-24 px-6 transition-transform duration-300 md:hidden',
+          'fixed inset-0 bg-transparent backdrop-blur-md z-40 pt-24 px-6 transition-transform duration-300 md:hidden',
           isMenuOpen ? 'translate-x-0' : 'translate-x-full'
         )}
       >
