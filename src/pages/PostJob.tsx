@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
 import { 
   Briefcase, 
   Building, 
@@ -350,13 +358,23 @@ const PostJob: React.FC = () => {
                     <BarChart4 className="h-5 w-5 text-muted-foreground" />
                     <span>Investment Stage</span>
                   </label>
-                  <Input 
-                    id="investment_stage" 
-                    name="investment_stage" 
+                  <Select 
                     value={formData.investment_stage} 
-                    onChange={handleInputChange} 
-                    placeholder="e.g. Seed, Series A, Bootstrapped"
-                  />
+                    onValueChange={(value) => handleSelectChange('investment_stage', value)}
+                  >
+                    <SelectTrigger id="investment_stage">
+                      <SelectValue placeholder="Select investment stage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Bootstrapped">Bootstrapped</SelectItem>
+                      <SelectItem value="Pre-Seed">Pre-Seed</SelectItem>
+                      <SelectItem value="Seed">Seed</SelectItem>
+                      <SelectItem value="Series A">Series A</SelectItem>
+                      <SelectItem value="Series B">Series B</SelectItem>
+                      <SelectItem value="Series C+">Series C+</SelectItem>
+                      <SelectItem value="Public">Public</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">
@@ -364,13 +382,21 @@ const PostJob: React.FC = () => {
                     <Users className="h-5 w-5 text-muted-foreground" />
                     <span>Team Size</span>
                   </label>
-                  <Input 
-                    id="team_size" 
-                    name="team_size" 
+                  <Select 
                     value={formData.team_size} 
-                    onChange={handleInputChange} 
-                    placeholder="e.g. 1-10, 11-50, 51-200"
-                  />
+                    onValueChange={(value) => handleSelectChange('team_size', value)}
+                  >
+                    <SelectTrigger id="team_size">
+                      <SelectValue placeholder="Select team size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1-10">1-10</SelectItem>
+                      <SelectItem value="11-50">11-50</SelectItem>
+                      <SelectItem value="51-200">51-200</SelectItem>
+                      <SelectItem value="201-500">201-500</SelectItem>
+                      <SelectItem value="500+">500+</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">
@@ -378,13 +404,23 @@ const PostJob: React.FC = () => {
                     <DollarSign className="h-5 w-5 text-muted-foreground" />
                     <span>Revenue Model</span>
                   </label>
-                  <Input 
-                    id="revenue_model" 
-                    name="revenue_model" 
+                  <Select 
                     value={formData.revenue_model} 
-                    onChange={handleInputChange} 
-                    placeholder="e.g. SaaS, Marketplace, E-commerce"
-                  />
+                    onValueChange={(value) => handleSelectChange('revenue_model', value)}
+                  >
+                    <SelectTrigger id="revenue_model">
+                      <SelectValue placeholder="Select revenue model" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Subscription">Subscription</SelectItem>
+                      <SelectItem value="Marketplace">Marketplace</SelectItem>
+                      <SelectItem value="SaaS">SaaS</SelectItem>
+                      <SelectItem value="Enterprise">Enterprise</SelectItem>
+                      <SelectItem value="Ads">Ads</SelectItem>
+                      <SelectItem value="E-commerce">E-commerce</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
                 
                 <div className="space-y-2">
@@ -392,19 +428,247 @@ const PostJob: React.FC = () => {
                     <Briefcase className="h-5 w-5 text-muted-foreground" />
                     <span>Job Type*</span>
                   </label>
-                  <select
-                    id="type"
-                    name="type"
-                    value={formData.type}
-                    onChange={handleInputChange}
+                  <Select 
+                    value={formData.type} 
+                    onValueChange={(value) => handleSelectChange('type', value)}
                     required
-                    className="w-full rounded-md border border-input bg-background px-3 py-2"
                   >
-                    <option value="Full-time">Full-time</option>
-                    <option value="Part-time">Part-time</option>
-                    <option value="Contract">Contract</option>
-                    <option value="Remote">Remote</option>
-                  </select>
+                    <SelectTrigger id="type">
+                      <SelectValue placeholder="Select job type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Full-time">Full-time</SelectItem>
+                      <SelectItem value="Part-time">Part-time</SelectItem>
+                      <SelectItem value="Contract">Contract</SelectItem>
+                      <SelectItem value="Remote">Remote</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {/* Job Role & Function */}
+              <div className="space-y-1 pt-4 border-t">
+                <h2 className="text-xl font-medium">Job Role & Function</h2>
+                <p className="text-sm text-muted-foreground">
+                  Details about the position's department and seniority level
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label htmlFor="department" className="flex items-center space-x-2 text-sm font-medium">
+                    <Building className="h-5 w-5 text-muted-foreground" />
+                    <span>Department</span>
+                  </label>
+                  <Select 
+                    value={formData.department} 
+                    onValueChange={(value) => handleSelectChange('department', value)}
+                  >
+                    <SelectTrigger id="department">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Engineering">Engineering</SelectItem>
+                      <SelectItem value="Product">Product</SelectItem>
+                      <SelectItem value="Design">Design</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Sales">Sales</SelectItem>
+                      <SelectItem value="Operations">Operations</SelectItem>
+                      <SelectItem value="HR">HR</SelectItem>
+                      <SelectItem value="Customer Support">Customer Support</SelectItem>
+                      <SelectItem value="Legal">Legal</SelectItem>
+                      <SelectItem value="Finance">Finance</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="seniority_level" className="flex items-center space-x-2 text-sm font-medium">
+                    <Briefcase className="h-5 w-5 text-muted-foreground" />
+                    <span>Seniority Level</span>
+                  </label>
+                  <Select 
+                    value={formData.seniority_level} 
+                    onValueChange={(value) => handleSelectChange('seniority_level', value)}
+                  >
+                    <SelectTrigger id="seniority_level">
+                      <SelectValue placeholder="Select seniority level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Internship">Internship</SelectItem>
+                      <SelectItem value="Entry-Level">Entry-Level</SelectItem>
+                      <SelectItem value="Mid-Level">Mid-Level</SelectItem>
+                      <SelectItem value="Senior">Senior</SelectItem>
+                      <SelectItem value="Lead">Lead</SelectItem>
+                      <SelectItem value="Director">Director</SelectItem>
+                      <SelectItem value="VP">VP</SelectItem>
+                      <SelectItem value="C-Level">C-Level</SelectItem>
+                      <SelectItem value="Who Cares">Who Cares</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="job_type" className="flex items-center space-x-2 text-sm font-medium">
+                    <Briefcase className="h-5 w-5 text-muted-foreground" />
+                    <span>Job Type</span>
+                  </label>
+                  <Select 
+                    value={formData.job_type} 
+                    onValueChange={(value) => handleSelectChange('job_type', value)}
+                  >
+                    <SelectTrigger id="job_type">
+                      <SelectValue placeholder="Select job type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Full-time">Full-time</SelectItem>
+                      <SelectItem value="Part-time">Part-time</SelectItem>
+                      <SelectItem value="Contract">Contract</SelectItem>
+                      <SelectItem value="Freelance">Freelance</SelectItem>
+                      <SelectItem value="Internship">Internship</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {/* Compensation & Benefits */}
+              <div className="space-y-1 pt-4 border-t">
+                <h2 className="text-xl font-medium">Compensation & Benefits</h2>
+                <p className="text-sm text-muted-foreground">
+                  Financial and non-financial benefits of the position
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label htmlFor="salary_range" className="flex items-center space-x-2 text-sm font-medium">
+                    <DollarSign className="h-5 w-5 text-muted-foreground" />
+                    <span>Salary Range</span>
+                  </label>
+                  <Select 
+                    value={formData.salary_range} 
+                    onValueChange={(value) => handleSelectChange('salary_range', value)}
+                  >
+                    <SelectTrigger id="salary_range">
+                      <SelectValue placeholder="Select salary range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Negotiable">Negotiable</SelectItem>
+                      <SelectItem value="$40K-$60K">$40K-$60K</SelectItem>
+                      <SelectItem value="$60K-$80K">$60K-$80K</SelectItem>
+                      <SelectItem value="$80K-$120K">$80K-$120K</SelectItem>
+                      <SelectItem value="$120K+">$120K+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="equity" className="flex items-center space-x-2 text-sm font-medium">
+                    <BarChart4 className="h-5 w-5 text-muted-foreground" />
+                    <span>Equity</span>
+                  </label>
+                  <Select 
+                    value={formData.equity} 
+                    onValueChange={(value) => handleSelectChange('equity', value)}
+                  >
+                    <SelectTrigger id="equity">
+                      <SelectValue placeholder="Select equity range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="None">None</SelectItem>
+                      <SelectItem value="0.1%-0.5%">0.1%-0.5%</SelectItem>
+                      <SelectItem value="0.5%-1%">0.5%-1%</SelectItem>
+                      <SelectItem value="1%+">1%+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              
+              {/* Working Conditions */}
+              <div className="space-y-1 pt-4 border-t">
+                <h2 className="text-xl font-medium">Working Conditions</h2>
+                <p className="text-sm text-muted-foreground">
+                  Details about work location, schedule, and visa requirements
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label htmlFor="remote_onsite" className="flex items-center space-x-2 text-sm font-medium">
+                    <Globe className="h-5 w-5 text-muted-foreground" />
+                    <span>Remote vs. Onsite</span>
+                  </label>
+                  <Select 
+                    value={formData.remote_onsite} 
+                    onValueChange={(value) => handleSelectChange('remote_onsite', value)}
+                  >
+                    <SelectTrigger id="remote_onsite">
+                      <SelectValue placeholder="Select work location type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Fully Remote">Fully Remote</SelectItem>
+                      <SelectItem value="Hybrid">Hybrid</SelectItem>
+                      <SelectItem value="Onsite">Onsite</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="work_hours" className="flex items-center space-x-2 text-sm font-medium">
+                    <Clock className="h-5 w-5 text-muted-foreground" />
+                    <span>Work Hours</span>
+                  </label>
+                  <Select 
+                    value={formData.work_hours} 
+                    onValueChange={(value) => handleSelectChange('work_hours', value)}
+                  >
+                    <SelectTrigger id="work_hours">
+                      <SelectValue placeholder="Select work hour structure" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Flexible">Flexible</SelectItem>
+                      <SelectItem value="Fixed">Fixed</SelectItem>
+                      <SelectItem value="Async Work">Async Work</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="visa_sponsorship" className="flex items-center space-x-2 text-sm font-medium">
+                    <Globe className="h-5 w-5 text-muted-foreground" />
+                    <span>Visa Sponsorship</span>
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      id="visa_sponsorship"
+                      checked={formData.visa_sponsorship}
+                      onCheckedChange={(checked) => handleSwitchChange('visa_sponsorship', checked)}
+                    />
+                    <span className="text-sm text-muted-foreground">
+                      {formData.visa_sponsorship ? 'Yes, we offer visa sponsorship' : 'No visa sponsorship available'}
+                    </span>
+                  </div>
+                </div>
+                
+                <div className="space-y-2">
+                  <label htmlFor="hiring_urgency" className="flex items-center space-x-2 text-sm font-medium">
+                    <Clock className="h-5 w-5 text-muted-foreground" />
+                    <span>Hiring Urgency</span>
+                  </label>
+                  <Select 
+                    value={formData.hiring_urgency} 
+                    onValueChange={(value) => handleSelectChange('hiring_urgency', value)}
+                  >
+                    <SelectTrigger id="hiring_urgency">
+                      <SelectValue placeholder="Select hiring timeline" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Immediate Hire">Immediate Hire</SelectItem>
+                      <SelectItem value="Within a Month">Within a Month</SelectItem>
+                      <SelectItem value="Open to Future Applicants">Open to Future Applicants</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
               

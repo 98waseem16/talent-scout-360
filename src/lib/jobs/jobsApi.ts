@@ -42,24 +42,27 @@ const mapDatabaseRecordToJob = (record: any): Job => {
  * Maps our frontend model to database fields
  */
 const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDatabaseFields => {
-  // Fixed type handling for array fields
-  const requirementsArray = Array.isArray(formData.requirements) 
-    ? formData.requirements 
-    : (typeof formData.requirements === 'string' 
-        ? formData.requirements.split('\n').filter(Boolean) 
-        : []);
+  // Handle array types properly
+  let requirementsArray: string[] = [];
+  if (Array.isArray(formData.requirements)) {
+    requirementsArray = formData.requirements;
+  } else if (typeof formData.requirements === 'string') {
+    requirementsArray = formData.requirements.split('\n').filter(Boolean);
+  }
   
-  const benefitsArray = Array.isArray(formData.benefits) 
-    ? formData.benefits 
-    : (typeof formData.benefits === 'string' 
-        ? formData.benefits.split('\n').filter(Boolean) 
-        : []);
+  let benefitsArray: string[] = [];
+  if (Array.isArray(formData.benefits)) {
+    benefitsArray = formData.benefits;
+  } else if (typeof formData.benefits === 'string') {
+    benefitsArray = formData.benefits.split('\n').filter(Boolean);
+  }
     
-  const responsibilitiesArray = Array.isArray(formData.responsibilities) 
-    ? formData.responsibilities 
-    : (typeof formData.responsibilities === 'string' 
-        ? formData.responsibilities.split('\n').filter(Boolean) 
-        : []);
+  let responsibilitiesArray: string[] = [];
+  if (Array.isArray(formData.responsibilities)) {
+    responsibilitiesArray = formData.responsibilities;
+  } else if (typeof formData.responsibilities === 'string') {
+    responsibilitiesArray = formData.responsibilities.split('\n').filter(Boolean);
+  }
 
   return {
     title: formData.title,
