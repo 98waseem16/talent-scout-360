@@ -1,14 +1,13 @@
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { Briefcase, Building, MapPin, DollarSign } from 'lucide-react';
+import { Briefcase, Building, MapPin } from 'lucide-react';
 
 interface JobBasicInfoProps {
   formData: {
     title: string;
     company: string;
     location: string;
-    salary: string;
   };
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -65,20 +64,6 @@ const JobBasicInfo: React.FC<JobBasicInfoProps> = ({ formData, handleInputChange
             value={formData.location} 
             onChange={handleInputChange} 
             placeholder="e.g. New York, NY (or Remote)"
-          />
-        </div>
-        
-        <div className="space-y-2">
-          <label htmlFor="salary" className="flex items-center space-x-2 text-sm font-medium">
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
-            <span>Salary Range</span>
-          </label>
-          <Input 
-            id="salary" 
-            name="salary" 
-            value={formData.salary} 
-            onChange={handleInputChange} 
-            placeholder="e.g. $80,000 - $120,000"
           />
         </div>
       </div>
