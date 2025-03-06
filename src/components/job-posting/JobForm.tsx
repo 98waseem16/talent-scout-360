@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -30,6 +31,7 @@ const JobForm: React.FC = () => {
     company: '',
     location: '',
     type: 'Full-time',
+    salary: '',
     description: '',
     responsibilities: [''],
     requirements: [''],
@@ -63,6 +65,7 @@ const JobForm: React.FC = () => {
               company: jobData.company || '',
               location: jobData.location || '',
               type: jobData.type || 'Full-time',
+              salary: jobData.salary || '',
               description: jobData.description || '',
               requirements: jobData.requirements || [''],
               benefits: jobData.benefits || [''],
@@ -229,7 +232,11 @@ const JobForm: React.FC = () => {
         <JobRoleFunction formData={formData} handleSelectChange={handleSelectChange} />
         
         {/* Compensation & Benefits */}
-        <CompensationBenefits formData={formData} handleSelectChange={handleSelectChange} />
+        <CompensationBenefits 
+          formData={formData} 
+          handleSelectChange={handleSelectChange}
+          handleInputChange={handleInputChange}
+        />
         
         {/* Working Conditions */}
         <WorkingConditions 
