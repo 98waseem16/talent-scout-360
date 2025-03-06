@@ -13,6 +13,7 @@ interface JobRoleFunctionProps {
   formData: {
     department?: string;
     seniority_level?: string;
+    job_type?: string;
   };
   handleSelectChange: (name: string, value: string) => void;
 }
@@ -78,6 +79,28 @@ const JobRoleFunction: React.FC<JobRoleFunctionProps> = ({ formData, handleSelec
               <SelectItem value="VP">VP</SelectItem>
               <SelectItem value="C-Level">C-Level</SelectItem>
               <SelectItem value="Who Cares">Who Cares</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        
+        <div className="space-y-2">
+          <label htmlFor="job_type" className="flex items-center space-x-2 text-sm font-medium">
+            <Briefcase className="h-5 w-5 text-muted-foreground" />
+            <span>Job Type</span>
+          </label>
+          <Select 
+            value={formData.job_type} 
+            onValueChange={(value) => handleSelectChange('job_type', value)}
+          >
+            <SelectTrigger id="job_type">
+              <SelectValue placeholder="Select job type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Full-time">Full-time</SelectItem>
+              <SelectItem value="Part-time">Part-time</SelectItem>
+              <SelectItem value="Contract">Contract</SelectItem>
+              <SelectItem value="Freelance">Freelance</SelectItem>
+              <SelectItem value="Internship">Internship</SelectItem>
             </SelectContent>
           </Select>
         </div>

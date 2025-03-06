@@ -8,23 +8,16 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 
 interface CompensationBenefitsProps {
   formData: {
-    salary?: string;
     salary_range?: string;
     equity?: string;
   };
   handleSelectChange: (name: string, value: string) => void;
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
 }
 
-const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({ 
-  formData, 
-  handleSelectChange,
-  handleInputChange 
-}) => {
+const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({ formData, handleSelectChange }) => {
   return (
     <>
       <div className="space-y-1 pt-4 border-t">
@@ -35,21 +28,6 @@ const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label htmlFor="salary" className="flex items-center space-x-2 text-sm font-medium">
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
-            <span>Salary*</span>
-          </label>
-          <Input 
-            id="salary" 
-            name="salary" 
-            value={formData.salary || ''} 
-            onChange={handleInputChange} 
-            required 
-            placeholder="e.g. $90,000 - $120,000"
-          />
-        </div>
-        
         <div className="space-y-2">
           <label htmlFor="salary_range" className="flex items-center space-x-2 text-sm font-medium">
             <DollarSign className="h-5 w-5 text-muted-foreground" />

@@ -31,17 +31,18 @@ const JobForm: React.FC = () => {
     company: '',
     location: '',
     type: 'Full-time',
-    salary: '',
     description: '',
     responsibilities: [''],
     requirements: [''],
     benefits: [''],
     logo: '/placeholder.svg',
+    salary: '',
     investment_stage: '',
     team_size: '',
     revenue_model: '',
     department: '',
     seniority_level: '',
+    job_type: '',
     salary_range: '',
     equity: '',
     remote_onsite: '',
@@ -65,18 +66,19 @@ const JobForm: React.FC = () => {
               company: jobData.company || '',
               location: jobData.location || '',
               type: jobData.type || 'Full-time',
-              salary: jobData.salary || '',
               description: jobData.description || '',
               requirements: jobData.requirements || [''],
               benefits: jobData.benefits || [''],
               responsibilities: jobData.responsibilities || [''],
               logo: jobData.logo || '/placeholder.svg',
               featured: jobData.featured || false,
+              salary: jobData.salary || '',
               investment_stage: jobData.investment_stage || '',
               team_size: jobData.team_size || '',
               revenue_model: jobData.revenue_model || '',
               department: jobData.department || '',
               seniority_level: jobData.seniority_level || '',
+              job_type: jobData.job_type || '',
               salary_range: jobData.salary_range || '',
               equity: jobData.equity || '',
               remote_onsite: jobData.remote_onsite || '',
@@ -153,21 +155,16 @@ const JobForm: React.FC = () => {
       let logoUrl = formData.logo;
       
       if (logoFile) {
-        const fileName = `${Date.now()}-${logoFile.name}`;
+        const fileName = `${user.id}-${Date.now()}-${logoFile.name}`;
         console.log('Uploading logo file:', fileName);
         
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from('logos')
-          .upload(fileName, logoFile, {
-            upsert: false,
-            cacheControl: '3600'
-          });
+          .upload(fileName, logoFile);
           
         if (uploadError) {
           console.error('Error uploading logo:', uploadError);
-          toast.error(`Error uploading logo: ${uploadError.message}`);
-          setIsSubmitting(false);
-          return;
+          throw uploadError;
         }
         
         // Get public URL
@@ -198,9 +195,9 @@ const JobForm: React.FC = () => {
       
       // Redirect to dashboard
       navigate('/dashboard');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error saving job:', error);
-      toast.error(`Failed to save job listing: ${error.message || 'Unknown error'}`);
+      toast.error('Failed to save job listing');
     } finally {
       setIsSubmitting(false);
     }
@@ -232,11 +229,7 @@ const JobForm: React.FC = () => {
         <JobRoleFunction formData={formData} handleSelectChange={handleSelectChange} />
         
         {/* Compensation & Benefits */}
-        <CompensationBenefits 
-          formData={formData} 
-          handleSelectChange={handleSelectChange}
-          handleInputChange={handleInputChange}
-        />
+        <CompensationBenefits formData={formData} handleSelectChange={handleSelectChange} />
         
         {/* Working Conditions */}
         <WorkingConditions 

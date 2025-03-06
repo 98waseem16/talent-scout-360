@@ -14,7 +14,6 @@ const Header: React.FC = () => {
   const navigate = useNavigate();
   const { user, signOut, isLoading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -40,15 +39,12 @@ const Header: React.FC = () => {
 
   const handleSignOut = async () => {
     try {
-      setIsSigningOut(true);
       await signOut();
       toast.success("Successfully signed out");
       navigate('/', { replace: true });
     } catch (error) {
       console.error("Sign out error:", error);
       toast.error("Failed to sign out. Please try again.");
-    } finally {
-      setIsSigningOut(false);
     }
   };
 
@@ -71,11 +67,10 @@ const Header: React.FC = () => {
             variant="outline"
             size={isMobile ? "default" : "sm"}
             onClick={handleSignOut}
-            disabled={isSigningOut}
             className="flex items-center gap-2"
           >
             <LogOut className="h-4 w-4" />
-            {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+            Sign Out
           </Button>
         </>
       );

@@ -1,4 +1,3 @@
-
 import { Job, JobDatabaseFields, JobFormData } from '../../types/job.types';
 import { formatPostedDate } from '../../utils/dateUtils';
 

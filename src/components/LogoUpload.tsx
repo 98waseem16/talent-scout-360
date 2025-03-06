@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Upload, X } from 'lucide-react';
-import { toast } from 'sonner';
 
 interface LogoUploadProps {
   currentLogoUrl?: string;
@@ -17,18 +16,6 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ currentLogoUrl, onLogoChange })
     const file = event.target.files?.[0] || null;
     
     if (file) {
-      // Check file size - limit to 2MB
-      if (file.size > 2 * 1024 * 1024) {
-        toast.error("File size exceeds the 2MB limit");
-        return;
-      }
-
-      // Check file type - allow only images
-      if (!file.type.startsWith('image/')) {
-        toast.error("Only image files are allowed");
-        return;
-      }
-
       const fileReader = new FileReader();
       fileReader.onload = () => {
         setPreviewUrl(fileReader.result as string);
@@ -84,7 +71,7 @@ const LogoUpload: React.FC<LogoUploadProps> = ({ currentLogoUrl, onLogoChange })
       </div>
       
       <p className="text-sm text-gray-500 text-center max-w-xs">
-        Upload your company logo. Max size: 2MB. PNG or JPG format.
+        Upload your company logo. Recommended size: 200x200px. PNG or JPG format.
       </p>
     </div>
   );
