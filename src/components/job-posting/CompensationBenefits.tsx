@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { DollarSign, BarChart4 } from 'lucide-react';
-import { Input } from '@/components/ui/input';
 import { 
   Select, 
   SelectContent, 
@@ -12,19 +11,13 @@ import {
 
 interface CompensationBenefitsProps {
   formData: {
-    salary: string;
     salary_range?: string;
     equity?: string;
   };
-  handleInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   handleSelectChange: (name: string, value: string) => void;
 }
 
-const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({ 
-  formData, 
-  handleInputChange, 
-  handleSelectChange 
-}) => {
+const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({ formData, handleSelectChange }) => {
   return (
     <>
       <div className="space-y-1 pt-4 border-t">
@@ -35,20 +28,6 @@ const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({
       </div>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="space-y-2">
-          <label htmlFor="salary" className="flex items-center space-x-2 text-sm font-medium">
-            <DollarSign className="h-5 w-5 text-muted-foreground" />
-            <span>Salary</span>
-          </label>
-          <Input 
-            id="salary" 
-            name="salary" 
-            value={formData.salary} 
-            onChange={handleInputChange} 
-            placeholder="e.g. $80,000 - $100,000"
-          />
-        </div>
-        
         <div className="space-y-2">
           <label htmlFor="salary_range" className="flex items-center space-x-2 text-sm font-medium">
             <DollarSign className="h-5 w-5 text-muted-foreground" />
