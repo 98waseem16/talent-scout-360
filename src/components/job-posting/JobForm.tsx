@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -24,7 +25,7 @@ const JobForm: React.FC = () => {
   const isEditMode = !!id;
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Initialize form data
+  // Initialize form data - including the 'salary' property
   const [formData, setFormData] = useState<JobFormData>({
     title: '',
     company: '',
@@ -40,6 +41,7 @@ const JobForm: React.FC = () => {
     revenue_model: '',
     department: '',
     seniority_level: '',
+    salary: '', // Added missing salary field
     salary_range: '',
     equity: '',
     remote_onsite: '',
@@ -69,6 +71,7 @@ const JobForm: React.FC = () => {
               responsibilities: jobData.responsibilities || [''],
               logo: jobData.logo || '/placeholder.svg',
               featured: jobData.featured || false,
+              salary: jobData.salary || '', // Added missing salary field
               investment_stage: jobData.investment_stage || '',
               team_size: jobData.team_size || '',
               revenue_model: jobData.revenue_model || '',
