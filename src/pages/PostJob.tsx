@@ -1,6 +1,6 @@
 
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
@@ -11,14 +11,22 @@ import { Loader2 } from 'lucide-react';
 const PostJob: React.FC = () => {
   const { user, isLoading } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const [authChecked, setAuthChecked] = useState(false);
+  const [localLoading, setLocalLoading] = useState(true);
 
   // Check if user is authenticated
   useEffect(() => {
+    // Only proceed when auth loading is complete
     if (!isLoading) {
       setAuthChecked(true);
+      setLocalLoading(false);
+      
       if (!user) {
         // Store the current path for redirection after login
+        localStorage.setItem('authReturnPath', window.location.pathname);
+        
+        // Navigate to auth page with return path
         navigate('/auth', { 
           state: { returnTo: window.location.pathname } 
         });
@@ -29,9 +37,9 @@ const PostJob: React.FC = () => {
         });
       }
     }
-  }, [user, navigate, isLoading]);
+  }, [user, navigate, isLoading, location.pathname]);
 
-  if (isLoading || !authChecked) {
+  if (isLoading || localLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />

@@ -69,6 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (error) {
         console.error('Error getting session:', error);
       } finally {
+        // Ensure loading state is set to false regardless of success or error
         setIsLoading(false);
       }
     };
@@ -88,6 +89,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else {
           setProfile(null);
         }
+        
+        // Ensure loading state is updated after auth state changes
+        setIsLoading(false);
       }
     );
 
@@ -98,6 +102,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (provider: 'google' | 'apple' | 'twitter' | 'linkedin_oidc') => {
     try {
+      setIsLoading(true);
       // Get the return URL from localStorage if it exists
       const returnTo = localStorage.getItem('authReturnPath') || `${window.location.origin}/dashboard`;
       
@@ -111,12 +116,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
     } catch (error: any) {
       toast.error('Authentication Error: ' + (error.message || 'Failed to sign in'));
+      setIsLoading(false);
       throw error;
     }
   };
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -127,12 +134,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success('Sign in successful');
     } catch (error: any) {
       toast.error('Authentication Error: ' + (error.message || 'Failed to sign in'));
+      setIsLoading(false);
       throw error;
     }
   };
 
   const signUp = async (options: SignUpOptions) => {
     try {
+      setIsLoading(true);
       // Get the return URL from localStorage if it exists
       const returnTo = localStorage.getItem('authReturnPath') || `${window.location.origin}/dashboard`;
       
@@ -150,12 +159,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       toast.success('Registration successful! Please check your email for verification');
     } catch (error: any) {
       toast.error('Registration Error: ' + (error.message || 'Failed to create account'));
+      setIsLoading(false);
       throw error;
+    } finally {
+      // Set loading to false after signup completes or fails
+      setIsLoading(false);
     }
   };
 
   const signOut = async () => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.auth.signOut();
       
       if (error) {
@@ -173,6 +187,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.error("Sign out error:", error);
       toast.error('Sign out Error: ' + (error.message || 'Failed to sign out'));
       throw error;
+    } finally {
+      // Ensure loading state is reset after sign out attempt
+      setIsLoading(false);
     }
   };
 
