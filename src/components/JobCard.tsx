@@ -17,7 +17,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
 
   return (
     <Link 
-      to={`/job/${job.id}`}
+      to={`/jobs/${job.id}`}
       style={{ animationDelay }}
       className={cn(
         "block opacity-0 animate-slide-up w-full rounded-xl overflow-hidden hover-scale",
