@@ -1,11 +1,18 @@
-
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Search, MapPin, Filter, X, Loader2 } from 'lucide-react';
+import { Search, MapPin, Filter, X, Loader2, Building2, Briefcase, DollarSign, Users, Globe } from 'lucide-react';
 import JobCard from '@/components/JobCard';
 import { getJobs } from '@/lib/jobs';
 import { Skeleton } from '@/components/ui/skeleton';
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 const Jobs: React.FC = () => {
   const location = useLocation();
@@ -17,6 +24,14 @@ const Jobs: React.FC = () => {
   const [locationQuery, setLocationQuery] = useState(initialLocation);
   const [jobType, setJobType] = useState<string[]>([]);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
+  
+  const [department, setDepartment] = useState<string>('');
+  const [seniority, setSeniority] = useState<string>('');
+  const [salaryRange, setSalaryRange] = useState<string>('');
+  const [teamSize, setTeamSize] = useState<string>('');
+  const [investmentStage, setInvestmentStage] = useState<string>('');
+  const [remoteOnly, setRemoteOnly] = useState(false);
+  const [visaSponsorship, setVisaSponsorship] = useState(false);
 
   const { data: jobs, isLoading, error } = useQuery({
     queryKey: ['jobs'],
@@ -35,6 +50,13 @@ const Jobs: React.FC = () => {
     setSearchQuery('');
     setLocationQuery('');
     setJobType([]);
+    setDepartment('');
+    setSeniority('');
+    setSalaryRange('');
+    setTeamSize('');
+    setInvestmentStage('');
+    setRemoteOnly(false);
+    setVisaSponsorship(false);
   };
 
   const filteredJobs = jobs?.filter(job => {
@@ -48,11 +70,20 @@ const Jobs: React.FC = () => {
       
     const matchesType = jobType.length === 0 ||
       jobType.includes(job.type);
+
+    const matchesDepartment = !department || job.department === department;
+    const matchesSeniority = !seniority || job.seniority_level === seniority;
+    const matchesSalary = !salaryRange || job.salary_range === salaryRange;
+    const matchesTeamSize = !teamSize || job.team_size === teamSize;
+    const matchesInvestment = !investmentStage || job.investment_stage === investmentStage;
+    const matchesRemote = !remoteOnly || job.remote_onsite === 'Fully Remote';
+    const matchesVisa = !visaSponsorship || job.visa_sponsorship === true;
       
-    return matchesSearch && matchesLocation && matchesType;
+    return matchesSearch && matchesLocation && matchesType && 
+           matchesDepartment && matchesSeniority && matchesSalary && 
+           matchesTeamSize && matchesInvestment && matchesRemote && matchesVisa;
   }) || [];
 
-  // Update URL with search params
   useEffect(() => {
     const params = new URLSearchParams();
     if (searchQuery) params.set('query', searchQuery);
@@ -66,7 +97,6 @@ const Jobs: React.FC = () => {
     <main className="min-h-screen pt-24 pb-16 px-6">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-          {/* Filters - Mobile Toggle */}
           <button
             className="md:hidden flex items-center text-foreground bg-white border border-border rounded-lg px-4 py-2 shadow-sm"
             onClick={() => setIsFilterOpen(!isFilterOpen)}
@@ -75,47 +105,159 @@ const Jobs: React.FC = () => {
             {isFilterOpen ? "Hide Filters" : "Show Filters"}
           </button>
           
-          {/* Filters Sidebar */}
           <aside 
-            className={`w-full md:w-64 md:sticky top-24 transition-all duration-300 ${
-              isFilterOpen ? 'max-h-[800px] opacity-100' : 'max-h-0 md:max-h-[800px] opacity-0 md:opacity-100 overflow-hidden md:overflow-visible'
+            className={`w-full md:w-80 md:sticky top-24 transition-all duration-300 ${
+              isFilterOpen ? 'max-h-[2000px] opacity-100' : 'max-h-0 md:max-h-[2000px] opacity-0 md:opacity-100 overflow-hidden md:overflow-visible'
             }`}
           >
             <div className="bg-white rounded-xl border border-border shadow-sm p-5 mb-6">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-medium">Filters</h3>
                 <button 
-                  onClick={clearFilters}
+                  onClick={() => {
+                    setJobType([]);
+                    setDepartment('');
+                    setSeniority('');
+                    setSalaryRange('');
+                    setTeamSize('');
+                    setInvestmentStage('');
+                    setRemoteOnly(false);
+                    setVisaSponsorship(false);
+                  }}
                   className="text-sm text-muted-foreground hover:text-primary transition-colors"
                 >
                   Clear all
                 </button>
               </div>
               
-              <div className="space-y-5">
-                <div>
-                  <h4 className="text-sm font-medium mb-2">Job Type</h4>
-                  <div className="space-y-2">
-                    {['Full-time', 'Part-time', 'Contract', 'Remote'].map(type => (
-                      <label key={type} className="flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={jobType.includes(type)}
-                          onChange={() => toggleJobType(type)}
-                          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/20"
-                        />
-                        <span className="text-sm">{type}</span>
-                      </label>
-                    ))}
-                  </div>
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Building2 className="h-4 w-4 text-muted-foreground" />
+                    Department
+                  </label>
+                  <Select value={department} onValueChange={setDepartment}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select department" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Departments</SelectItem>
+                      <SelectItem value="Engineering">Engineering</SelectItem>
+                      <SelectItem value="Design">Design</SelectItem>
+                      <SelectItem value="Product">Product</SelectItem>
+                      <SelectItem value="Marketing">Marketing</SelectItem>
+                      <SelectItem value="Sales">Sales</SelectItem>
+                      <SelectItem value="Operations">Operations</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Briefcase className="h-4 w-4 text-muted-foreground" />
+                    Seniority Level
+                  </label>
+                  <Select value={seniority} onValueChange={setSeniority}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select level" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Levels</SelectItem>
+                      <SelectItem value="Internship">Internship</SelectItem>
+                      <SelectItem value="Entry-Level">Entry-Level</SelectItem>
+                      <SelectItem value="Mid-Level">Mid-Level</SelectItem>
+                      <SelectItem value="Senior">Senior</SelectItem>
+                      <SelectItem value="Lead">Lead</SelectItem>
+                      <SelectItem value="Manager">Manager</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <DollarSign className="h-4 w-4 text-muted-foreground" />
+                    Salary Range
+                  </label>
+                  <Select value={salaryRange} onValueChange={setSalaryRange}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select range" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Ranges</SelectItem>
+                      <SelectItem value="$40K-$60K">$40K-$60K</SelectItem>
+                      <SelectItem value="$60K-$80K">$60K-$80K</SelectItem>
+                      <SelectItem value="$80K-$120K">$80K-$120K</SelectItem>
+                      <SelectItem value="$120K+">$120K+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Users className="h-4 w-4 text-muted-foreground" />
+                    Team Size
+                  </label>
+                  <Select value={teamSize} onValueChange={setTeamSize}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Sizes</SelectItem>
+                      <SelectItem value="1-10">1-10</SelectItem>
+                      <SelectItem value="11-50">11-50</SelectItem>
+                      <SelectItem value="51-200">51-200</SelectItem>
+                      <SelectItem value="201-500">201-500</SelectItem>
+                      <SelectItem value="500+">500+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    Investment Stage
+                  </label>
+                  <Select value={investmentStage} onValueChange={setInvestmentStage}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select stage" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Stages</SelectItem>
+                      <SelectItem value="Bootstrapped">Bootstrapped</SelectItem>
+                      <SelectItem value="Pre-Seed">Pre-Seed</SelectItem>
+                      <SelectItem value="Seed">Seed</SelectItem>
+                      <SelectItem value="Series A">Series A</SelectItem>
+                      <SelectItem value="Series B+">Series B+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    Remote Only
+                  </label>
+                  <Switch
+                    checked={remoteOnly}
+                    onCheckedChange={setRemoteOnly}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between">
+                  <label className="flex items-center gap-2 text-sm font-medium">
+                    <Globe className="h-4 w-4 text-muted-foreground" />
+                    Visa Sponsorship
+                  </label>
+                  <Switch
+                    checked={visaSponsorship}
+                    onCheckedChange={setVisaSponsorship}
+                  />
                 </div>
               </div>
             </div>
           </aside>
           
-          {/* Main Content */}
           <div className="flex-1">
-            {/* Search Bar */}
             <div className="bg-white rounded-xl border border-border shadow-sm p-4 mb-8">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
@@ -146,7 +288,6 @@ const Jobs: React.FC = () => {
               </div>
             </div>
             
-            {/* Results Count */}
             <div className="mb-6 flex justify-between items-center">
               {isLoading ? (
                 <Skeleton className="h-8 w-32" />
@@ -156,7 +297,6 @@ const Jobs: React.FC = () => {
                 </h2>
               )}
               
-              {/* Active Filters */}
               {(searchQuery || locationQuery || jobType.length > 0) && (
                 <div className="flex flex-wrap gap-2">
                   {searchQuery && (
@@ -201,7 +341,6 @@ const Jobs: React.FC = () => {
               )}
             </div>
             
-            {/* Job Listings */}
             {isLoading ? (
               <div className="space-y-6">
                 {[...Array(5)].map((_, index) => (
