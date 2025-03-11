@@ -8,14 +8,11 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
-import { Banner, BannerIcon, BannerTitle, BannerClose } from '@/components/ui/banner';
-import { CheckCircle } from 'lucide-react';
 
 const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
   const { signInWithEmail, signUp, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -37,14 +34,8 @@ const Auth: React.FC = () => {
     
     try {
       await signInWithEmail(email, password);
-      // Show success banner
-      setShowSuccessBanner(true);
       toast.success('Signed in successfully');
-      
-      // Briefly show the success banner before redirecting
-      setTimeout(() => {
-        navigate(returnTo, { replace: true });
-      }, 1500);
+      navigate(returnTo, { replace: true });
     } catch (error) {
       console.error('Sign in error:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to sign in');
@@ -69,20 +60,7 @@ const Auth: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100">
-      {showSuccessBanner && (
-        <div className="fixed top-4 left-0 right-0 mx-auto w-full max-w-md z-50" style={{
-          '--primary': '142.1 76.2% 36.3%',
-          '--primary-foreground': '355.7 100% 97.3%',
-        }}>
-          <Banner inset>
-            <BannerIcon icon={CheckCircle} />
-            <BannerTitle>Signed in successfully! Redirecting...</BannerTitle>
-            <BannerClose onClick={() => setShowSuccessBanner(false)} />
-          </Banner>
-        </div>
-      )}
-      
+    <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <Card className="w-full max-w-md p-4">
         <CardHeader>
           <CardTitle className="text-2xl text-center">Authentication</CardTitle>
