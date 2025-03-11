@@ -350,9 +350,20 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
       throw new Error('Logo file is too large. Maximum size is 2MB.');
     }
     
+    // Generate a unique filename with timestamp and sanitized original name
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.]/g, '')}`;
     console.log('Generated file name for storage:', fileName);
     
+    // Check if 'logos' bucket exists
+    const { data: bucketData, error: bucketError } = await supabase
+      .storage
+      .getBucket('logos');
+      
+    if (bucketError) {
+      console.log('Bucket does not exist yet or error checking bucket:', bucketError);
+    }
+
+    // Upload file to storage
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('logos')
       .upload(fileName, file, {
@@ -362,6 +373,9 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
       
     if (uploadError) {
       console.error('Supabase storage upload error:', uploadError);
+      if (uploadError.message.includes('bucket') || uploadError.message.includes('Bucket')) {
+        throw new Error('Storage bucket not configured. Please contact support.');
+      }
       throw new Error(`Error uploading logo: ${uploadError.message}`);
     }
     

@@ -21,7 +21,11 @@ export const createJobListing = async (jobData: JobFormData): Promise<string> =>
 
     if (error) {
       console.error('Error creating job:', error);
-      throw error;
+      throw new Error(`Error creating job: ${error.message}`);
+    }
+    
+    if (!data || data.length === 0) {
+      throw new Error('No data returned after creating job');
     }
     
     console.log('Job created successfully:', data);
@@ -48,17 +52,18 @@ export const updateJobListing = async (id: string, jobData: JobFormData): Promis
       updated_at: new Date().toISOString()
     };
     
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from('job_postings')
       .update(fieldsWithTimestamp)
-      .eq('id', id);
+      .eq('id', id)
+      .select();
 
     if (error) {
       console.error('Error updating job:', error);
-      throw error;
+      throw new Error(`Error updating job: ${error.message}`);
     }
     
-    console.log('Job updated successfully');
+    console.log('Job updated successfully:', data);
   } catch (error) {
     console.error('Error updating job:', error);
     throw error;

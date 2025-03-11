@@ -33,6 +33,13 @@ export const useJobFormSubmit = (id?: string) => {
         toast.error('Invalid logo format. Please upload an image file.');
         return;
       }
+      
+      // Check file size (max 2MB)
+      const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+      if (logoFile.size > maxSizeInBytes) {
+        toast.error('Logo file is too large. Maximum size is 2MB.');
+        return;
+      }
     }
     
     setIsSubmitting(true);
@@ -45,11 +52,12 @@ export const useJobFormSubmit = (id?: string) => {
       
       if (logoFile) {
         try {
+          console.log('Uploading logo file:', logoFile.name, logoFile.type, logoFile.size);
           logoUrl = await uploadCompanyLogo(logoFile);
           console.log('Logo uploaded successfully, URL:', logoUrl);
-        } catch (uploadError) {
+        } catch (uploadError: any) {
           console.error('Error uploading logo:', uploadError);
-          toast.error('Failed to upload company logo');
+          toast.error(uploadError.message || 'Failed to upload company logo');
           setIsSubmitting(false);
           return;
         }
@@ -65,18 +73,31 @@ export const useJobFormSubmit = (id?: string) => {
       console.log('Final job data to submit:', jobDataToSubmit);
       
       if (isEditMode && id) {
-        await updateJobListing(id, jobDataToSubmit);
-        toast.success('Job listing updated successfully!');
+        try {
+          await updateJobListing(id, jobDataToSubmit);
+          toast.success('Job listing updated successfully!');
+          // Redirect to dashboard
+          navigate('/dashboard');
+        } catch (updateError: any) {
+          console.error('Error updating job:', updateError);
+          toast.error(updateError.message || 'Failed to update job listing');
+          return;
+        }
       } else {
-        await createJobListing(jobDataToSubmit);
-        toast.success('Job listing created successfully!');
+        try {
+          await createJobListing(jobDataToSubmit);
+          toast.success('Job listing created successfully!');
+          // Redirect to dashboard
+          navigate('/dashboard');
+        } catch (createError: any) {
+          console.error('Error creating job:', createError);
+          toast.error(createError.message || 'Failed to create job listing');
+          return;
+        }
       }
-      
-      // Redirect to dashboard
-      navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving job:', error);
-      toast.error('Failed to save job listing');
+      toast.error(error.message || 'Failed to save job listing');
     } finally {
       setIsSubmitting(false);
     }
