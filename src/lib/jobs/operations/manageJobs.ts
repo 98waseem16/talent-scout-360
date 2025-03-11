@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { JobFormData } from '../../types/job.types';
 import { mapJobFormDataToDatabaseFields } from '../utils/jobMappers';
@@ -80,8 +81,7 @@ export const seedJobs = async () => {
       requirements: job.requirements,
       benefits: job.benefits,
       logo: job.logo,
-      featured: job.featured,
-      application_url: job.application_url
+      featured: job.featured
     }));
 
     const { error } = await supabase

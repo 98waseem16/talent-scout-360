@@ -1,7 +1,8 @@
+
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { getJobById } from '@/lib/jobs/operations/fetchJobs';
+import { getJobById } from '@/lib/jobs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 

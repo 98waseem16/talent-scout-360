@@ -58,8 +58,7 @@ const Dashboard: React.FC = () => {
             benefits: Array.isArray(job.benefits) ? job.benefits : [],
             logo: job.logo || '',
             featured: job.featured || false,
-            user_id: job.user_id,
-            application_url: job.application_url || ''
+            user_id: job.user_id
           }));
           
           setJobs(transformedJobs);

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ArrowLeft, Bookmark, Share2, MapPin, DollarSign, Briefcase, Clock } from 'lucide-react';
 import type { Job } from '@/lib/types/job.types';
 
@@ -10,18 +10,6 @@ interface JobHeaderProps {
 }
 
 const JobHeader: React.FC<JobHeaderProps> = ({ job, handleApply }) => {
-  const navigate = useNavigate();
-  
-  const onApplyClick = () => {
-    if (job.application_url) {
-      // Redirect to the application URL
-      window.open(job.application_url, '_blank');
-    } else {
-      // Use the default application handler
-      handleApply();
-    }
-  };
-  
   return (
     <>
       {/* Back button */}
@@ -78,7 +66,7 @@ const JobHeader: React.FC<JobHeaderProps> = ({ job, handleApply }) => {
             
             <div className="flex flex-col sm:flex-row gap-3">
               <button 
-                onClick={onApplyClick}
+                onClick={handleApply}
                 className="bg-primary hover:bg-primary/90 text-white font-medium px-6 py-2.5 rounded-lg transition-colors active:scale-[0.98]"
               >
                 Apply Now

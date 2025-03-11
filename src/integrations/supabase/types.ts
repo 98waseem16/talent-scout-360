@@ -11,7 +11,6 @@ export type Database = {
     Tables: {
       job_postings: {
         Row: {
-          application_url: string | null
           benefits: string[]
           company: string
           created_at: string
@@ -42,7 +41,6 @@ export type Database = {
           work_hours: string | null
         }
         Insert: {
-          application_url?: string | null
           benefits: string[]
           company: string
           created_at?: string
@@ -73,7 +71,6 @@ export type Database = {
           work_hours?: string | null
         }
         Update: {
-          application_url?: string | null
           benefits?: string[]
           company?: string
           created_at?: string
