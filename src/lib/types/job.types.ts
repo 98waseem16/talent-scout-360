@@ -12,6 +12,7 @@ export interface Job {
   benefits: string[];
   logo: string;
   featured?: boolean;
+  application_url: string;
   user_id?: string;
   investment_stage?: string;
   team_size?: string;
@@ -25,7 +26,6 @@ export interface Job {
   work_hours?: string;
   visa_sponsorship?: boolean;
   hiring_urgency?: string;
-  application_url: string;
 }
 
 export interface JobFormData {

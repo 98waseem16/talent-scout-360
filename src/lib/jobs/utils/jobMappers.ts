@@ -36,9 +36,6 @@ export const mapJobFormDataToDatabaseFields = (
   };
 };
 
-/**
- * Maps the database fields to the Job type
- */
 export const mapDatabaseFieldsToJob = (dbFields: any) => {
   return {
     id: dbFields.id,
@@ -71,35 +68,3 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   };
 };
 
-/**
- * Maps the database fields to the JobFormData type
- */
-export const mapDatabaseFieldsToJobFormData = (dbFields: any): JobFormData => {
-  return {
-    title: dbFields.title,
-    company: dbFields.company,
-    location: dbFields.location,
-    type: dbFields.type,
-    salary: dbFields.salary,
-    description: dbFields.description,
-    responsibilities: dbFields.responsibilities,
-    requirements: dbFields.requirements,
-    benefits: dbFields.benefits,
-    logo: dbFields.logo,
-    featured: dbFields.featured,
-    application_url: dbFields.application_url || '',
-    user_id: dbFields.user_id,
-    investment_stage: dbFields.investment_stage,
-    team_size: dbFields.team_size,
-    revenue_model: dbFields.revenue_model,
-    department: dbFields.department,
-    seniority_level: dbFields.seniority_level,
-    job_type: dbFields.job_type,
-    salary_range: dbFields.salary_range,
-    equity: dbFields.equity,
-    remote_onsite: dbFields.remote_onsite,
-    work_hours: dbFields.work_hours,
-    visa_sponsorship: dbFields.visa_sponsorship,
-    hiring_urgency: dbFields.hiring_urgency
-  };
-};
