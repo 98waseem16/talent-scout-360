@@ -1,9 +1,6 @@
 
 import { JobDatabaseFields, JobFormData } from '../../types/job.types';
 
-/**
- * Maps the JobFormData to the database fields
- */
 export const mapJobFormDataToDatabaseFields = (
   formData: JobFormData
 ): JobDatabaseFields => {
@@ -67,4 +64,3 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     hiring_urgency: dbFields.hiring_urgency
   };
 };
-
