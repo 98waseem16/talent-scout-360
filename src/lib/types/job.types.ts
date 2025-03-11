@@ -26,6 +26,7 @@ export interface Job {
   work_hours?: string;
   visa_sponsorship?: boolean;
   hiring_urgency?: string;
+  application_url: string; // Added application URL
 }
 
 export interface JobFormData {
@@ -39,7 +40,7 @@ export interface JobFormData {
   benefits: string[];
   logo: string;
   featured?: boolean;
-  application_url?: string;
+  application_url: string; // Added application URL field
   contact_email?: string;
   salary: string;
   user_id?: string;
@@ -71,6 +72,7 @@ export interface JobDatabaseFields {
   responsibilities: string[];
   logo: string;
   featured: boolean;
+  application_url: string; // Added application URL field
   user_id?: string;
   posted?: string;
   created_at?: string;

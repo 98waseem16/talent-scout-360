@@ -30,6 +30,7 @@ export const useJobFormData = (id?: string) => {
     visa_sponsorship: false,
     hiring_urgency: '',
     featured: false,
+    application_url: '', // Added application URL with empty default
   });
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -66,6 +67,7 @@ export const useJobFormData = (id?: string) => {
               work_hours: jobData.work_hours || '',
               visa_sponsorship: jobData.visa_sponsorship || false,
               hiring_urgency: jobData.hiring_urgency || '',
+              application_url: jobData.application_url || '', // Added application URL field
             });
           }
         } catch (error) {

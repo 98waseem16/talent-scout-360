@@ -13,6 +13,7 @@ import FeaturedOption from './FeaturedOption';
 import PostJobBenefits from './PostJobBenefits';
 import JobFormHeader from './JobFormHeader';
 import JobFormActions from './JobFormActions';
+import ApplicationUrlField from './ApplicationUrlField'; // Import the new component
 import { useJobFormData } from './hooks/useJobFormData';
 import { useJobFormSubmit } from './hooks/useJobFormSubmit';
 
@@ -74,6 +75,12 @@ const JobForm: React.FC = () => {
           handleListChange={handleListChange}
           addListItem={addListItem}
           removeListItem={removeListItem}
+        />
+        
+        {/* Application URL Field */}
+        <ApplicationUrlField 
+          applicationUrl={formData.application_url} 
+          handleInputChange={handleInputChange} 
         />
         
         {/* Company Logo */}

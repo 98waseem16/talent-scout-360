@@ -1,3 +1,4 @@
+
 import { Job, JobDatabaseFields, JobFormData } from '../../types/job.types';
 import { formatPostedDate } from '../../utils/dateUtils';
 
@@ -27,6 +28,7 @@ export const mapDatabaseRecordToJob = (record: JobDatabaseFields): Job => {
     benefits,
     logo: record.logo,
     featured: record.featured,
+    application_url: record.application_url || '', // Added application URL
     // Add additional fields
     user_id: record.user_id,
     investment_stage: record.investment_stage,
@@ -84,6 +86,7 @@ export const mapJobToDatabaseRecord = (job: Partial<Job>): JobDatabaseFields => 
     benefits: job.benefits || [],
     logo: job.logo || '/placeholder.svg',
     featured: job.featured || false,
+    application_url: job.application_url || '', // Added application URL
     user_id: job.user_id,
     investment_stage: job.investment_stage,
     team_size: job.team_size,
@@ -116,6 +119,7 @@ export const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDataba
     benefits: formData.benefits || [],
     logo: formData.logo || '/placeholder.svg',
     featured: formData.featured || false,
+    application_url: formData.application_url || '', // Added application URL
     user_id: formData.user_id,
     investment_stage: formData.investment_stage,
     team_size: formData.team_size,
