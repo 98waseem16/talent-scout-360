@@ -1,113 +1,15 @@
-import { Job, JobDatabaseFields, JobFormData } from '../../types/job.types';
-import { formatPostedDate } from '../../utils/dateUtils';
+
+import { JobDatabaseFields, JobFormData } from '../../types/job.types';
 
 /**
- * Maps a database record to our frontend Job model
+ * Maps the JobFormData to the database fields
  */
-export const mapDatabaseRecordToJob = (record: JobDatabaseFields): Job => {
-  // Handle posted date formatting
-  const postedDate = record.posted || record.created_at || new Date().toISOString();
-  
-  // Handle array fields that might be strings in the database
-  const responsibilities = handleArrayField(record.responsibilities);
-  const requirements = handleArrayField(record.requirements);
-  const benefits = handleArrayField(record.benefits);
-
+export const mapJobFormDataToDatabaseFields = (
+  formData: JobFormData
+): JobDatabaseFields => {
   return {
-    id: record.id || '',
-    title: record.title,
-    company: record.company,
-    location: record.location,
-    salary: record.salary,
-    type: record.type as 'Full-time' | 'Part-time' | 'Contract' | 'Remote',
-    posted: formatPostedDate(postedDate),
-    description: record.description,
-    responsibilities,
-    requirements,
-    benefits,
-    logo: record.logo,
-    featured: record.featured,
-    application_url: record.application_url || '',
-    user_id: record.user_id,
-    investment_stage: record.investment_stage,
-    team_size: record.team_size,
-    revenue_model: record.revenue_model,
-    department: record.department,
-    seniority_level: record.seniority_level,
-    job_type: record.job_type,
-    salary_range: record.salary_range,
-    equity: record.equity,
-    remote_onsite: record.remote_onsite,
-    work_hours: record.work_hours,
-    visa_sponsorship: record.visa_sponsorship,
-    hiring_urgency: record.hiring_urgency
-  };
-};
-
-/**
- * Helper function to handle array fields that might be stored as strings in the database
- */
-function handleArrayField(field: unknown): string[] {
-  // If it's already an array, return it
-  if (Array.isArray(field)) {
-    return field;
-  }
-  
-  // If it's a string (serialized JSON), parse it
-  if (typeof field === 'string') {
-    try {
-      const parsed = JSON.parse(field);
-      return Array.isArray(parsed) ? parsed : [field];
-    } catch (e) {
-      // If parsing fails, treat the string as a single item
-      return [field];
-    }
-  }
-  
-  // Default to empty array if undefined or null
-  return [];
-}
-
-/**
- * Maps our frontend Job model to the database fields
- */
-export const mapJobToDatabaseRecord = (job: Partial<Job>): JobDatabaseFields => {
-  return {
-    title: job.title || '',
-    company: job.company || '',
-    location: job.location || '',
-    type: job.type || 'Full-time',
-    salary: job.salary || '',
-    description: job.description || '',
-    responsibilities: job.responsibilities || [],
-    requirements: job.requirements || [],
-    benefits: job.benefits || [],
-    logo: job.logo || '/placeholder.svg',
-    featured: job.featured || false,
-    application_url: job.application_url || '',
-    user_id: job.user_id,
-    investment_stage: job.investment_stage,
-    team_size: job.team_size,
-    revenue_model: job.revenue_model,
-    department: job.department,
-    seniority_level: job.seniority_level,
-    job_type: job.job_type,
-    salary_range: job.salary_range,
-    equity: job.equity,
-    remote_onsite: job.remote_onsite,
-    work_hours: job.work_hours,
-    visa_sponsorship: job.visa_sponsorship,
-    hiring_urgency: job.hiring_urgency
-  };
-};
-
-/**
- * Maps the job form data to database fields
- */
-export const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDatabaseFields => {
-  return {
-    title: formData.title || '',
-    company: formData.company || '',
+    title: formData.title,
+    company: formData.company,
     location: formData.location || '',
     type: formData.type || 'Full-time',
     salary: formData.salary || '',
@@ -131,5 +33,73 @@ export const mapJobFormDataToDatabaseFields = (formData: JobFormData): JobDataba
     work_hours: formData.work_hours,
     visa_sponsorship: formData.visa_sponsorship,
     hiring_urgency: formData.hiring_urgency
+  };
+};
+
+/**
+ * Maps the database fields to the Job type
+ */
+export const mapDatabaseFieldsToJob = (dbFields: any) => {
+  return {
+    id: dbFields.id,
+    title: dbFields.title,
+    company: dbFields.company,
+    location: dbFields.location,
+    salary: dbFields.salary,
+    type: dbFields.type,
+    posted: dbFields.posted,
+    description: dbFields.description,
+    responsibilities: dbFields.responsibilities,
+    requirements: dbFields.requirements,
+    benefits: dbFields.benefits,
+    logo: dbFields.logo,
+    featured: dbFields.featured,
+    application_url: dbFields.application_url || '',
+    user_id: dbFields.user_id,
+    investment_stage: dbFields.investment_stage,
+    team_size: dbFields.team_size,
+    revenue_model: dbFields.revenue_model,
+    department: dbFields.department,
+    seniority_level: dbFields.seniority_level,
+    job_type: dbFields.job_type,
+    salary_range: dbFields.salary_range,
+    equity: dbFields.equity,
+    remote_onsite: dbFields.remote_onsite,
+    work_hours: dbFields.work_hours,
+    visa_sponsorship: dbFields.visa_sponsorship,
+    hiring_urgency: dbFields.hiring_urgency
+  };
+};
+
+/**
+ * Maps the database fields to the JobFormData type
+ */
+export const mapDatabaseFieldsToJobFormData = (dbFields: any): JobFormData => {
+  return {
+    title: dbFields.title,
+    company: dbFields.company,
+    location: dbFields.location,
+    type: dbFields.type,
+    salary: dbFields.salary,
+    description: dbFields.description,
+    responsibilities: dbFields.responsibilities,
+    requirements: dbFields.requirements,
+    benefits: dbFields.benefits,
+    logo: dbFields.logo,
+    featured: dbFields.featured,
+    application_url: dbFields.application_url || '',
+    user_id: dbFields.user_id,
+    investment_stage: dbFields.investment_stage,
+    team_size: dbFields.team_size,
+    revenue_model: dbFields.revenue_model,
+    department: dbFields.department,
+    seniority_level: dbFields.seniority_level,
+    job_type: dbFields.job_type,
+    salary_range: dbFields.salary_range,
+    equity: dbFields.equity,
+    remote_onsite: dbFields.remote_onsite,
+    work_hours: dbFields.work_hours,
+    visa_sponsorship: dbFields.visa_sponsorship,
+    hiring_urgency: dbFields.hiring_urgency
   };
 };

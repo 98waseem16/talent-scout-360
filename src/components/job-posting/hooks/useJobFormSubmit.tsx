@@ -2,10 +2,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { JobFormData } from '@/lib/types/job.types';
 import { createJobListing, updateJobListing } from '@/lib/jobs/jobsApi';
+import { uploadCompanyLogo } from '@/lib/jobs';
 
 export const useJobFormSubmit = (id?: string) => {
   const { user } = useAuth();
@@ -21,6 +21,20 @@ export const useJobFormSubmit = (id?: string) => {
       return;
     }
     
+    // Validate required fields
+    if (!formData.title || !formData.company || !formData.application_url) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+    
+    // Validate logo file if provided
+    if (logoFile) {
+      if (!logoFile.type.startsWith('image/')) {
+        toast.error('Invalid logo format. Please upload an image file.');
+        return;
+      }
+    }
+    
     setIsSubmitting(true);
     
     try {
@@ -30,25 +44,15 @@ export const useJobFormSubmit = (id?: string) => {
       let logoUrl = formData.logo;
       
       if (logoFile) {
-        const fileName = `${user.id}-${Date.now()}-${logoFile.name}`;
-        console.log('Uploading logo file:', fileName);
-        
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('logos')
-          .upload(fileName, logoFile);
-          
-        if (uploadError) {
+        try {
+          logoUrl = await uploadCompanyLogo(logoFile);
+          console.log('Logo uploaded successfully, URL:', logoUrl);
+        } catch (uploadError) {
           console.error('Error uploading logo:', uploadError);
-          throw uploadError;
+          toast.error('Failed to upload company logo');
+          setIsSubmitting(false);
+          return;
         }
-        
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('logos')
-          .getPublicUrl(fileName);
-          
-        logoUrl = urlData.publicUrl;
-        console.log('Logo uploaded successfully, URL:', logoUrl);
       }
       
       // Prepare job data with user_id

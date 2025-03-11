@@ -337,16 +337,43 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
 
 export const uploadCompanyLogo = async (file: File): Promise<string> => {
   try {
-    const publicUrl = await uploadFile(file, 'company-logos', {
-      maxWidth: 400,
-      maxHeight: 400,
-      maxSizeInMB: 2,
-      quality: 0.8
-    });
+    console.log('Starting logo upload process:', file.name, file.type, file.size);
     
-    return publicUrl;
+    // Validate file is an image
+    if (!file.type.startsWith('image/')) {
+      throw new Error('Invalid logo format. Please upload an image file.');
+    }
+    
+    // Validate file size (max 2MB)
+    const maxSizeInBytes = 2 * 1024 * 1024; // 2MB
+    if (file.size > maxSizeInBytes) {
+      throw new Error('Logo file is too large. Maximum size is 2MB.');
+    }
+    
+    const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.]/g, '')}`;
+    console.log('Generated file name for storage:', fileName);
+    
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('logos')
+      .upload(fileName, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+      
+    if (uploadError) {
+      console.error('Supabase storage upload error:', uploadError);
+      throw new Error(`Error uploading logo: ${uploadError.message}`);
+    }
+    
+    // Get public URL
+    const { data: urlData } = supabase.storage
+      .from('logos')
+      .getPublicUrl(fileName);
+      
+    console.log('Logo upload successful, public URL:', urlData.publicUrl);
+    return urlData.publicUrl;
   } catch (error) {
-    console.error('Error uploading company logo:', error);
+    console.error('Error in uploadCompanyLogo function:', error);
     throw error;
   }
 };
