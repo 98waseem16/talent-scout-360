@@ -354,28 +354,44 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.]/g, '')}`;
     console.log('Generated file name for storage:', fileName);
     
-    // Check if 'logos' bucket exists
-    const { data: bucketData, error: bucketError } = await supabase
-      .storage
-      .getBucket('logos');
+    // Create logos bucket if it doesn't exist
+    try {
+      // Try to create the bucket - this might fail if it exists or if permissions aren't right
+      // We'll handle the upload attempt regardless
+      const { data: bucketData, error: bucketError } = await supabase.storage.createBucket('logos', {
+        public: true
+      });
       
-    if (bucketError) {
-      console.log('Bucket does not exist yet or error checking bucket:', bucketError);
+      if (bucketError) {
+        console.log('Note: Could not create logos bucket, might already exist:', bucketError.message);
+        // Continue anyway - the bucket might already exist
+      } else {
+        console.log('Created logos bucket successfully');
+      }
+    } catch (bucketCreateError) {
+      console.log('Bucket creation attempt failed, continuing anyway:', bucketCreateError);
+      // Continue with upload attempt
     }
 
-    // Upload file to storage
+    // Upload file to storage - try with public access
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('logos')
       .upload(fileName, file, {
         cacheControl: '3600',
-        upsert: false
+        upsert: false,
       });
       
     if (uploadError) {
       console.error('Supabase storage upload error:', uploadError);
+      // Provide more specific error messages based on the error
       if (uploadError.message.includes('bucket') || uploadError.message.includes('Bucket')) {
-        throw new Error('Storage bucket not configured. Please contact support.');
+        throw new Error('Storage bucket not properly configured. Please contact support with this error: ' + uploadError.message);
       }
+      
+      if (uploadError.message.includes('permission') || uploadError.message.includes('auth')) {
+        throw new Error('Permission denied when uploading logo. If this persists, use an external image URL instead.');
+      }
+      
       throw new Error(`Error uploading logo: ${uploadError.message}`);
     }
     

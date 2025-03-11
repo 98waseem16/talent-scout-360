@@ -47,28 +47,38 @@ export const useJobFormSubmit = (id?: string) => {
     try {
       console.log('Submitting job form data:', formData);
       
-      // Upload logo if provided
-      let logoUrl = formData.logo;
+      // Prepare job data with default logo URL and user_id
+      let jobDataToSubmit: JobFormData = {
+        ...formData,
+        user_id: user.id
+      };
       
+      // Upload logo if provided
       if (logoFile) {
         try {
           console.log('Uploading logo file:', logoFile.name, logoFile.type, logoFile.size);
-          logoUrl = await uploadCompanyLogo(logoFile);
+          const logoUrl = await uploadCompanyLogo(logoFile);
           console.log('Logo uploaded successfully, URL:', logoUrl);
+          
+          // Update form data with logo URL
+          jobDataToSubmit = {
+            ...jobDataToSubmit,
+            logo: logoUrl
+          };
         } catch (uploadError: any) {
           console.error('Error uploading logo:', uploadError);
           toast.error(uploadError.message || 'Failed to upload company logo');
-          setIsSubmitting(false);
-          return;
+          
+          // If logo upload fails but we're in edit mode and there's an existing logo, 
+          // we can continue with the existing logo
+          if (!isEditMode || !formData.logo) {
+            setIsSubmitting(false);
+            return;
+          }
+          
+          toast.warning('Continuing with existing logo due to upload error.');
         }
       }
-      
-      // Prepare job data with user_id
-      const jobDataToSubmit: JobFormData = {
-        ...formData,
-        logo: logoUrl,
-        user_id: user.id
-      };
       
       console.log('Final job data to submit:', jobDataToSubmit);
       
