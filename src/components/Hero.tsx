@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin } from 'lucide-react';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
+import { SplashCursor } from '@/components/ui/splash-cursor';
 
 const Hero: React.FC = () => {
   const [query, setQuery] = useState('');
@@ -75,11 +76,14 @@ const Hero: React.FC = () => {
           
           <div className="hidden md:block relative">
             <div className="absolute top-0 right-0 -z-10 w-72 h-72 bg-primary/5 rounded-full blur-3xl" />
-            <img 
-              src="/placeholder.svg" 
-              alt="Startup job search illustration" 
-              className="max-w-full rounded-xl shadow-2xl"
-            />
+            <div className="relative w-full h-96 rounded-xl shadow-2xl overflow-hidden">
+              <SplashCursor 
+                COLOR_UPDATE_SPEED={5}
+                SPLAT_RADIUS={0.3}
+                DENSITY_DISSIPATION={2.5}
+                CURL={5}
+              />
+            </div>
           </div>
         </div>
       </div>
