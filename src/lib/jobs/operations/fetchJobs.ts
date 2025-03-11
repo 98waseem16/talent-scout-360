@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Job } from '../../types/job.types';
 import { staticJobs } from '../../data/staticJobs';

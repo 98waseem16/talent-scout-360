@@ -1,4 +1,3 @@
-
 import { Job } from '../types/job.types';
 
 export const staticJobs: Job[] = [
@@ -30,7 +29,8 @@ export const staticJobs: Job[] = [
       'Professional development budget'
     ],
     logo: '/placeholder.svg',
-    featured: true
+    featured: true,
+    application_url: 'https://techvision.example.com/careers/senior-frontend-developer'
   },
   {
     id: '2',
