@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from './file-upload';
 
@@ -354,45 +355,61 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.]/g, '')}`;
     console.log('Generated file name for storage:', fileName);
     
-    // Create logos bucket if it doesn't exist
+    // Try to use existing bucket first
     try {
-      // Try to create the bucket - this might fail if it exists or if permissions aren't right
-      // We'll handle the upload attempt regardless
-      const { data: bucketData, error: bucketError } = await supabase.storage.createBucket('logos', {
-        public: true
-      });
+      // First check if the bucket exists
+      const { data: bucketInfo, error: getBucketError } = await supabase.storage.getBucket('logos');
       
-      if (bucketError) {
-        console.log('Note: Could not create logos bucket, might already exist:', bucketError.message);
-        // Continue anyway - the bucket might already exist
+      if (getBucketError) {
+        console.log('Error checking logos bucket:', getBucketError.message);
+        console.log('Will attempt to create the bucket...');
+        
+        // Try to create the bucket
+        const { data: createData, error: createError } = await supabase.storage.createBucket('logos', {
+          public: true
+        });
+        
+        if (createError) {
+          console.error('Error creating logos bucket:', createError);
+          throw new Error(`Storage setup error: ${createError.message}`);
+        } else {
+          console.log('Successfully created logos bucket');
+        }
       } else {
-        console.log('Created logos bucket successfully');
+        console.log('Logos bucket exists:', bucketInfo);
       }
-    } catch (bucketCreateError) {
-      console.log('Bucket creation attempt failed, continuing anyway:', bucketCreateError);
-      // Continue with upload attempt
+    } catch (bucketError) {
+      console.error('Bucket operation failed:', bucketError);
+      // Continue anyway - we'll attempt the upload
     }
 
-    // Upload file to storage - try with public access
+    // Attempt to upload the file
+    console.log('Attempting to upload logo to Supabase storage...');
     const { data: uploadData, error: uploadError } = await supabase.storage
       .from('logos')
       .upload(fileName, file, {
         cacheControl: '3600',
-        upsert: false,
+        upsert: true, // Use upsert true to overwrite if file exists
       });
       
     if (uploadError) {
       console.error('Supabase storage upload error:', uploadError);
-      // Provide more specific error messages based on the error
+      
+      // Detailed error handling
       if (uploadError.message.includes('bucket') || uploadError.message.includes('Bucket')) {
-        throw new Error('Storage bucket not properly configured. Please contact support with this error: ' + uploadError.message);
+        throw new Error(`Storage bucket not properly configured: ${uploadError.message}`);
       }
       
       if (uploadError.message.includes('permission') || uploadError.message.includes('auth')) {
-        throw new Error('Permission denied when uploading logo. If this persists, use an external image URL instead.');
+        throw new Error(`Permission denied when uploading logo: ${uploadError.message}`);
       }
       
+      // Generic error with message
       throw new Error(`Error uploading logo: ${uploadError.message}`);
+    }
+    
+    if (!uploadData || !uploadData.path) {
+      throw new Error('Upload failed: No file data returned');
     }
     
     // Get public URL
@@ -400,11 +417,22 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
       .from('logos')
       .getPublicUrl(fileName);
       
+    if (!urlData || !urlData.publicUrl) {
+      throw new Error('Failed to get public URL for uploaded logo');
+    }
+    
     console.log('Logo upload successful, public URL:', urlData.publicUrl);
     return urlData.publicUrl;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in uploadCompanyLogo function:', error);
-    throw error;
+    // Ensure error is properly propagated
+    if (error instanceof Error) {
+      throw error;
+    } else if (typeof error === 'object') {
+      throw new Error(error.message || 'Unknown upload error');
+    } else {
+      throw new Error(String(error) || 'Unknown upload error');
+    }
   }
 };
 

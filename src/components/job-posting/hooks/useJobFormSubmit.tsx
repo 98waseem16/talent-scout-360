@@ -67,7 +67,8 @@ export const useJobFormSubmit = (id?: string) => {
           };
         } catch (uploadError: any) {
           console.error('Error uploading logo:', uploadError);
-          toast.error(uploadError.message || 'Failed to upload company logo');
+          const errorMessage = typeof uploadError === 'object' ? uploadError.message || 'Unknown upload error' : String(uploadError);
+          toast.error(errorMessage);
           
           // If logo upload fails but we're in edit mode and there's an existing logo, 
           // we can continue with the existing logo
@@ -90,7 +91,9 @@ export const useJobFormSubmit = (id?: string) => {
           navigate('/dashboard');
         } catch (updateError: any) {
           console.error('Error updating job:', updateError);
-          toast.error(updateError.message || 'Failed to update job listing');
+          const errorMessage = typeof updateError === 'object' ? updateError.message || 'Unknown error' : String(updateError);
+          toast.error(`Failed to update job listing: ${errorMessage}`);
+          setIsSubmitting(false);
           return;
         }
       } else {
@@ -101,13 +104,17 @@ export const useJobFormSubmit = (id?: string) => {
           navigate('/dashboard');
         } catch (createError: any) {
           console.error('Error creating job:', createError);
-          toast.error(createError.message || 'Failed to create job listing');
+          const errorMessage = typeof createError === 'object' ? createError.message || 'Unknown error' : String(createError);
+          toast.error(`Failed to create job listing: ${errorMessage}`);
+          setIsSubmitting(false);
           return;
         }
       }
     } catch (error: any) {
       console.error('Error saving job:', error);
-      toast.error(error.message || 'Failed to save job listing');
+      const errorMessage = typeof error === 'object' ? error.message || 'Unknown error' : String(error);
+      toast.error(`Failed to save job listing: ${errorMessage}`);
+      setIsSubmitting(false);
     } finally {
       setIsSubmitting(false);
     }

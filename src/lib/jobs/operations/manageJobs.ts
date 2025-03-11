@@ -21,7 +21,15 @@ export const createJobListing = async (jobData: JobFormData): Promise<string> =>
 
     if (error) {
       console.error('Error creating job:', error);
-      throw new Error(`Error creating job: ${error.message}`);
+      
+      // Specific error handling based on error code
+      if (error.code === '23505') {
+        throw new Error('A job with this information already exists');
+      } else if (error.code === '42501') {
+        throw new Error('Permission denied. You may not have access to create job listings');
+      }
+      
+      throw new Error(`Database error creating job: ${error.message}`);
     }
     
     if (!data || data.length === 0) {
@@ -60,7 +68,19 @@ export const updateJobListing = async (id: string, jobData: JobFormData): Promis
 
     if (error) {
       console.error('Error updating job:', error);
-      throw new Error(`Error updating job: ${error.message}`);
+      
+      // Specific error handling
+      if (error.code === '42501') {
+        throw new Error('Permission denied. You may not have the rights to update this job listing');
+      } else if (error.code === '23514') {
+        throw new Error('Invalid data provided. Please check required fields');
+      }
+      
+      throw new Error(`Database error updating job: ${error.message}`);
+    }
+    
+    if (!data || data.length === 0) {
+      throw new Error('Job not found or you do not have permission to update it');
     }
     
     console.log('Job updated successfully:', data);
