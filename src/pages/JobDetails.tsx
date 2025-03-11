@@ -33,6 +33,13 @@ const JobDetails: React.FC = () => {
         description: "Please sign in to apply for this job",
         variant: "destructive"
       });
+    } else if (job && job.application_url) {
+      // If user is logged in, redirect to the application URL
+      window.open(job.application_url, '_blank');
+      toast({
+        title: "Redirecting to application",
+        description: "You are being redirected to the job application page"
+      });
     } else {
       toast({
         title: "Application submitted",
@@ -63,29 +70,35 @@ const JobDetails: React.FC = () => {
     );
   }
 
+  // Add the application_url property to the job object before passing it to components
+  const jobWithUrl = {
+    ...job,
+    application_url: job.application_url || ''
+  };
+
   return (
     <main className="min-h-screen pt-24 pb-16 px-6">
       <div className="max-w-4xl mx-auto">
         {/* Job Header with title, company, location, etc. */}
-        <JobHeader job={job} handleApply={handleApply} />
+        <JobHeader job={jobWithUrl} handleApply={handleApply} />
         
         {/* Main Content Area */}
         <div className="grid md:grid-cols-3 gap-8">
           <div className="md:col-span-2 space-y-8">
             {/* Job Description with responsibilities, requirements, and benefits */}
-            <JobDescription job={job} />
+            <JobDescription job={jobWithUrl} />
             
             {/* Application Form */}
             <section className="bg-white rounded-xl border border-border shadow-sm p-6 md:p-8">
               <h2 className="text-xl font-medium mb-4">Quick Apply</h2>
-              <QuickApplyForm user={user} handleApply={handleApply} job={job} />
+              <QuickApplyForm user={user} handleApply={handleApply} job={jobWithUrl} />
             </section>
           </div>
           
           {/* Sidebar with company info and job insights */}
           <div className="space-y-6">
-            <CompanyInfo job={job} />
-            <JobInsights job={job} />
+            <CompanyInfo job={jobWithUrl} />
+            <JobInsights job={jobWithUrl} />
           </div>
         </div>
       </div>

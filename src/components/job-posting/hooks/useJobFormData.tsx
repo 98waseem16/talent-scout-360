@@ -64,6 +64,7 @@ export const useJobFormData = (id?: string) => {
               work_hours: jobData.work_hours || '',
               visa_sponsorship: jobData.visa_sponsorship || false,
               hiring_urgency: jobData.hiring_urgency || '',
+              application_url: jobData.application_url || '', // Added field here
             });
           }
         } catch (error) {

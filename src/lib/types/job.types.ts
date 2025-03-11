@@ -72,6 +72,7 @@ export interface JobDatabaseFields {
   responsibilities: string[];
   logo: string;
   featured: boolean;
+  application_url: string; // Added required field
   user_id?: string;
   posted?: string;
   created_at?: string;

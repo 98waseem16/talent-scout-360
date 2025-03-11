@@ -15,6 +15,7 @@ export interface Job {
   benefits: string[];
   logo: string;
   featured?: boolean;
+  application_url: string;
 }
 
 export const staticJobs: Job[] = [
@@ -46,7 +47,8 @@ export const staticJobs: Job[] = [
       'Professional development budget'
     ],
     logo: '/placeholder.svg',
-    featured: true
+    featured: true,
+    application_url: 'https://techvision.com/careers/senior-frontend-developer'
   },
   {
     id: '2',
@@ -76,7 +78,8 @@ export const staticJobs: Job[] = [
       'Annual company retreats'
     ],
     logo: '/placeholder.svg',
-    featured: true
+    featured: true,
+    application_url: 'https://designpulse.com/careers/product-designer'
   },
   {
     id: '3',
@@ -105,7 +108,8 @@ export const staticJobs: Job[] = [
       'Unlimited PTO policy',
       'Home office stipend and coworking allowance'
     ],
-    logo: '/placeholder.svg'
+    logo: '/placeholder.svg',
+    application_url: 'https://growthlabs.com/careers/full-stack-engineer'
   },
   {
     id: '4',
@@ -134,7 +138,8 @@ export const staticJobs: Job[] = [
       'Professional development opportunities',
       'Hybrid work model (3 days in office, 2 days remote)'
     ],
-    logo: '/placeholder.svg'
+    logo: '/placeholder.svg',
+    application_url: 'https://brandelevate.com/careers/marketing-manager'
   },
   {
     id: '5',
@@ -164,7 +169,8 @@ export const staticJobs: Job[] = [
       'Learning and development budget'
     ],
     logo: '/placeholder.svg',
-    featured: true
+    featured: true,
+    application_url: 'https://cloudnative.com/careers/devops-engineer'
   },
   {
     id: '6',
@@ -194,7 +200,8 @@ export const staticJobs: Job[] = [
       'Continuing education assistance'
     ],
     logo: '/placeholder.svg',
-    featured: true
+    featured: true,
+    application_url: 'https://analyticaai.com/careers/data-scientist'
   }
 ];
 
@@ -244,7 +251,8 @@ export const getJobs = async (): Promise<Job[]> => {
       requirements: job.requirements,
       benefits: job.benefits,
       logo: job.logo,
-      featured: job.featured
+      featured: job.featured,
+      application_url: job.application_url || ''
     }));
 
     return jobs;
@@ -281,7 +289,8 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
       requirements: job.requirements,
       benefits: job.benefits,
       logo: job.logo,
-      featured: job.featured
+      featured: job.featured,
+      application_url: job.application_url || ''
     }));
 
     return jobs;
@@ -317,7 +326,8 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       requirements: data.requirements,
       benefits: data.benefits,
       logo: data.logo,
-      featured: data.featured
+      featured: data.featured,
+      application_url: data.application_url || ''
     };
   } catch (error) {
     console.error('Error fetching job by ID:', error);
@@ -355,7 +365,8 @@ export const seedJobs = async () => {
         requirements: job.requirements,
         benefits: job.benefits,
         logo: job.logo,
-        featured: job.featured
+        featured: job.featured,
+        application_url: job.application_url
       }))
     );
 

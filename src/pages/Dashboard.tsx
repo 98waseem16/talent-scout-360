@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -43,7 +42,6 @@ const Dashboard: React.FC = () => {
         }
 
         if (jobsData) {
-          // Transform database records to match our Job type
           const transformedJobs: Job[] = jobsData.map(job => ({
             id: job.id,
             title: job.title,
@@ -58,7 +56,8 @@ const Dashboard: React.FC = () => {
             benefits: Array.isArray(job.benefits) ? job.benefits : [],
             logo: job.logo || '',
             featured: job.featured || false,
-            user_id: job.user_id
+            user_id: job.user_id,
+            application_url: job.application_url || ''
           }));
           
           setJobs(transformedJobs);
@@ -104,11 +103,9 @@ const Dashboard: React.FC = () => {
               <h1 className="text-3xl font-bold text-balance">Dashboard</h1>
               <p className="text-muted-foreground mt-1">Manage your job postings and account</p>
             </div>
-            {/* Removed Post a New Job button */}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-            {/* Sidebar */}
             <div className="col-span-1 md:col-span-3">
               <Card className="shadow-md">
                 <CardHeader className="pb-2">
@@ -149,9 +146,7 @@ const Dashboard: React.FC = () => {
               </Card>
             </div>
 
-            {/* Main Content */}
             <div className="col-span-1 md:col-span-9">
-              {/* Job Listings */}
               {activeTab === 'jobs' && (
                 <>
                   <h2 className="text-2xl font-semibold mb-4">My Job Listings</h2>
@@ -215,7 +210,6 @@ const Dashboard: React.FC = () => {
                 </>
               )}
 
-              {/* Drafts */}
               {activeTab === 'drafts' && (
                 <>
                   <h2 className="text-2xl font-semibold mb-4">Saved Drafts</h2>
@@ -227,7 +221,6 @@ const Dashboard: React.FC = () => {
                 </>
               )}
 
-              {/* Profile */}
               {activeTab === 'profile' && (
                 <>
                   <h2 className="text-2xl font-semibold mb-4">My Profile</h2>
@@ -281,7 +274,6 @@ const Dashboard: React.FC = () => {
                 </>
               )}
 
-              {/* Settings */}
               {activeTab === 'settings' && (
                 <>
                   <h2 className="text-2xl font-semibold mb-4">Account Settings</h2>
