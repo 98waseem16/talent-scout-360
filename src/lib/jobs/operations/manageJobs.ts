@@ -81,7 +81,8 @@ export const seedJobs = async () => {
       requirements: job.requirements,
       benefits: job.benefits,
       logo: job.logo,
-      featured: job.featured
+      featured: job.featured,
+      application_url: job.application_url
     }));
 
     const { error } = await supabase

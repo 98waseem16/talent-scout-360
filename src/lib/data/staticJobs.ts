@@ -60,7 +60,8 @@ export const staticJobs: Job[] = [
       'Annual company retreats'
     ],
     logo: '/placeholder.svg',
-    featured: true
+    featured: true,
+    application_url: 'https://designpulse.example.com/careers/product-designer'
   },
   {
     id: '3',
@@ -89,7 +90,8 @@ export const staticJobs: Job[] = [
       'Unlimited PTO policy',
       'Home office stipend and coworking allowance'
     ],
-    logo: '/placeholder.svg'
+    logo: '/placeholder.svg',
+    application_url: 'https://growthlabs.example.com/careers/full-stack-engineer'
   },
   {
     id: '4',
@@ -118,7 +120,8 @@ export const staticJobs: Job[] = [
       'Professional development opportunities',
       'Hybrid work model (3 days in office, 2 days remote)'
     ],
-    logo: '/placeholder.svg'
+    logo: '/placeholder.svg',
+    application_url: 'https://brandelevate.example.com/careers/marketing-manager'
   },
   {
     id: '5',
@@ -148,7 +151,8 @@ export const staticJobs: Job[] = [
       'Learning and development budget'
     ],
     logo: '/placeholder.svg',
-    featured: true
+    featured: true,
+    application_url: 'https://cloudnative.example.com/careers/devops-engineer'
   },
   {
     id: '6',
@@ -178,6 +182,7 @@ export const staticJobs: Job[] = [
       'Continuing education assistance'
     ],
     logo: '/placeholder.svg',
-    featured: true
+    featured: true,
+    application_url: 'https://analyticaai.example.com/careers/data-scientist'
   }
 ];

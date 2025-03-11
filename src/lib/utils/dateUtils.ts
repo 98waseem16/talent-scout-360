@@ -1,7 +1,4 @@
 
-/**
- * Formats a date string into a human-readable relative time format
- */
 export const formatPostedDate = (postedDate: string): string => {
   const now = new Date();
   const posted = new Date(postedDate);
