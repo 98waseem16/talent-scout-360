@@ -1,11 +1,9 @@
-
 import { useState, useEffect } from 'react';
 import { getJobById } from '@/lib/jobs/jobsApi';
 import { toast } from 'sonner';
 import { JobFormData } from '@/lib/types/job.types';
 
 export const useJobFormData = (id?: string) => {
-  // Initialize form data
   const [formData, setFormData] = useState<JobFormData>({
     title: '',
     company: '',
@@ -30,13 +28,12 @@ export const useJobFormData = (id?: string) => {
     visa_sponsorship: false,
     hiring_urgency: '',
     featured: false,
-    application_url: '', // Added required field
+    application_url: '', // Add this field
   });
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const isEditMode = !!id;
 
-  // Fetch job data if in edit mode
   useEffect(() => {
     if (isEditMode && id) {
       const fetchJobData = async () => {
@@ -79,7 +76,6 @@ export const useJobFormData = (id?: string) => {
     }
   }, [id, isEditMode]);
 
-  // Event handlers
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
