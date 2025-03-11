@@ -1,14 +1,29 @@
-
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import type { User } from '@supabase/supabase-js';
+import type { Job } from '@/lib/types/job.types';
 
 interface QuickApplyFormProps {
   user: User | null;
   handleApply: () => void;
+  job: Job;
 }
 
-const QuickApplyForm: React.FC<QuickApplyFormProps> = ({ user, handleApply }) => {
+const QuickApplyForm: React.FC<QuickApplyFormProps> = ({ user, handleApply, job }) => {
+  const navigate = useNavigate();
+
+  const handleSubmitApplication = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (user && job.application_url) {
+      window.open(job.application_url, '_blank');
+      handleApply();
+      return;
+    }
+    
+    handleApply();
+  };
+
   if (!user) {
     return (
       <div className="text-center py-6">
@@ -24,7 +39,15 @@ const QuickApplyForm: React.FC<QuickApplyFormProps> = ({ user, handleApply }) =>
   }
   
   return (
-    <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); handleApply(); }}>
+    <form className="space-y-4" onSubmit={handleSubmitApplication}>
+      {job.application_url ? (
+        <div className="bg-secondary/30 p-4 rounded-lg mb-4">
+          <p className="text-sm text-muted-foreground">
+            When you submit this application, you will be redirected to the company's job application page.
+          </p>
+        </div>
+      ) : null}
+      
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label htmlFor="name" className="block text-sm font-medium mb-1">Full Name</label>
@@ -82,7 +105,7 @@ const QuickApplyForm: React.FC<QuickApplyFormProps> = ({ user, handleApply }) =>
         type="submit"
         className="w-full bg-primary hover:bg-primary/90 text-white font-medium py-2.5 px-6 rounded-lg transition-colors active:scale-[0.98]"
       >
-        Submit Application
+        {job.application_url ? "Continue to Application" : "Submit Application"}
       </button>
     </form>
   );

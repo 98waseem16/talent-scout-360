@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { Briefcase, Building, MapPin, DollarSign } from 'lucide-react';
+import { Briefcase, Building, MapPin, DollarSign, Link } from 'lucide-react';
 
 interface JobBasicInfoProps {
   formData: {
@@ -9,6 +9,7 @@ interface JobBasicInfoProps {
     company: string;
     location: string;
     salary: string;
+    application_url: string;
   };
   handleInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
@@ -80,6 +81,24 @@ const JobBasicInfo: React.FC<JobBasicInfoProps> = ({ formData, handleInputChange
             onChange={handleInputChange} 
             placeholder="e.g. $80,000 - $120,000"
           />
+        </div>
+
+        <div className="space-y-2 md:col-span-2">
+          <label htmlFor="application_url" className="flex items-center space-x-2 text-sm font-medium">
+            <Link className="h-5 w-5 text-muted-foreground" />
+            <span>Application URL*</span>
+          </label>
+          <Input 
+            id="application_url" 
+            name="application_url" 
+            value={formData.application_url || ''} 
+            onChange={handleInputChange} 
+            required 
+            placeholder="e.g. https://yourcompany.com/careers/job-title"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Direct link to the job posting on your careers page where applicants will be directed
+          </p>
         </div>
       </div>
     </>

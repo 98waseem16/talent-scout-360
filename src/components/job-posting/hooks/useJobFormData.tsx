@@ -30,6 +30,7 @@ export const useJobFormData = (id?: string) => {
     visa_sponsorship: false,
     hiring_urgency: '',
     featured: false,
+    application_url: '', // Added required field
   });
 
   const [logoFile, setLogoFile] = useState<File | null>(null);

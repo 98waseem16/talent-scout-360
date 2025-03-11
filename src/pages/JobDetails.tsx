@@ -78,7 +78,7 @@ const JobDetails: React.FC = () => {
             {/* Application Form */}
             <section className="bg-white rounded-xl border border-border shadow-sm p-6 md:p-8">
               <h2 className="text-xl font-medium mb-4">Quick Apply</h2>
-              <QuickApplyForm user={user} handleApply={handleApply} />
+              <QuickApplyForm user={user} handleApply={handleApply} job={job} />
             </section>
           </div>
           
