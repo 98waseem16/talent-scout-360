@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { JobFormData } from '../../types/job.types';
 import { mapJobFormDataToDatabaseFields } from '../utils/jobMappers';
