@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Job } from '../../types/job.types';
 import { staticJobs } from '../../data/staticJobs';
-import { mapDatabaseRecordToJob } from '../utils/jobMappers';
+import { mapDatabaseFieldsToJob } from '../utils/jobMappers';
 
 /**
  * Fetches all jobs from the database
@@ -20,7 +20,7 @@ export const getJobs = async (): Promise<Job[]> => {
     }
 
     // Map database records to our frontend Job model
-    const jobs = data.map(record => mapDatabaseRecordToJob(record));
+    const jobs = data.map(record => mapDatabaseFieldsToJob(record));
     return jobs;
   } catch (error) {
     console.error('Error fetching jobs:', error);
@@ -46,7 +46,7 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
     }
 
     // Map database records to our frontend Job model
-    const jobs = data.map(record => mapDatabaseRecordToJob(record));
+    const jobs = data.map(record => mapDatabaseFieldsToJob(record));
     return jobs;
   } catch (error) {
     console.error('Error fetching trending jobs:', error);
@@ -70,7 +70,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       return staticJobs.find(job => job.id === id);
     }
 
-    return mapDatabaseRecordToJob(data);
+    return mapDatabaseFieldsToJob(data);
   } catch (error) {
     console.error('Error fetching job by ID:', error);
     return staticJobs.find(job => job.id === id);
