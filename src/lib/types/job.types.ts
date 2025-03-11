@@ -1,4 +1,3 @@
-
 export interface Job {
   id: string;
   title: string;
@@ -26,7 +25,7 @@ export interface Job {
   work_hours?: string;
   visa_sponsorship?: boolean;
   hiring_urgency?: string;
-  application_url: string; // Added required field
+  application_url: string;
 }
 
 export interface JobFormData {
@@ -40,7 +39,7 @@ export interface JobFormData {
   benefits: string[];
   logo: string;
   featured?: boolean;
-  application_url: string; // Added required field
+  application_url: string;
   contact_email?: string;
   salary: string;
   user_id?: string;
@@ -58,7 +57,6 @@ export interface JobFormData {
   hiring_urgency?: string;
 }
 
-// Define a type mapping our frontend model to the database schema
 export interface JobDatabaseFields {
   id?: string;
   title: string;
@@ -72,7 +70,7 @@ export interface JobDatabaseFields {
   responsibilities: string[];
   logo: string;
   featured: boolean;
-  application_url: string; // Added required field
+  application_url: string;
   user_id?: string;
   posted?: string;
   created_at?: string;
