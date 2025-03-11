@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from './file-upload';
 
@@ -351,38 +350,17 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
       throw new Error('Logo file is too large. Maximum size is 2MB.');
     }
     
+    // Get the current user session to ensure we're authenticated
+    const { data: sessionData } = await supabase.auth.getSession();
+    
+    if (!sessionData.session) {
+      throw new Error('Authentication required to upload logos. Please sign in.');
+    }
+    
     // Generate a unique filename with timestamp and sanitized original name
     const fileName = `${Date.now()}-${file.name.replace(/[^a-zA-Z0-9_.]/g, '')}`;
     console.log('Generated file name for storage:', fileName);
     
-    // Try to use existing bucket first
-    try {
-      // First check if the bucket exists
-      const { data: bucketInfo, error: getBucketError } = await supabase.storage.getBucket('logos');
-      
-      if (getBucketError) {
-        console.log('Error checking logos bucket:', getBucketError.message);
-        console.log('Will attempt to create the bucket...');
-        
-        // Try to create the bucket
-        const { data: createData, error: createError } = await supabase.storage.createBucket('logos', {
-          public: true
-        });
-        
-        if (createError) {
-          console.error('Error creating logos bucket:', createError);
-          throw new Error(`Storage setup error: ${createError.message}`);
-        } else {
-          console.log('Successfully created logos bucket');
-        }
-      } else {
-        console.log('Logos bucket exists:', bucketInfo);
-      }
-    } catch (bucketError) {
-      console.error('Bucket operation failed:', bucketError);
-      // Continue anyway - we'll attempt the upload
-    }
-
     // Attempt to upload the file
     console.log('Attempting to upload logo to Supabase storage...');
     const { data: uploadData, error: uploadError } = await supabase.storage
@@ -394,6 +372,7 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
       
     if (uploadError) {
       console.error('Supabase storage upload error:', uploadError);
+      console.log('Error details:', JSON.stringify(uploadError, null, 2));
       
       // Detailed error handling
       if (uploadError.message.includes('bucket') || uploadError.message.includes('Bucket')) {
@@ -401,7 +380,11 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
       }
       
       if (uploadError.message.includes('permission') || uploadError.message.includes('auth')) {
-        throw new Error(`Permission denied when uploading logo: ${uploadError.message}`);
+        throw new Error(`Permission denied when uploading logo: ${uploadError.message}. Make sure you're signed in.`);
+      }
+      
+      if (uploadError.message.includes('policy')) {
+        throw new Error(`Storage policy error: ${uploadError.message}. Please contact support.`);
       }
       
       // Generic error with message
@@ -425,7 +408,9 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
     return urlData.publicUrl;
   } catch (error: any) {
     console.error('Error in uploadCompanyLogo function:', error);
-    // Ensure error is properly propagated
+    console.log('Full error object:', JSON.stringify(error, null, 2));
+    
+    // Provide a user-friendly error message
     if (error instanceof Error) {
       throw error;
     } else if (typeof error === 'object') {

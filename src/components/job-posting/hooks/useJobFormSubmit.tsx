@@ -18,6 +18,7 @@ export const useJobFormSubmit = (id?: string) => {
     
     if (!user) {
       toast.error('You must be logged in to post a job');
+      navigate('/auth', { state: { returnTo: window.location.pathname } });
       return;
     }
     
@@ -57,6 +58,8 @@ export const useJobFormSubmit = (id?: string) => {
       if (logoFile) {
         try {
           console.log('Uploading logo file:', logoFile.name, logoFile.type, logoFile.size);
+          toast.info('Uploading company logo...');
+          
           const logoUrl = await uploadCompanyLogo(logoFile);
           console.log('Logo uploaded successfully, URL:', logoUrl);
           
@@ -65,10 +68,15 @@ export const useJobFormSubmit = (id?: string) => {
             ...jobDataToSubmit,
             logo: logoUrl
           };
+          
+          toast.success('Logo uploaded successfully');
         } catch (uploadError: any) {
           console.error('Error uploading logo:', uploadError);
+          // Log the full error object for debugging
+          console.log('Full upload error:', JSON.stringify(uploadError, null, 2));
+          
           const errorMessage = typeof uploadError === 'object' ? uploadError.message || 'Unknown upload error' : String(uploadError);
-          toast.error(errorMessage);
+          toast.error(`Logo upload failed: ${errorMessage}`);
           
           // If logo upload fails but we're in edit mode and there's an existing logo, 
           // we can continue with the existing logo
