@@ -26,10 +26,12 @@ const JobDetails: React.FC = () => {
     enabled: !!id
   });
 
-  // Add additional logging to verify job data
+  // Enhanced logging to verify job data
   useEffect(() => {
     if (job) {
       console.log('JobDetails page - job data loaded:', job);
+    } else {
+      console.log('JobDetails page - no job data available yet');
     }
   }, [job]);
 
@@ -66,7 +68,7 @@ const JobDetails: React.FC = () => {
     );
   }
   
-  // Error state
+  // Error state - improved error handling
   if (error || !job) {
     console.error('Error or no job data:', error);
     return (
@@ -78,7 +80,7 @@ const JobDetails: React.FC = () => {
     );
   }
 
-  // Add the application_url property to the job object before passing it to components
+  // Ensure application_url is defined
   const jobWithUrl = {
     ...job,
     application_url: job.application_url || ''

@@ -41,10 +41,21 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // More detailed debug logging to track filter state
+  // Enhanced debug logging for filter state tracking
   useEffect(() => {
-    console.log('FilterSidebar - Current filter values:', {
-      ...filters,
+    console.log('FilterSidebar - Current filters state:', {
+      department: filters.department,
+      seniority: filters.seniority,
+      salaryRange: filters.salaryRange,
+      teamSize: filters.teamSize,
+      investmentStage: filters.investmentStage,
+      remote: filters.remote,
+      jobType: filters.jobType,
+      workHours: filters.workHours,
+      equity: filters.equity,
+      hiringUrgency: filters.hiringUrgency,
+      revenueModel: filters.revenueModel,
+      visaSponsorship: filters.visaSponsorship,
       hasActiveFilters: Object.entries(filters).some(([key, value]) => 
         key === 'visaSponsorship' ? value === true : value !== 'all'
       )

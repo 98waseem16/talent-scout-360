@@ -34,37 +34,45 @@ export const mapJobFormDataToDatabaseFields = (
 };
 
 export const mapDatabaseFieldsToJob = (dbFields: any) => {
-  // More detailed logging to identify any issues with field mapping
-  console.log('Raw database fields for job mapping:', dbFields);
+  if (!dbFields) {
+    console.error('mapDatabaseFieldsToJob received null or undefined dbFields');
+    return null;
+  }
   
+  // Detailed logging for job data mapping
+  console.log('Raw database fields for job mapping:', JSON.stringify(dbFields, null, 2));
+  
+  // Ensure all fields are properly mapped and have appropriate fallbacks
   const mappedJob = {
     id: dbFields.id,
-    title: dbFields.title,
-    company: dbFields.company,
-    location: dbFields.location,
-    salary: dbFields.salary,
-    type: dbFields.type,
-    posted: dbFields.posted,
-    description: dbFields.description,
-    responsibilities: dbFields.responsibilities || [],
-    requirements: dbFields.requirements || [],
-    benefits: dbFields.benefits || [],
-    logo: dbFields.logo,
-    featured: dbFields.featured,
+    title: dbFields.title || '',
+    company: dbFields.company || '',
+    location: dbFields.location || '',
+    salary: dbFields.salary || '',
+    type: dbFields.type || '',
+    posted: dbFields.posted || '',
+    description: dbFields.description || '',
+    responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
+    requirements: Array.isArray(dbFields.requirements) ? dbFields.requirements : [],
+    benefits: Array.isArray(dbFields.benefits) ? dbFields.benefits : [],
+    logo: dbFields.logo || '/placeholder.svg',
+    featured: Boolean(dbFields.featured),
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
-    investment_stage: dbFields.investment_stage,
-    team_size: dbFields.team_size,
-    revenue_model: dbFields.revenue_model,
-    department: dbFields.department,
-    seniority_level: dbFields.seniority_level,
-    job_type: dbFields.job_type,
-    salary_range: dbFields.salary_range,
-    equity: dbFields.equity,
-    remote_onsite: dbFields.remote_onsite,
-    work_hours: dbFields.work_hours,
-    visa_sponsorship: dbFields.visa_sponsorship,
-    hiring_urgency: dbFields.hiring_urgency
+    
+    // Additional fields - ensure these are properly mapped for filtering
+    investment_stage: dbFields.investment_stage || '',
+    team_size: dbFields.team_size || '',
+    revenue_model: dbFields.revenue_model || '',
+    department: dbFields.department || '',
+    seniority_level: dbFields.seniority_level || '',
+    job_type: dbFields.job_type || '',
+    salary_range: dbFields.salary_range || '',
+    equity: dbFields.equity || '',
+    remote_onsite: dbFields.remote_onsite || '',
+    work_hours: dbFields.work_hours || '',
+    visa_sponsorship: dbFields.visa_sponsorship === true,
+    hiring_urgency: dbFields.hiring_urgency || ''
   };
   
   console.log('Mapped job object:', mappedJob);
