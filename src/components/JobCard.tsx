@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Briefcase, MapPin, DollarSign, Clock } from 'lucide-react';
 import type { Job } from '@/lib/jobs';
+import { GlowEffect } from '@/components/ui/glow-effect';
 
 interface JobCardProps {
   job: Job;
@@ -24,8 +25,20 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
         featured ? "glass-card" : "bg-white shadow-sm border border-border"
       )}
     >
-      <div className="p-6">
-        <div className="flex items-start gap-4">
+      <div className="relative p-6">
+        {/* Add glow effect only for featured jobs */}
+        {(featured || job.featured) && (
+          <GlowEffect
+            colors={['#9b87f5', '#D946EF', '#F97316', '#0EA5E9']}
+            mode="flowHorizontal"
+            blur="medium"
+            scale={1.2}
+            duration={8}
+            className="rounded-xl opacity-70 z-0"
+          />
+        )}
+        
+        <div className="flex items-start gap-4 relative z-10">
           <div className="h-12 w-12 rounded-md bg-secondary/50 flex items-center justify-center overflow-hidden">
             <img 
               src={job.logo} 

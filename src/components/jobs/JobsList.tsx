@@ -50,7 +50,12 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
     <div className="space-y-6">
       {filteredJobs.length > 0 ? (
         filteredJobs.map((job, index) => (
-          <JobCard key={job.id} job={job} index={index} />
+          <JobCard 
+            key={job.id} 
+            job={job} 
+            index={index} 
+            featured={job.featured}
+          />
         ))
       ) : (
         <div className="text-center py-16">
