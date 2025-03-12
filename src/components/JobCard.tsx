@@ -48,50 +48,29 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className={cn(
-                "text-lg font-medium truncate",
-                featured || job.featured ? "text-white" : ""
-              )}>
-                {job.title}
-              </h3>
+              <h3 className="text-lg font-medium truncate">{job.title}</h3>
               {job.featured && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-destructive text-white shadow-sm">
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                   Featured
                 </span>
               )}
             </div>
-            <p className={cn(
-              featured || job.featured ? "text-white/90" : "text-muted-foreground"
-            )}>
-              {job.company}
-            </p>
+            <p className="text-muted-foreground">{job.company}</p>
             
             <div className="mt-3 flex flex-wrap gap-3 text-sm text-muted-foreground">
-              <div className={cn(
-                "flex items-center", 
-                featured || job.featured ? "text-white/85" : ""
-              )}>
+              <div className="flex items-center">
                 <MapPin className="mr-1 h-3.5 w-3.5" />
                 <span>{job.location}</span>
               </div>
-              <div className={cn(
-                "flex items-center", 
-                featured || job.featured ? "text-white/85" : ""
-              )}>
+              <div className="flex items-center">
                 <DollarSign className="mr-1 h-3.5 w-3.5" />
                 <span>{job.salary}</span>
               </div>
-              <div className={cn(
-                "flex items-center", 
-                featured || job.featured ? "text-white/85" : ""
-              )}>
+              <div className="flex items-center">
                 <Briefcase className="mr-1 h-3.5 w-3.5" />
                 <span>{job.type}</span>
               </div>
-              <div className={cn(
-                "flex items-center", 
-                featured || job.featured ? "text-white/85" : ""
-              )}>
+              <div className="flex items-center">
                 <Clock className="mr-1 h-3.5 w-3.5" />
                 <span>{job.posted}</span>
               </div>
