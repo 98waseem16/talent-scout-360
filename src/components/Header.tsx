@@ -101,7 +101,7 @@ const Header: React.FC = () => {
           <span className="bg-primary text-white p-1.5 rounded-md">
             <Briefcase className="h-4 w-4" />
           </span>
-          Launchly
+          notCorporate
         </Link>
 
         {/* Desktop Navigation */}
