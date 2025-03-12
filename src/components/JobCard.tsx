@@ -49,8 +49,8 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
               <h3 className={cn(
-                "text-lg font-medium truncate",
-                featured || job.featured ? "text-white" : ""
+                "text-lg font-medium truncate px-3 py-1 rounded-full",
+                featured || job.featured ? "bg-black/70 text-white shadow-sm" : ""
               )}>
                 {job.title}
               </h3>
@@ -61,36 +61,37 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
               )}
             </div>
             <p className={cn(
-              featured || job.featured ? "text-white/90" : "text-muted-foreground"
+              "mt-1 px-3 py-1 rounded-full inline-block",
+              featured || job.featured ? "bg-black/60 text-white" : "text-muted-foreground"
             )}>
               {job.company}
             </p>
             
-            <div className="mt-3 flex flex-wrap gap-3 text-sm text-muted-foreground">
+            <div className="mt-3 flex flex-wrap gap-3 text-sm">
               <div className={cn(
-                "flex items-center", 
-                featured || job.featured ? "text-white/85" : ""
+                "flex items-center px-2.5 py-1 rounded-full",
+                featured || job.featured ? "bg-black/50 text-white" : "bg-secondary text-muted-foreground"
               )}>
                 <MapPin className="mr-1 h-3.5 w-3.5" />
                 <span>{job.location}</span>
               </div>
               <div className={cn(
-                "flex items-center", 
-                featured || job.featured ? "text-white/85" : ""
+                "flex items-center px-2.5 py-1 rounded-full", 
+                featured || job.featured ? "bg-black/50 text-white" : "bg-secondary text-muted-foreground"
               )}>
                 <DollarSign className="mr-1 h-3.5 w-3.5" />
                 <span>{job.salary}</span>
               </div>
               <div className={cn(
-                "flex items-center", 
-                featured || job.featured ? "text-white/85" : ""
+                "flex items-center px-2.5 py-1 rounded-full", 
+                featured || job.featured ? "bg-black/50 text-white" : "bg-secondary text-muted-foreground"
               )}>
                 <Briefcase className="mr-1 h-3.5 w-3.5" />
                 <span>{job.type}</span>
               </div>
               <div className={cn(
-                "flex items-center", 
-                featured || job.featured ? "text-white/85" : ""
+                "flex items-center px-2.5 py-1 rounded-full", 
+                featured || job.featured ? "bg-black/50 text-white" : "bg-secondary text-muted-foreground"
               )}>
                 <Clock className="mr-1 h-3.5 w-3.5" />
                 <span>{job.posted}</span>
