@@ -123,6 +123,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
+  // Add debug logging to see what's coming from the database
   const filteredJobs = jobs?.filter(job => {
     // Basic text search filters
     const matchesSearch = searchQuery === '' || 
@@ -133,40 +134,26 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const matchesLocation = locationQuery === '' ||
       job.location.toLowerCase().includes(locationQuery.toLowerCase());
     
-    // Advanced filters
-    const matchesDepartment = filters.department === 'all' || 
-      (job.department && job.department.toLowerCase() === filters.department.toLowerCase());
-      
-    const matchesSeniority = filters.seniority === 'all' || 
-      (job.seniority_level && job.seniority_level.toLowerCase() === filters.seniority.toLowerCase());
-      
-    const matchesSalaryRange = filters.salaryRange === 'all' || 
-      (job.salary_range && job.salary_range.toLowerCase() === filters.salaryRange.toLowerCase());
-      
-    const matchesTeamSize = filters.teamSize === 'all' || 
-      (job.team_size && job.team_size.toLowerCase() === filters.teamSize.toLowerCase());
-      
-    const matchesInvestmentStage = filters.investmentStage === 'all' || 
-      (job.investment_stage && job.investment_stage.toLowerCase() === filters.investmentStage.toLowerCase());
-      
-    const matchesRemote = filters.remote === 'all' || 
-      (job.remote_onsite && job.remote_onsite.toLowerCase() === filters.remote.toLowerCase());
-      
-    const matchesJobType = filters.jobType === 'all' || 
-      (job.job_type && job.job_type.toLowerCase() === filters.jobType.toLowerCase());
-      
-    const matchesWorkHours = filters.workHours === 'all' || 
-      (job.work_hours && job.work_hours.toLowerCase() === filters.workHours.toLowerCase());
-      
-    const matchesEquity = filters.equity === 'all' || 
-      (job.equity && job.equity.toLowerCase() === filters.equity.toLowerCase());
-      
-    const matchesHiringUrgency = filters.hiringUrgency === 'all' || 
-      (job.hiring_urgency && job.hiring_urgency.toLowerCase() === filters.hiringUrgency.toLowerCase());
-      
-    const matchesRevenueModel = filters.revenueModel === 'all' || 
-      (job.revenue_model && job.revenue_model.toLowerCase() === filters.revenueModel.toLowerCase());
-      
+    // Helper function for comparing values with case insensitivity
+    const matchesField = (jobField: string | undefined, filterValue: string): boolean => {
+      if (filterValue === 'all') return true;
+      if (!jobField) return false;
+      return jobField.toLowerCase() === filterValue.toLowerCase();
+    };
+
+    // Advanced filters using the helper function
+    const matchesDepartment = matchesField(job.department, filters.department);
+    const matchesSeniority = matchesField(job.seniority_level, filters.seniority);
+    const matchesSalaryRange = matchesField(job.salary_range, filters.salaryRange);
+    const matchesTeamSize = matchesField(job.team_size, filters.teamSize);
+    const matchesInvestmentStage = matchesField(job.investment_stage, filters.investmentStage);
+    const matchesRemote = matchesField(job.remote_onsite, filters.remote);
+    const matchesJobType = matchesField(job.job_type, filters.jobType);
+    const matchesWorkHours = matchesField(job.work_hours, filters.workHours);
+    const matchesEquity = matchesField(job.equity, filters.equity);
+    const matchesHiringUrgency = matchesField(job.hiring_urgency, filters.hiringUrgency);
+    const matchesRevenueModel = matchesField(job.revenue_model, filters.revenueModel);
+    
     const matchesVisaSponsorship = !filters.visaSponsorship || 
       job.visa_sponsorship === true;
     
