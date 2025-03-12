@@ -45,17 +45,17 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   const [filters, setFilters] = useState<JobFilters>({
-    department: '',
-    seniority: '',
-    salaryRange: '',
-    teamSize: '',
-    investmentStage: '',
-    remote: '',
-    jobType: '',
-    workHours: '',
-    equity: '',
-    hiringUrgency: '',
-    revenueModel: '',
+    department: 'all',
+    seniority: 'all',
+    salaryRange: 'all',
+    teamSize: 'all',
+    investmentStage: 'all',
+    remote: 'all',
+    jobType: 'all',
+    workHours: 'all',
+    equity: 'all',
+    hiringUrgency: 'all',
+    revenueModel: 'all',
     visaSponsorship: false
   });
 
@@ -77,17 +77,17 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
 
   const clearAllFilters = () => {
     setFilters({
-      department: '',
-      seniority: '',
-      salaryRange: '',
-      teamSize: '',
-      investmentStage: '',
-      remote: '',
-      jobType: '',
-      workHours: '',
-      equity: '',
-      hiringUrgency: '',
-      revenueModel: '',
+      department: 'all',
+      seniority: 'all',
+      salaryRange: 'all',
+      teamSize: 'all',
+      investmentStage: 'all',
+      remote: 'all',
+      jobType: 'all',
+      workHours: 'all',
+      equity: 'all',
+      hiringUrgency: 'all',
+      revenueModel: 'all',
       visaSponsorship: false
     });
   };
@@ -100,7 +100,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     } else {
       setFilters(prev => ({ 
         ...prev, 
-        [type]: type === 'visaSponsorship' ? false : '' 
+        [type]: type === 'visaSponsorship' ? false : 'all' 
       }));
     }
   };
@@ -109,17 +109,17 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   const activeFilters = [
     ...(searchQuery ? [{ type: 'search', label: `"${searchQuery}"` }] : []),
     ...(locationQuery ? [{ type: 'location', label: locationQuery }] : []),
-    ...(filters.department ? [{ type: 'department', label: filters.department }] : []),
-    ...(filters.seniority ? [{ type: 'seniority', label: filters.seniority }] : []),
-    ...(filters.salaryRange ? [{ type: 'salaryRange', label: filters.salaryRange }] : []),
-    ...(filters.teamSize ? [{ type: 'teamSize', label: filters.teamSize }] : []),
-    ...(filters.investmentStage ? [{ type: 'investmentStage', label: filters.investmentStage }] : []),
-    ...(filters.remote ? [{ type: 'remote', label: filters.remote }] : []),
-    ...(filters.jobType ? [{ type: 'jobType', label: filters.jobType }] : []),
-    ...(filters.workHours ? [{ type: 'workHours', label: filters.workHours }] : []),
-    ...(filters.equity ? [{ type: 'equity', label: filters.equity }] : []),
-    ...(filters.hiringUrgency ? [{ type: 'hiringUrgency', label: filters.hiringUrgency }] : []),
-    ...(filters.revenueModel ? [{ type: 'revenueModel', label: filters.revenueModel }] : []),
+    ...(filters.department !== 'all' ? [{ type: 'department', label: filters.department }] : []),
+    ...(filters.seniority !== 'all' ? [{ type: 'seniority', label: filters.seniority }] : []),
+    ...(filters.salaryRange !== 'all' ? [{ type: 'salaryRange', label: filters.salaryRange }] : []),
+    ...(filters.teamSize !== 'all' ? [{ type: 'teamSize', label: filters.teamSize }] : []),
+    ...(filters.investmentStage !== 'all' ? [{ type: 'investmentStage', label: filters.investmentStage }] : []),
+    ...(filters.remote !== 'all' ? [{ type: 'remote', label: filters.remote }] : []),
+    ...(filters.jobType !== 'all' ? [{ type: 'jobType', label: filters.jobType }] : []),
+    ...(filters.workHours !== 'all' ? [{ type: 'workHours', label: filters.workHours }] : []),
+    ...(filters.equity !== 'all' ? [{ type: 'equity', label: filters.equity }] : []),
+    ...(filters.hiringUrgency !== 'all' ? [{ type: 'hiringUrgency', label: filters.hiringUrgency }] : []),
+    ...(filters.revenueModel !== 'all' ? [{ type: 'revenueModel', label: filters.revenueModel }] : []),
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
@@ -134,38 +134,38 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       job.location.toLowerCase().includes(locationQuery.toLowerCase());
     
     // Advanced filters
-    const matchesDepartment = filters.department === '' || 
-      job.department?.toLowerCase() === filters.department.toLowerCase();
+    const matchesDepartment = filters.department === 'all' || 
+      (job.department && job.department.toLowerCase() === filters.department.toLowerCase());
       
-    const matchesSeniority = filters.seniority === '' || 
-      job.seniority_level?.toLowerCase() === filters.seniority.toLowerCase();
+    const matchesSeniority = filters.seniority === 'all' || 
+      (job.seniority_level && job.seniority_level.toLowerCase() === filters.seniority.toLowerCase());
       
-    const matchesSalaryRange = filters.salaryRange === '' || 
-      job.salary_range?.toLowerCase() === filters.salaryRange.toLowerCase();
+    const matchesSalaryRange = filters.salaryRange === 'all' || 
+      (job.salary_range && job.salary_range.toLowerCase() === filters.salaryRange.toLowerCase());
       
-    const matchesTeamSize = filters.teamSize === '' || 
-      job.team_size?.toLowerCase() === filters.teamSize.toLowerCase();
+    const matchesTeamSize = filters.teamSize === 'all' || 
+      (job.team_size && job.team_size.toLowerCase() === filters.teamSize.toLowerCase());
       
-    const matchesInvestmentStage = filters.investmentStage === '' || 
-      job.investment_stage?.toLowerCase() === filters.investmentStage.toLowerCase();
+    const matchesInvestmentStage = filters.investmentStage === 'all' || 
+      (job.investment_stage && job.investment_stage.toLowerCase() === filters.investmentStage.toLowerCase());
       
-    const matchesRemote = filters.remote === '' || 
-      job.remote_onsite?.toLowerCase() === filters.remote.toLowerCase();
+    const matchesRemote = filters.remote === 'all' || 
+      (job.remote_onsite && job.remote_onsite.toLowerCase() === filters.remote.toLowerCase());
       
-    const matchesJobType = filters.jobType === '' || 
-      job.job_type?.toLowerCase() === filters.jobType.toLowerCase();
+    const matchesJobType = filters.jobType === 'all' || 
+      (job.job_type && job.job_type.toLowerCase() === filters.jobType.toLowerCase());
       
-    const matchesWorkHours = filters.workHours === '' || 
-      job.work_hours?.toLowerCase() === filters.workHours.toLowerCase();
+    const matchesWorkHours = filters.workHours === 'all' || 
+      (job.work_hours && job.work_hours.toLowerCase() === filters.workHours.toLowerCase());
       
-    const matchesEquity = filters.equity === '' || 
-      job.equity?.toLowerCase() === filters.equity.toLowerCase();
+    const matchesEquity = filters.equity === 'all' || 
+      (job.equity && job.equity.toLowerCase() === filters.equity.toLowerCase());
       
-    const matchesHiringUrgency = filters.hiringUrgency === '' || 
-      job.hiring_urgency?.toLowerCase() === filters.hiringUrgency.toLowerCase();
+    const matchesHiringUrgency = filters.hiringUrgency === 'all' || 
+      (job.hiring_urgency && job.hiring_urgency.toLowerCase() === filters.hiringUrgency.toLowerCase());
       
-    const matchesRevenueModel = filters.revenueModel === '' || 
-      job.revenue_model?.toLowerCase() === filters.revenueModel.toLowerCase();
+    const matchesRevenueModel = filters.revenueModel === 'all' || 
+      (job.revenue_model && job.revenue_model.toLowerCase() === filters.revenueModel.toLowerCase());
       
     const matchesVisaSponsorship = !filters.visaSponsorship || 
       job.visa_sponsorship === true;
