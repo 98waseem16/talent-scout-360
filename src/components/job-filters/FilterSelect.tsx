@@ -30,6 +30,12 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   label,
   icon
 }) => {
+  // Console log to debug selected values
+  const handleValueChange = (newValue: string) => {
+    console.log(`Filter changed: ${label || 'unknown'} = ${newValue}`);
+    onChange(newValue);
+  };
+
   return (
     <div className="space-y-1">
       {label && (
@@ -38,7 +44,7 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
           {label}
         </label>
       )}
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={handleValueChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>

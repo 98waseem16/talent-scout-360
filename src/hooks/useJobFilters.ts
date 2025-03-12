@@ -123,45 +123,132 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Add debug logging to see what's coming from the database
+  // Define a debugging function to log filtering details
+  const debugFilter = (jobField: any, filterValue: string, filterName: string, jobId: string) => {
+    if (filterValue !== 'all') {
+      console.log(`Filter ${filterName}:`, { 
+        jobId,
+        filterValue, 
+        jobFieldValue: jobField, 
+        jobFieldType: typeof jobField,
+        match: String(jobField).toLowerCase() === filterValue.toLowerCase()
+      });
+    }
+    return true;
+  };
+
+  // Completely revised filtering logic
   const filteredJobs = jobs?.filter(job => {
+    // For debugging, uncomment this line
+    // console.log(`Filtering job: ${job.id} - ${job.title}`);
+
     // Basic text search filters
     const matchesSearch = searchQuery === '' || 
-      job.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.company.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.description.toLowerCase().includes(searchQuery.toLowerCase());
+      job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      job.description?.toLowerCase().includes(searchQuery.toLowerCase());
       
     const matchesLocation = locationQuery === '' ||
-      job.location.toLowerCase().includes(locationQuery.toLowerCase());
+      (job.location && job.location.toLowerCase().includes(locationQuery.toLowerCase()));
     
-    // Helper function for comparing values with case insensitivity
-    const matchesField = (jobField: string | undefined, filterValue: string): boolean => {
-      if (filterValue === 'all') return true;
-      if (!jobField) return false;
-      return jobField.toLowerCase() === filterValue.toLowerCase();
-    };
-
-    // Advanced filters using the helper function
-    const matchesDepartment = matchesField(job.department, filters.department);
-    const matchesSeniority = matchesField(job.seniority_level, filters.seniority);
-    const matchesSalaryRange = matchesField(job.salary_range, filters.salaryRange);
-    const matchesTeamSize = matchesField(job.team_size, filters.teamSize);
-    const matchesInvestmentStage = matchesField(job.investment_stage, filters.investmentStage);
-    const matchesRemote = matchesField(job.remote_onsite, filters.remote);
-    const matchesJobType = matchesField(job.job_type, filters.jobType);
-    const matchesWorkHours = matchesField(job.work_hours, filters.workHours);
-    const matchesEquity = matchesField(job.equity, filters.equity);
-    const matchesHiringUrgency = matchesField(job.hiring_urgency, filters.hiringUrgency);
-    const matchesRevenueModel = matchesField(job.revenue_model, filters.revenueModel);
+    // If basic filters don't match, return early
+    if (!matchesSearch || !matchesLocation) return false;
     
-    const matchesVisaSponsorship = !filters.visaSponsorship || 
-      job.visa_sponsorship === true;
+    // Department filter
+    if (filters.department !== 'all') {
+      if (!job.department || job.department.toLowerCase() !== filters.department.toLowerCase()) {
+        debugFilter(job.department, filters.department, 'department', job.id);
+        return false;
+      }
+    }
     
-    return matchesSearch && matchesLocation && 
-      matchesDepartment && matchesSeniority && matchesSalaryRange && 
-      matchesTeamSize && matchesInvestmentStage && matchesRemote && 
-      matchesJobType && matchesWorkHours && matchesEquity && 
-      matchesHiringUrgency && matchesRevenueModel && matchesVisaSponsorship;
+    // Seniority level filter
+    if (filters.seniority !== 'all') {
+      if (!job.seniority_level || job.seniority_level.toLowerCase() !== filters.seniority.toLowerCase()) {
+        debugFilter(job.seniority_level, filters.seniority, 'seniority_level', job.id);
+        return false;
+      }
+    }
+    
+    // Salary range filter
+    if (filters.salaryRange !== 'all') {
+      if (!job.salary_range || job.salary_range.toLowerCase() !== filters.salaryRange.toLowerCase()) {
+        debugFilter(job.salary_range, filters.salaryRange, 'salary_range', job.id);
+        return false;
+      }
+    }
+    
+    // Team size filter
+    if (filters.teamSize !== 'all') {
+      if (!job.team_size || job.team_size.toLowerCase() !== filters.teamSize.toLowerCase()) {
+        debugFilter(job.team_size, filters.teamSize, 'team_size', job.id);
+        return false;
+      }
+    }
+    
+    // Investment stage filter
+    if (filters.investmentStage !== 'all') {
+      if (!job.investment_stage || job.investment_stage.toLowerCase() !== filters.investmentStage.toLowerCase()) {
+        debugFilter(job.investment_stage, filters.investmentStage, 'investment_stage', job.id);
+        return false;
+      }
+    }
+    
+    // Remote/Onsite filter
+    if (filters.remote !== 'all') {
+      if (!job.remote_onsite || job.remote_onsite.toLowerCase() !== filters.remote.toLowerCase()) {
+        debugFilter(job.remote_onsite, filters.remote, 'remote_onsite', job.id);
+        return false;
+      }
+    }
+    
+    // Job type filter
+    if (filters.jobType !== 'all') {
+      if (!job.job_type || job.job_type.toLowerCase() !== filters.jobType.toLowerCase()) {
+        debugFilter(job.job_type, filters.jobType, 'job_type', job.id);
+        return false;
+      }
+    }
+    
+    // Work hours filter
+    if (filters.workHours !== 'all') {
+      if (!job.work_hours || job.work_hours.toLowerCase() !== filters.workHours.toLowerCase()) {
+        debugFilter(job.work_hours, filters.workHours, 'work_hours', job.id);
+        return false;
+      }
+    }
+    
+    // Equity filter
+    if (filters.equity !== 'all') {
+      if (!job.equity || job.equity.toLowerCase() !== filters.equity.toLowerCase()) {
+        debugFilter(job.equity, filters.equity, 'equity', job.id);
+        return false;
+      }
+    }
+    
+    // Hiring urgency filter
+    if (filters.hiringUrgency !== 'all') {
+      if (!job.hiring_urgency || job.hiring_urgency.toLowerCase() !== filters.hiringUrgency.toLowerCase()) {
+        debugFilter(job.hiring_urgency, filters.hiringUrgency, 'hiring_urgency', job.id);
+        return false;
+      }
+    }
+    
+    // Revenue model filter
+    if (filters.revenueModel !== 'all') {
+      if (!job.revenue_model || job.revenue_model.toLowerCase() !== filters.revenueModel.toLowerCase()) {
+        debugFilter(job.revenue_model, filters.revenueModel, 'revenue_model', job.id);
+        return false;
+      }
+    }
+    
+    // Visa sponsorship filter
+    if (filters.visaSponsorship && job.visa_sponsorship !== true) {
+      return false;
+    }
+    
+    // If all filters passed, include the job
+    return true;
   }) || [];
 
   return {

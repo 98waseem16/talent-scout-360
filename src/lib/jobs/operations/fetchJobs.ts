@@ -23,9 +23,6 @@ export const getJobs = async (): Promise<Job[]> => {
       return staticJobs;
     }
 
-    // Map database records to our frontend Job model
-    const jobs = data.map(record => mapDatabaseFieldsToJob(record));
-    
     // Add detailed logging to see job fields from the database
     console.log('Job data from database:', data.map(job => ({
       id: job.id,
@@ -34,8 +31,18 @@ export const getJobs = async (): Promise<Job[]> => {
       seniority_level: job.seniority_level,
       remote_onsite: job.remote_onsite,
       job_type: job.job_type,
+      salary_range: job.salary_range,
+      equity: job.equity,
+      work_hours: job.work_hours,
+      hiring_urgency: job.hiring_urgency,
+      revenue_model: job.revenue_model,
+      team_size: job.team_size,
+      investment_stage: job.investment_stage,
+      visa_sponsorship: job.visa_sponsorship
     })));
     
+    // Map database records to our frontend Job model
+    const jobs = data.map(record => mapDatabaseFieldsToJob(record));
     return jobs;
   } catch (error) {
     console.error('Error fetching jobs:', error);
