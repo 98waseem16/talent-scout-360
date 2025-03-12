@@ -19,6 +19,10 @@ export const getJobs = async (): Promise<Job[]> => {
       return staticJobs;
     }
 
+    if (!data) {
+      return staticJobs;
+    }
+
     // Map database records to our frontend Job model
     const jobs = data.map(record => mapDatabaseFieldsToJob(record));
     return jobs;
@@ -45,6 +49,10 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
       return staticJobs.filter(job => job.featured);
     }
 
+    if (!data) {
+      return staticJobs.filter(job => job.featured);
+    }
+
     // Map database records to our frontend Job model
     const jobs = data.map(record => mapDatabaseFieldsToJob(record));
     return jobs;
@@ -67,6 +75,10 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
 
     if (error) {
       console.error('Error fetching job by ID:', error);
+      return staticJobs.find(job => job.id === id);
+    }
+
+    if (!data) {
       return staticJobs.find(job => job.id === id);
     }
 
