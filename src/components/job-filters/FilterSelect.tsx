@@ -30,7 +30,7 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   label,
   icon
 }) => {
-  // Console log to debug selected values
+  // Enhanced console log to debug filter values
   const handleValueChange = (newValue: string) => {
     console.log(`Filter changed: ${label || 'unknown'} = ${newValue}`);
     onChange(newValue);

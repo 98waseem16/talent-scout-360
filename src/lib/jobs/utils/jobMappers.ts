@@ -34,6 +34,14 @@ export const mapJobFormDataToDatabaseFields = (
 };
 
 export const mapDatabaseFieldsToJob = (dbFields: any) => {
+  // Log the exact data we're mapping to debug filter issues
+  console.log('Mapping database fields for job:', dbFields.id, {
+    department: dbFields.department,
+    seniority_level: dbFields.seniority_level,
+    job_type: dbFields.job_type,
+    remote_onsite: dbFields.remote_onsite
+  });
+  
   return {
     id: dbFields.id,
     title: dbFields.title,

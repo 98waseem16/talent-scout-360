@@ -43,6 +43,19 @@ export const getJobs = async (): Promise<Job[]> => {
     
     // Map database records to our frontend Job model
     const jobs = data.map(record => mapDatabaseFieldsToJob(record));
+    
+    // Log the mapped job objects to verify filter fields
+    console.log('Mapped job objects for filters:', jobs.map(job => ({
+      id: job.id,
+      department: job.department,
+      seniority_level: job.seniority_level,
+      remote_onsite: job.remote_onsite, 
+      job_type: job.job_type,
+      salary_range: job.salary_range,
+      equity: job.equity,
+      work_hours: job.work_hours
+    })));
+    
     return jobs;
   } catch (error) {
     console.error('Error fetching jobs:', error);

@@ -41,6 +41,11 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
+  // Debug log on render to check filter values
+  React.useEffect(() => {
+    console.log('Current filter values:', filters);
+  }, [filters]);
+
   return (
     <aside 
       className={`w-full md:w-64 md:sticky top-24 transition-all duration-300 ${
