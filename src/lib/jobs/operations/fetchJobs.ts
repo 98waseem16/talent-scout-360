@@ -9,6 +9,7 @@ import { mapDatabaseFieldsToJob } from '../utils/jobMappers';
  */
 export const getJobs = async (): Promise<Job[]> => {
   try {
+    console.log('Fetching jobs from database...');
     const { data, error } = await supabase
       .from('job_postings')
       .select('*')
@@ -19,12 +20,16 @@ export const getJobs = async (): Promise<Job[]> => {
       return staticJobs;
     }
 
-    if (!data) {
+    if (!data || data.length === 0) {
+      console.log('No jobs found in database, returning static jobs');
       return staticJobs;
     }
 
-    // Add detailed logging to see job fields from the database
-    console.log('Job data from database:', data.map(job => ({
+    // Log comprehensive data for the first job to verify all fields are present
+    console.log('First job from database (complete data):', data[0]);
+    
+    // More detailed logging of all jobs' filter-relevant fields
+    console.log('All jobs filter fields from database:', data.map(job => ({
       id: job.id,
       title: job.title,
       department: job.department,
@@ -44,17 +49,7 @@ export const getJobs = async (): Promise<Job[]> => {
     // Map database records to our frontend Job model
     const jobs = data.map(record => mapDatabaseFieldsToJob(record));
     
-    // Log the mapped job objects to verify filter fields
-    console.log('Mapped job objects for filters:', jobs.map(job => ({
-      id: job.id,
-      department: job.department,
-      seniority_level: job.seniority_level,
-      remote_onsite: job.remote_onsite, 
-      job_type: job.job_type,
-      salary_range: job.salary_range,
-      equity: job.equity,
-      work_hours: job.work_hours
-    })));
+    console.log(`Successfully mapped ${jobs.length} jobs from database`);
     
     return jobs;
   } catch (error) {
@@ -98,6 +93,7 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
  */
 export const getJobById = async (id: string): Promise<Job | undefined> => {
   try {
+    console.log(`Fetching job with ID ${id} from database...`);
     const { data, error } = await supabase
       .from('job_postings')
       .select('*')
@@ -110,10 +106,18 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
     }
 
     if (!data) {
+      console.log(`No job found with ID ${id}, returning static job`);
       return staticJobs.find(job => job.id === id);
     }
 
-    return mapDatabaseFieldsToJob(data);
+    // Log the complete job data from database to verify all fields
+    console.log('Job data from database:', data);
+    
+    // Map and return the job with all fields
+    const mappedJob = mapDatabaseFieldsToJob(data);
+    console.log('Mapped job data:', mappedJob);
+    
+    return mappedJob;
   } catch (error) {
     console.error('Error fetching job by ID:', error);
     return staticJobs.find(job => job.id === id);

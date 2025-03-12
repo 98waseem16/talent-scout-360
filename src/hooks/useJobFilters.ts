@@ -123,30 +123,35 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Define a debugging function to log filtering details
-  const debugFilter = (jobField: any, filterValue: string, filterName: string, jobId: string) => {
-    if (filterValue !== 'all') {
-      console.log(`Filter ${filterName}:`, { 
-        jobId,
-        filterValue, 
-        jobFieldValue: jobField, 
-        jobFieldType: typeof jobField,
-        match: String(jobField).toLowerCase() === filterValue.toLowerCase()
-      });
-    }
-    return true;
+  // Helper function to safely compare string values
+  const safeStringCompare = (a: any, b: string): boolean => {
+    if (a === null || a === undefined) return false;
+    return String(a).toLowerCase() === b.toLowerCase();
   };
 
-  // Completely revised filtering logic
+  // Debug function to log details for troublesome filters
+  const logFilterDebug = (jobId: string, fieldName: string, jobValue: any, filterValue: string, result: boolean) => {
+    if (filterValue !== 'all') {
+      console.log(`Filter Debug - ${fieldName}:`, { 
+        jobId,
+        filterValue, 
+        jobValue,
+        valueType: typeof jobValue,
+        result
+      });
+    }
+    return result;
+  };
+
+  // Improved filtering logic
   const filteredJobs = jobs?.filter(job => {
-    // For debugging, uncomment this line
-    // console.log(`Filtering job: ${job.id} - ${job.title}`);
+    console.log(`Filtering job: ${job.id} - ${job.title}`, job);
 
     // Basic text search filters
     const matchesSearch = searchQuery === '' || 
-      job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (job.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       job.company?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      job.description?.toLowerCase().includes(searchQuery.toLowerCase());
+      job.description?.toLowerCase().includes(searchQuery.toLowerCase()));
       
     const matchesLocation = locationQuery === '' ||
       (job.location && job.location.toLowerCase().includes(locationQuery.toLowerCase()));
@@ -156,93 +161,82 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     
     // Department filter
     if (filters.department !== 'all') {
-      if (!job.department || job.department.toLowerCase() !== filters.department.toLowerCase()) {
-        debugFilter(job.department, filters.department, 'department', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.department, filters.department);
+      logFilterDebug(job.id, 'department', job.department, filters.department, result);
+      if (!result) return false;
     }
     
     // Seniority level filter
     if (filters.seniority !== 'all') {
-      if (!job.seniority_level || job.seniority_level.toLowerCase() !== filters.seniority.toLowerCase()) {
-        debugFilter(job.seniority_level, filters.seniority, 'seniority_level', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.seniority_level, filters.seniority);
+      logFilterDebug(job.id, 'seniority_level', job.seniority_level, filters.seniority, result);
+      if (!result) return false;
     }
     
     // Salary range filter
     if (filters.salaryRange !== 'all') {
-      if (!job.salary_range || job.salary_range.toLowerCase() !== filters.salaryRange.toLowerCase()) {
-        debugFilter(job.salary_range, filters.salaryRange, 'salary_range', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.salary_range, filters.salaryRange);
+      logFilterDebug(job.id, 'salary_range', job.salary_range, filters.salaryRange, result);
+      if (!result) return false;
     }
     
     // Team size filter
     if (filters.teamSize !== 'all') {
-      if (!job.team_size || job.team_size.toLowerCase() !== filters.teamSize.toLowerCase()) {
-        debugFilter(job.team_size, filters.teamSize, 'team_size', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.team_size, filters.teamSize);
+      logFilterDebug(job.id, 'team_size', job.team_size, filters.teamSize, result);
+      if (!result) return false;
     }
     
     // Investment stage filter
     if (filters.investmentStage !== 'all') {
-      if (!job.investment_stage || job.investment_stage.toLowerCase() !== filters.investmentStage.toLowerCase()) {
-        debugFilter(job.investment_stage, filters.investmentStage, 'investment_stage', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.investment_stage, filters.investmentStage);
+      logFilterDebug(job.id, 'investment_stage', job.investment_stage, filters.investmentStage, result);
+      if (!result) return false;
     }
     
     // Remote/Onsite filter
     if (filters.remote !== 'all') {
-      if (!job.remote_onsite || job.remote_onsite.toLowerCase() !== filters.remote.toLowerCase()) {
-        debugFilter(job.remote_onsite, filters.remote, 'remote_onsite', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.remote_onsite, filters.remote);
+      logFilterDebug(job.id, 'remote_onsite', job.remote_onsite, filters.remote, result);
+      if (!result) return false;
     }
     
     // Job type filter
     if (filters.jobType !== 'all') {
-      if (!job.job_type || job.job_type.toLowerCase() !== filters.jobType.toLowerCase()) {
-        debugFilter(job.job_type, filters.jobType, 'job_type', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.job_type, filters.jobType);
+      logFilterDebug(job.id, 'job_type', job.job_type, filters.jobType, result);
+      if (!result) return false;
     }
     
     // Work hours filter
     if (filters.workHours !== 'all') {
-      if (!job.work_hours || job.work_hours.toLowerCase() !== filters.workHours.toLowerCase()) {
-        debugFilter(job.work_hours, filters.workHours, 'work_hours', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.work_hours, filters.workHours);
+      logFilterDebug(job.id, 'work_hours', job.work_hours, filters.workHours, result);
+      if (!result) return false;
     }
     
     // Equity filter
     if (filters.equity !== 'all') {
-      if (!job.equity || job.equity.toLowerCase() !== filters.equity.toLowerCase()) {
-        debugFilter(job.equity, filters.equity, 'equity', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.equity, filters.equity);
+      logFilterDebug(job.id, 'equity', job.equity, filters.equity, result);
+      if (!result) return false;
     }
     
     // Hiring urgency filter
     if (filters.hiringUrgency !== 'all') {
-      if (!job.hiring_urgency || job.hiring_urgency.toLowerCase() !== filters.hiringUrgency.toLowerCase()) {
-        debugFilter(job.hiring_urgency, filters.hiringUrgency, 'hiring_urgency', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.hiring_urgency, filters.hiringUrgency);
+      logFilterDebug(job.id, 'hiring_urgency', job.hiring_urgency, filters.hiringUrgency, result);
+      if (!result) return false;
     }
     
     // Revenue model filter
     if (filters.revenueModel !== 'all') {
-      if (!job.revenue_model || job.revenue_model.toLowerCase() !== filters.revenueModel.toLowerCase()) {
-        debugFilter(job.revenue_model, filters.revenueModel, 'revenue_model', job.id);
-        return false;
-      }
+      const result = safeStringCompare(job.revenue_model, filters.revenueModel);
+      logFilterDebug(job.id, 'revenue_model', job.revenue_model, filters.revenueModel, result);
+      if (!result) return false;
     }
     
-    // Visa sponsorship filter
+    // Visa sponsorship filter (boolean check)
     if (filters.visaSponsorship && job.visa_sponsorship !== true) {
       return false;
     }

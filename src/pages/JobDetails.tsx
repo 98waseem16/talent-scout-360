@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getJobById } from '@/lib/jobs';
@@ -25,6 +25,13 @@ const JobDetails: React.FC = () => {
     queryFn: () => getJobById(id || ''),
     enabled: !!id
   });
+
+  // Add additional logging to verify job data
+  useEffect(() => {
+    if (job) {
+      console.log('JobDetails page - job data loaded:', job);
+    }
+  }, [job]);
 
   const handleApply = () => {
     if (!user) {
@@ -61,6 +68,7 @@ const JobDetails: React.FC = () => {
   
   // Error state
   if (error || !job) {
+    console.error('Error or no job data:', error);
     return (
       <main className="min-h-screen pt-32 pb-16 px-6">
         <div className="max-w-3xl mx-auto">

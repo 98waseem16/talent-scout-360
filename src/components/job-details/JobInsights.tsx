@@ -7,6 +7,9 @@ interface JobInsightsProps {
 }
 
 const JobInsights: React.FC<JobInsightsProps> = ({ job }) => {
+  // Add console logging to debug the job data
+  console.log('JobInsights component - job data:', job);
+  
   return (
     <section className="bg-white rounded-xl border border-border shadow-sm p-6">
       <h2 className="text-lg font-medium mb-4">Job Insights</h2>
