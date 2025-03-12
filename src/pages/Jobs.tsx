@@ -3,6 +3,8 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getJobs } from '@/lib/jobs';
 import { useJobFilters } from '@/hooks/useJobFilters';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
 import ActiveFilters from '@/components/jobs/ActiveFilters';
 import FilterToggle from '@/components/jobs/FilterToggle';
@@ -33,58 +35,62 @@ const Jobs: React.FC = () => {
   } = useJobFilters(jobs);
 
   return (
-    <main className="min-h-screen pt-24 pb-16 px-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-          {/* Filters - Mobile Toggle */}
-          <FilterToggle 
-            isFilterOpen={isFilterOpen} 
-            setIsFilterOpen={setIsFilterOpen} 
-          />
-          
-          {/* Filters Sidebar */}
-          <FilterSidebar 
-            isFilterOpen={isFilterOpen}
-            filters={filters}
-            setFilters={setFilters}
-            clearAllFilters={clearAllFilters}
-          />
-          
-          {/* Main Content */}
-          <div className="flex-1">
-            {/* Search Bar */}
-            <JobSearchBar 
-              searchQuery={searchQuery}
-              locationQuery={locationQuery}
-              setSearchQuery={setSearchQuery}
-              setLocationQuery={setLocationQuery}
+    <>
+      <Header />
+      <main className="min-h-screen pt-24 pb-16 px-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+            {/* Filters - Mobile Toggle */}
+            <FilterToggle 
+              isFilterOpen={isFilterOpen} 
+              setIsFilterOpen={setIsFilterOpen} 
             />
             
-            {/* Results Count & Active Filters */}
-            <div className="mb-6">
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <JobsCount count={filteredJobs.length} isLoading={isLoading} />
-                
-                {/* Active Filters */}
-                <ActiveFilters 
-                  activeFilters={activeFilters}
-                  removeFilter={removeFilter}
-                  clearFilters={clearFilters}
-                />
+            {/* Filters Sidebar */}
+            <FilterSidebar 
+              isFilterOpen={isFilterOpen}
+              filters={filters}
+              setFilters={setFilters}
+              clearAllFilters={clearAllFilters}
+            />
+            
+            {/* Main Content */}
+            <div className="flex-1">
+              {/* Search Bar */}
+              <JobSearchBar 
+                searchQuery={searchQuery}
+                locationQuery={locationQuery}
+                setSearchQuery={setSearchQuery}
+                setLocationQuery={setLocationQuery}
+              />
+              
+              {/* Results Count & Active Filters */}
+              <div className="mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  <JobsCount count={filteredJobs.length} isLoading={isLoading} />
+                  
+                  {/* Active Filters */}
+                  <ActiveFilters 
+                    activeFilters={activeFilters}
+                    removeFilter={removeFilter}
+                    clearFilters={clearFilters}
+                  />
+                </div>
               </div>
+              
+              {/* Job Listings */}
+              <JobsList 
+                jobs={jobs}
+                isLoading={isLoading}
+                error={error}
+                filteredJobs={filteredJobs}
+              />
             </div>
-            
-            {/* Job Listings */}
-            <JobsList 
-              jobs={jobs}
-              isLoading={isLoading}
-              error={error}
-              filteredJobs={filteredJobs}
-            />
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+      <Footer />
+    </>
   );
 };
 

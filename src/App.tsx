@@ -22,18 +22,20 @@ const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <AuthProvider>
         <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/jobs/:id" element={<JobDetails />} />
-            <Route path="/post-job" element={<PostJob />} />
-            <Route path="/edit-job/:id" element={<PostJob />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="flex flex-col min-h-screen">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/jobs" element={<Jobs />} />
+              <Route path="/jobs/:id" element={<JobDetails />} />
+              <Route path="/post-job" element={<PostJob />} />
+              <Route path="/edit-job/:id" element={<PostJob />} />
+              <Route path="/dashboard" element={<Dashboard />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+          <Toaster />
         </Router>
-        <Toaster />
       </AuthProvider>
     </QueryClientProvider>
   );

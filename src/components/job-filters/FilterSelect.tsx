@@ -31,14 +31,6 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   icon
 }) => {
   const handleValueChange = (newValue: string) => {
-    // Log detailed filter change information
-    console.log(`Filter changed: ${label || 'unknown'} filter`, {
-      filterName: label,
-      previousValue: value,
-      newValue,
-      availableOptions: options.map(o => ({ label: o.label, value: o.value }))
-    });
-    
     onChange(newValue);
   };
 

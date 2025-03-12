@@ -5,6 +5,8 @@ import { useQuery } from '@tanstack/react-query';
 import { getJobById } from '@/lib/jobs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import Header from '@/components/Header';
+import Footer from '@/components/Footer';
 
 // Import components
 import JobHeader from '@/components/job-details/JobHeader';
@@ -60,11 +62,15 @@ const JobDetails: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <main className="min-h-screen pt-32 pb-16 px-6 flex justify-center">
-        <div className="max-w-4xl w-full">
-          <LoadingState />
-        </div>
-      </main>
+      <>
+        <Header />
+        <main className="min-h-screen pt-32 pb-16 px-6 flex justify-center">
+          <div className="max-w-4xl w-full">
+            <LoadingState />
+          </div>
+        </main>
+        <Footer />
+      </>
     );
   }
   
@@ -72,11 +78,15 @@ const JobDetails: React.FC = () => {
   if (error || !job) {
     console.error('Error or no job data:', error);
     return (
-      <main className="min-h-screen pt-32 pb-16 px-6">
-        <div className="max-w-3xl mx-auto">
-          <ErrorState />
-        </div>
-      </main>
+      <>
+        <Header />
+        <main className="min-h-screen pt-32 pb-16 px-6">
+          <div className="max-w-3xl mx-auto">
+            <ErrorState />
+          </div>
+        </main>
+        <Footer />
+      </>
     );
   }
 
@@ -87,32 +97,36 @@ const JobDetails: React.FC = () => {
   };
 
   return (
-    <main className="min-h-screen pt-24 pb-16 px-6">
-      <div className="max-w-4xl mx-auto">
-        {/* Job Header with title, company, location, etc. */}
-        <JobHeader job={jobWithUrl} handleApply={handleApply} />
-        
-        {/* Main Content Area */}
-        <div className="grid md:grid-cols-3 gap-8">
-          <div className="md:col-span-2 space-y-8">
-            {/* Job Description with responsibilities, requirements, and benefits */}
-            <JobDescription job={jobWithUrl} />
-            
-            {/* Application Form */}
-            <section className="bg-white rounded-xl border border-border shadow-sm p-6 md:p-8">
-              <h2 className="text-xl font-medium mb-4">Quick Apply</h2>
-              <QuickApplyForm user={user} handleApply={handleApply} job={jobWithUrl} />
-            </section>
-          </div>
+    <>
+      <Header />
+      <main className="min-h-screen pt-24 pb-16 px-6">
+        <div className="max-w-4xl mx-auto">
+          {/* Job Header with title, company, location, etc. */}
+          <JobHeader job={jobWithUrl} handleApply={handleApply} />
           
-          {/* Sidebar with company info and job insights */}
-          <div className="space-y-6">
-            <CompanyInfo job={jobWithUrl} />
-            <JobInsights job={jobWithUrl} />
+          {/* Main Content Area */}
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="md:col-span-2 space-y-8">
+              {/* Job Description with responsibilities, requirements, and benefits */}
+              <JobDescription job={jobWithUrl} />
+              
+              {/* Application Form */}
+              <section className="bg-white rounded-xl border border-border shadow-sm p-6 md:p-8">
+                <h2 className="text-xl font-medium mb-4">Quick Apply</h2>
+                <QuickApplyForm user={user} handleApply={handleApply} job={jobWithUrl} />
+              </section>
+            </div>
+            
+            {/* Sidebar with company info and job insights */}
+            <div className="space-y-6">
+              <CompanyInfo job={jobWithUrl} />
+              <JobInsights job={jobWithUrl} />
+            </div>
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+      <Footer />
+    </>
   );
 };
 
