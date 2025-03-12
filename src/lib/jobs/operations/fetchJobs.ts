@@ -25,47 +25,34 @@ export const getJobs = async (): Promise<Job[]> => {
       return staticJobs;
     }
 
-    // Detailed logging of complete job data from database
-    console.log('First job from database (complete data):', JSON.stringify(data[0], null, 2));
-    
-    // Log all relevant filter fields for every job to identify data inconsistencies
-    console.log('All jobs filter-relevant fields from database:', data.map(job => ({
-      id: job.id,
-      title: job.title,
-      department: job.department,
-      seniority_level: job.seniority_level,
-      remote_onsite: job.remote_onsite,
-      job_type: job.job_type,
-      salary_range: job.salary_range,
-      equity: job.equity,
-      work_hours: job.work_hours,
-      hiring_urgency: job.hiring_urgency,
-      revenue_model: job.revenue_model,
-      team_size: job.team_size,
-      investment_stage: job.investment_stage,
-      visa_sponsorship: job.visa_sponsorship
-    })));
+    // Log first job data to debug
+    if (data[0]) {
+      console.log('Sample job from database:', {
+        id: data[0].id,
+        title: data[0].title,
+        remote_onsite: data[0].remote_onsite,
+        job_type: data[0].job_type,
+        full_record: data[0]
+      });
+    }
     
     // Map database records to our frontend Job model
-    const jobs = data.map(record => mapDatabaseFieldsToJob(record));
-    
-    // Validate that mapping worked correctly by logging mapped filter values
-    console.log('Mapped jobs filter values:', jobs.map(job => ({
-      id: job.id,
-      department: job.department,
-      seniority_level: job.seniority_level,
-      remote_onsite: job.remote_onsite,
-      job_type: job.job_type,
-      salary_range: job.salary_range,
-      equity: job.equity,
-      work_hours: job.work_hours,
-      hiring_urgency: job.hiring_urgency,
-      revenue_model: job.revenue_model,
-      team_size: job.team_size,
-      investment_stage: job.investment_stage,
-      visa_sponsorship: job.visa_sponsorship
-    })));
-    
+    const jobs = data.map(record => {
+      const mappedJob = mapDatabaseFieldsToJob(record);
+      
+      // For debugging, log one job's filter fields to check mapping
+      if (record.id === data[0]?.id) {
+        console.log('First job mapped filter fields:', {
+          id: mappedJob.id,
+          title: mappedJob.title,
+          remote_onsite: mappedJob.remote_onsite,
+          job_type: mappedJob.job_type
+        });
+      }
+      
+      return mappedJob;
+    }).filter(Boolean) as Job[]; // Filter out any null results
+
     console.log(`Successfully mapped ${jobs.length} jobs from database`);
     
     return jobs;
@@ -97,7 +84,7 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
     }
 
     // Map database records to our frontend Job model
-    const jobs = data.map(record => mapDatabaseFieldsToJob(record));
+    const jobs = data.map(record => mapDatabaseFieldsToJob(record)).filter(Boolean) as Job[];
     return jobs;
   } catch (error) {
     console.error('Error fetching trending jobs:', error);
@@ -128,12 +115,10 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
     }
 
     // Log the complete job data from database to verify all fields
-    console.log('Job data from database:', JSON.stringify(data, null, 2));
+    console.log('Job data from database:', data);
     
     // Map and return the job with all fields
     const mappedJob = mapDatabaseFieldsToJob(data);
-    console.log('Mapped job data for display:', JSON.stringify(mappedJob, null, 2));
-    
     return mappedJob;
   } catch (error) {
     console.error('Error fetching job by ID:', error);

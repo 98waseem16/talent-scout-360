@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import JobFilters from '@/components/job-filters/JobFilters';
 
 interface FilterSidebarProps {
@@ -41,25 +41,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Enhanced debug logging for filter state tracking
-  useEffect(() => {
-    console.log('FilterSidebar - Current filters state:', {
-      department: filters.department,
-      seniority: filters.seniority,
-      salaryRange: filters.salaryRange,
-      teamSize: filters.teamSize,
-      investmentStage: filters.investmentStage,
-      remote: filters.remote,
-      jobType: filters.jobType,
-      workHours: filters.workHours,
-      equity: filters.equity,
-      hiringUrgency: filters.hiringUrgency,
-      revenueModel: filters.revenueModel,
-      visaSponsorship: filters.visaSponsorship,
-      hasActiveFilters: Object.entries(filters).some(([key, value]) => 
-        key === 'visaSponsorship' ? value === true : value !== 'all'
-      )
-    });
+  // Add logging when filters change
+  React.useEffect(() => {
+    console.log('FilterSidebar - Current filters state:', filters);
   }, [filters]);
 
   return (

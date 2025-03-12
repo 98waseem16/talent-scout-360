@@ -39,8 +39,13 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return null;
   }
   
-  // Detailed logging for job data mapping
-  console.log('Raw database fields for job mapping:', JSON.stringify(dbFields, null, 2));
+  // Log what we're getting from the database to help with debugging
+  console.log('Mapping database fields to job:', {
+    id: dbFields.id,
+    title: dbFields.title,
+    remote_onsite: dbFields.remote_onsite,
+    job_type: dbFields.job_type
+  });
   
   // Ensure all fields are properly mapped and have appropriate fallbacks
   const mappedJob = {
@@ -60,21 +65,20 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // Additional fields - ensure these are properly mapped for filtering
-    investment_stage: dbFields.investment_stage || '',
-    team_size: dbFields.team_size || '',
-    revenue_model: dbFields.revenue_model || '',
+    // These are the filter fields that need to be properly mapped
     department: dbFields.department || '',
     seniority_level: dbFields.seniority_level || '',
-    job_type: dbFields.job_type || '',
     salary_range: dbFields.salary_range || '',
-    equity: dbFields.equity || '',
+    team_size: dbFields.team_size || '',
+    investment_stage: dbFields.investment_stage || '',
     remote_onsite: dbFields.remote_onsite || '',
+    job_type: dbFields.job_type || '',
     work_hours: dbFields.work_hours || '',
-    visa_sponsorship: dbFields.visa_sponsorship === true,
-    hiring_urgency: dbFields.hiring_urgency || ''
+    equity: dbFields.equity || '',
+    hiring_urgency: dbFields.hiring_urgency || '',
+    revenue_model: dbFields.revenue_model || '',
+    visa_sponsorship: dbFields.visa_sponsorship === true
   };
   
-  console.log('Mapped job object:', mappedJob);
   return mappedJob;
 };
