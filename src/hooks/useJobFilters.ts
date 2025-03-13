@@ -128,7 +128,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Improved matching function that handles case insensitivity and null checks
+  // Improved case-insensitive matching function
   const matchesFilter = (jobValue: any, filterValue: string): boolean => {
     // If filter is set to 'all', always match
     if (filterValue === 'all') return true;
@@ -141,10 +141,38 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const filterValueStr = filterValue.toLowerCase().trim();
     
     // Check if the job value contains or exactly matches the filter value
-    return jobValueStr === filterValueStr;
+    return jobValueStr === filterValueStr || jobValueStr.includes(filterValueStr);
   };
 
-  // Improved filtering logic with debugging
+  // Map filter fields to job fields
+  const getJobFieldValue = (job: Job, filterType: string): any => {
+    const fieldMappings: Record<string, keyof Job> = {
+      department: 'department',
+      seniority: 'seniority_level',
+      salaryRange: 'salary_range',
+      teamSize: 'team_size',
+      investmentStage: 'investment_stage',
+      remote: 'remote_onsite',
+      jobType: 'job_type',
+      workHours: 'work_hours',
+      equity: 'equity',
+      hiringUrgency: 'hiring_urgency',
+      revenueModel: 'revenue_model',
+      visaSponsorship: 'visa_sponsorship'
+    };
+
+    const fieldName = fieldMappings[filterType];
+    if (!fieldName) return null;
+
+    // Special case for job_type which might come from either field
+    if (filterType === 'jobType' && !job.job_type) {
+      return job.type;
+    }
+    
+    return job[fieldName];
+  };
+
+  // Improved filtering logic with logging and correct field mapping
   const filteredJobs = jobs?.filter(job => {
     // Basic text search filters
     const searchFields = [
@@ -162,54 +190,56 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     // If basic filters don't match, return early
     if (!matchesSearch || !matchesLocation) return false;
     
-    // Debug logging for specific fields
-    if (filters.jobType !== 'all') {
-      console.log(`Job type filter: "${filters.jobType}" comparing with job.job_type: "${job.job_type}"`);
+    // Debug logging for selected filters
+    const activeFilterKeys = Object.entries(filters)
+      .filter(([key, value]) => value !== 'all' && value !== false)
+      .map(([key]) => key);
+    
+    if (activeFilterKeys.length > 0) {
+      console.log(`Checking job "${job.title}" against active filters:`, 
+        activeFilterKeys.map(key => `${key}=${filters[key as keyof JobFilters]}`).join(', '));
+      
+      // Log the actual job values for comparison
+      console.log('Job values:', activeFilterKeys.reduce((acc, key) => {
+        const fieldValue = getJobFieldValue(job, key);
+        return { ...acc, [key]: fieldValue };
+      }, {}));
     }
     
-    if (filters.remote !== 'all') {
-      console.log(`Remote filter: "${filters.remote}" comparing with job.remote_onsite: "${job.remote_onsite}"`);
+    // Check each filter
+    const filterMatches = Object.entries(filters).every(([filterType, filterValue]) => {
+      // Skip 'all' filters or false visa_sponsorship
+      if (filterValue === 'all' || (filterType === 'visaSponsorship' && !filterValue)) {
+        return true;
+      }
+      
+      // Get the corresponding job field value
+      const jobValue = getJobFieldValue(job, filterType);
+      
+      // For visa_sponsorship (boolean check)
+      if (filterType === 'visaSponsorship') {
+        const result = Boolean(jobValue);
+        if (filterValue === true && filterType === 'visaSponsorship') {
+          console.log(`Visa sponsorship filter: Job has ${result ? 'visa sponsorship' : 'no visa sponsorship'}`);
+        }
+        return result;
+      }
+      
+      // For all other filters (string comparison)
+      const result = matchesFilter(jobValue, filterValue as string);
+      
+      if (filterValue !== 'all' && !result) {
+        console.log(`Filter failed: ${filterType}=${filterValue}, job has: ${jobValue}`);
+      }
+      
+      return result;
+    });
+    
+    if (activeFilterKeys.length > 0) {
+      console.log(`Job "${job.title}" ${filterMatches ? 'matches' : 'does not match'} all filters`);
     }
     
-    // Field-specific filters with mapping to correct field names
-    const departmentMatches = matchesFilter(job.department, filters.department);
-    const seniorityMatches = matchesFilter(job.seniority_level, filters.seniority);
-    const salaryRangeMatches = matchesFilter(job.salary_range, filters.salaryRange);
-    const teamSizeMatches = matchesFilter(job.team_size, filters.teamSize);
-    const investmentStageMatches = matchesFilter(job.investment_stage, filters.investmentStage);
-    const remoteMatches = matchesFilter(job.remote_onsite, filters.remote);
-    const jobTypeMatches = matchesFilter(job.job_type, filters.jobType);
-    const workHoursMatches = matchesFilter(job.work_hours, filters.workHours);
-    const equityMatches = matchesFilter(job.equity, filters.equity);
-    const hiringUrgencyMatches = matchesFilter(job.hiring_urgency, filters.hiringUrgency);
-    const revenueModelMatches = matchesFilter(job.revenue_model, filters.revenueModel);
-    
-    // Visa sponsorship filter (boolean check)
-    const visaSponsorshipMatches = !filters.visaSponsorship || job.visa_sponsorship === true;
-    
-    // Log detailed filter results for debugging
-    if (filters.jobType !== 'all' || filters.remote !== 'all') {
-      console.log(`Filter results for job "${job.title}":`, {
-        jobTypeMatches,
-        remoteMatches,
-        departmentMatches,
-        seniorityMatches
-      });
-    }
-    
-    // All filters must match
-    return departmentMatches &&
-           seniorityMatches &&
-           salaryRangeMatches &&
-           teamSizeMatches &&
-           investmentStageMatches &&
-           remoteMatches &&
-           jobTypeMatches &&
-           workHoursMatches &&
-           equityMatches &&
-           hiringUrgencyMatches &&
-           revenueModelMatches &&
-           visaSponsorshipMatches;
+    return filterMatches;
   }) || [];
 
   return {
