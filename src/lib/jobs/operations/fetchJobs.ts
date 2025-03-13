@@ -1,4 +1,4 @@
-
+<lov-codelov-code>
 import { supabase } from '@/integrations/supabase/client';
 import { Job } from '../../types/job.types';
 import { staticJobs } from '../../data/staticJobs';
@@ -31,29 +31,26 @@ export const getJobs = async (): Promise<Job[]> => {
         id: data[0].id,
         title: data[0].title,
         remote_onsite: data[0].remote_onsite,
-        job_type: data[0].job_type,
-        full_record: data[0]
+        job_type: data[0].job_type
       });
     }
     
     // Map database records to our frontend Job model
     const jobs = data.map(record => {
       const mappedJob = mapDatabaseFieldsToJob(record);
-      
-      // For debugging, log one job's filter fields to check mapping
-      if (record.id === data[0]?.id) {
-        console.log('First job mapped filter fields:', {
-          id: mappedJob.id,
-          title: mappedJob.title,
-          remote_onsite: mappedJob.remote_onsite,
-          job_type: mappedJob.job_type
-        });
-      }
-      
       return mappedJob;
     }).filter(Boolean) as Job[]; // Filter out any null results
 
+    // Log mapped jobs for debugging
     console.log(`Successfully mapped ${jobs.length} jobs from database`);
+    if (jobs.length > 0) {
+      console.log('Sample mapped job:', {
+        id: jobs[0].id,
+        title: jobs[0].title,
+        remote_onsite: jobs[0].remote_onsite,
+        job_type: jobs[0].job_type
+      });
+    }
     
     return jobs;
   } catch (error) {

@@ -41,9 +41,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Add logging when filters change
+  // Add logging for debugging
   React.useEffect(() => {
-    console.log('FilterSidebar - Current filters state:', filters);
+    console.log('Current filters applied:', filters);
   }, [filters]);
 
   return (
