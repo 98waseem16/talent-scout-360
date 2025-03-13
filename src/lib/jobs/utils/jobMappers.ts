@@ -39,24 +39,11 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return null;
   }
   
-  // Log what we're getting from the database to help with debugging
-  console.log('Mapping database fields to job - raw data:', {
-    id: dbFields.id,
-    title: dbFields.title,
-    remote_onsite: dbFields.remote_onsite,
-    job_type: dbFields.job_type,
-    type: dbFields.type,
-    department: dbFields.department,
-    seniority_level: dbFields.seniority_level,
-    team_size: dbFields.team_size,
-    investment_stage: dbFields.investment_stage,
-    salary_range: dbFields.salary_range,
-    work_hours: dbFields.work_hours,
-    equity: dbFields.equity,
-    hiring_urgency: dbFields.hiring_urgency,
-    revenue_model: dbFields.revenue_model,
-    visa_sponsorship: dbFields.visa_sponsorship
-  });
+  // Log the exact field names and values for debugging
+  console.log('DEBUG - Database field names and values:', Object.keys(dbFields).reduce((acc, key) => {
+    acc[key] = typeof dbFields[key] === 'string' ? dbFields[key].toLowerCase() : dbFields[key];
+    return acc;
+  }, {} as Record<string, any>));
   
   // Ensure all fields are properly mapped and have appropriate fallbacks
   const mappedJob = {
@@ -76,22 +63,35 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // CRITICAL FIX: Ensure filter fields are properly mapped with consistent values
-    // This is why job_type worked but others didn't
-    department: dbFields.department || '',
-    seniority_level: dbFields.seniority_level || '',
-    job_type: dbFields.job_type || dbFields.type || 'Full-time', // Ensure job_type is always populated
-    salary_range: dbFields.salary_range || '',
-    team_size: dbFields.team_size || '',
-    investment_stage: dbFields.investment_stage || '',
-    remote_onsite: dbFields.remote_onsite || '',
-    work_hours: dbFields.work_hours || '',
-    equity: dbFields.equity || '',
-    hiring_urgency: dbFields.hiring_urgency || '',
-    revenue_model: dbFields.revenue_model || '',
+    // CRITICAL FIX: Ensure filter fields are properly mapped with consistent lowercase values
+    department: dbFields.department ? String(dbFields.department).trim() : '',
+    seniority_level: dbFields.seniority_level ? String(dbFields.seniority_level).trim() : '',
+    job_type: dbFields.job_type ? String(dbFields.job_type).trim() : (dbFields.type ? String(dbFields.type).trim() : 'Full-time'),
+    salary_range: dbFields.salary_range ? String(dbFields.salary_range).trim() : '',
+    team_size: dbFields.team_size ? String(dbFields.team_size).trim() : '',
+    investment_stage: dbFields.investment_stage ? String(dbFields.investment_stage).trim() : '',
+    remote_onsite: dbFields.remote_onsite ? String(dbFields.remote_onsite).trim() : '',
+    work_hours: dbFields.work_hours ? String(dbFields.work_hours).trim() : '',
+    equity: dbFields.equity ? String(dbFields.equity).trim() : '',
+    hiring_urgency: dbFields.hiring_urgency ? String(dbFields.hiring_urgency).trim() : '',
+    revenue_model: dbFields.revenue_model ? String(dbFields.revenue_model).trim() : '',
     visa_sponsorship: dbFields.visa_sponsorship === true
   };
   
-  console.log('Final mapped job with all fields:', mappedJob);
+  console.log('DEBUG - After mapping - Mapped job filter fields:', {
+    department: mappedJob.department,
+    seniority_level: mappedJob.seniority_level,
+    job_type: mappedJob.job_type,
+    salary_range: mappedJob.salary_range,
+    team_size: mappedJob.team_size,
+    investment_stage: mappedJob.investment_stage,
+    remote_onsite: mappedJob.remote_onsite,
+    work_hours: mappedJob.work_hours,
+    equity: mappedJob.equity,
+    hiring_urgency: mappedJob.hiring_urgency,
+    revenue_model: mappedJob.revenue_model,
+    visa_sponsorship: mappedJob.visa_sponsorship
+  });
+  
   return mappedJob;
 };

@@ -27,12 +27,7 @@ export const getJobs = async (): Promise<Job[]> => {
 
     // Log first job data to debug
     if (data[0]) {
-      console.log('Sample job from database:', {
-        id: data[0].id,
-        title: data[0].title,
-        remote_onsite: data[0].remote_onsite,
-        job_type: data[0].job_type
-      });
+      console.log('DEBUG - Sample job from database - full record:', data[0]);
     }
     
     // Map database records to our frontend Job model
@@ -44,11 +39,21 @@ export const getJobs = async (): Promise<Job[]> => {
     // Log mapped jobs for debugging
     console.log(`Successfully mapped ${jobs.length} jobs from database`);
     if (jobs.length > 0) {
-      console.log('Sample mapped job:', {
+      console.log('DEBUG - Sample mapped job with all filter fields:', {
         id: jobs[0].id,
         title: jobs[0].title,
+        department: jobs[0].department,
+        seniority_level: jobs[0].seniority_level,
+        job_type: jobs[0].job_type,
+        salary_range: jobs[0].salary_range,
+        team_size: jobs[0].team_size,
+        investment_stage: jobs[0].investment_stage,
         remote_onsite: jobs[0].remote_onsite,
-        job_type: jobs[0].job_type
+        work_hours: jobs[0].work_hours,
+        equity: jobs[0].equity,
+        hiring_urgency: jobs[0].hiring_urgency,
+        revenue_model: jobs[0].revenue_model,
+        visa_sponsorship: jobs[0].visa_sponsorship
       });
     }
     
@@ -112,10 +117,29 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
     }
 
     // Log the complete job data from database to verify all fields
-    console.log('Job data from database - full record:', data);
+    console.log('DEBUG - Job data from database - full record:', data);
     
     // Map and return the job with all fields
     const mappedJob = mapDatabaseFieldsToJob(data);
+    
+    // Log mapped job with all filter fields
+    console.log('DEBUG - Job after mapping - all filter fields:', {
+      id: mappedJob?.id,
+      title: mappedJob?.title,
+      department: mappedJob?.department,
+      seniority_level: mappedJob?.seniority_level,
+      job_type: mappedJob?.job_type,
+      salary_range: mappedJob?.salary_range,
+      team_size: mappedJob?.team_size,
+      investment_stage: mappedJob?.investment_stage,
+      remote_onsite: mappedJob?.remote_onsite,
+      work_hours: mappedJob?.work_hours,
+      equity: mappedJob?.equity,
+      hiring_urgency: mappedJob?.hiring_urgency,
+      revenue_model: mappedJob?.revenue_model,
+      visa_sponsorship: mappedJob?.visa_sponsorship
+    });
+    
     return mappedJob;
   } catch (error) {
     console.error('Error fetching job by ID:', error);

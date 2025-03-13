@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { 
   Briefcase, 
   Building2, 
@@ -21,15 +21,16 @@ interface JobInsightsProps {
 }
 
 const JobInsights: React.FC<JobInsightsProps> = ({ job }) => {
-  useEffect(() => {
-    // Log the full job data to debug what fields are actually available
-    console.log('JobInsights component - full job data:', job);
-  }, [job]);
-
   // Helper to check if a field has a value
   const hasValue = (value: any): boolean => {
     return value !== undefined && value !== null && value !== '';
   };
+
+  // Log all job fields to debug what's available
+  console.log('DEBUG - JobInsights - All job fields:', Object.entries(job).reduce((acc, [key, value]) => {
+    acc[key] = value;
+    return acc;
+  }, {} as Record<string, any>));
 
   // Function to create each insight item
   const InsightItem = ({ icon, label, value }: { icon: React.ReactNode, label: string, value: React.ReactNode }) => (
@@ -46,7 +47,6 @@ const JobInsights: React.FC<JobInsightsProps> = ({ job }) => {
 
   // Return early with fallback if no job data
   if (!job || Object.keys(job).length === 0) {
-    console.error('JobInsights: No job data available');
     return (
       <div className="bg-white rounded-xl border border-border shadow-sm p-6">
         <h2 className="text-xl font-medium mb-4">Job Insights</h2>
