@@ -99,7 +99,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       .from('job_postings')
       .select('*')
       .eq('id', id)
-      .maybeSingle(); // Changed from single() to maybeSingle() to avoid errors
+      .maybeSingle(); // Using maybeSingle() instead of single() to avoid errors when no job is found
 
     if (error) {
       console.error('Error fetching job by ID:', error);

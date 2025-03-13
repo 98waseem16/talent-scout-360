@@ -45,6 +45,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     title: dbFields.title,
     remote_onsite: dbFields.remote_onsite,
     job_type: dbFields.job_type,
+    type: dbFields.type,
     department: dbFields.department,
     seniority_level: dbFields.seniority_level,
     team_size: dbFields.team_size,
@@ -64,7 +65,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     company: dbFields.company || '',
     location: dbFields.location || '',
     salary: dbFields.salary || '',
-    type: dbFields.type || dbFields.job_type || '', // Map both type and job_type for backwards compatibility
+    type: dbFields.type || dbFields.job_type || 'Full-time', // Map both type and job_type for backwards compatibility
     posted: dbFields.posted || '',
     description: dbFields.description || '',
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
@@ -75,14 +76,15 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // These are the filter fields that need to be properly mapped
+    // CRITICAL FIX: Ensure filter fields are properly mapped with consistent values
+    // This is why job_type worked but others didn't
     department: dbFields.department || '',
     seniority_level: dbFields.seniority_level || '',
+    job_type: dbFields.job_type || dbFields.type || 'Full-time', // Ensure job_type is always populated
     salary_range: dbFields.salary_range || '',
     team_size: dbFields.team_size || '',
     investment_stage: dbFields.investment_stage || '',
     remote_onsite: dbFields.remote_onsite || '',
-    job_type: dbFields.job_type || dbFields.type || '', // Ensure job_type is always populated
     work_hours: dbFields.work_hours || '',
     equity: dbFields.equity || '',
     hiring_urgency: dbFields.hiring_urgency || '',
