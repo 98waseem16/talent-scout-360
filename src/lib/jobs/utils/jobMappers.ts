@@ -40,11 +40,21 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   }
   
   // Log what we're getting from the database to help with debugging
-  console.log('Mapping database fields to job:', {
+  console.log('Mapping database fields to job - raw data:', {
     id: dbFields.id,
     title: dbFields.title,
     remote_onsite: dbFields.remote_onsite,
-    job_type: dbFields.job_type
+    job_type: dbFields.job_type,
+    department: dbFields.department,
+    seniority_level: dbFields.seniority_level,
+    team_size: dbFields.team_size,
+    investment_stage: dbFields.investment_stage,
+    salary_range: dbFields.salary_range,
+    work_hours: dbFields.work_hours,
+    equity: dbFields.equity,
+    hiring_urgency: dbFields.hiring_urgency,
+    revenue_model: dbFields.revenue_model,
+    visa_sponsorship: dbFields.visa_sponsorship
   });
   
   // Ensure all fields are properly mapped and have appropriate fallbacks
@@ -80,5 +90,6 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     visa_sponsorship: dbFields.visa_sponsorship === true
   };
   
+  console.log('Final mapped job with all fields:', mappedJob);
   return mappedJob;
 };

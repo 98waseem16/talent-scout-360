@@ -11,7 +11,6 @@ import {
   Zap,
   BarChart4,
   Globe,
-  Timer,
   Percent,
   Award
 } from 'lucide-react';
@@ -23,7 +22,8 @@ interface JobInsightsProps {
 
 const JobInsights: React.FC<JobInsightsProps> = ({ job }) => {
   useEffect(() => {
-    console.log('JobInsights component - job data:', job);
+    // Log the full job data to debug what fields are actually available
+    console.log('JobInsights component - full job data:', job);
   }, [job]);
 
   // Helper to check if a field has a value
@@ -157,7 +157,7 @@ const JobInsights: React.FC<JobInsightsProps> = ({ job }) => {
           />
         )}
         
-        {/* Visa sponsorship */}
+        {/* Visa sponsorship - include even if not available */}
         <InsightItem 
           icon={<Globe className="h-4 w-4" />} 
           label="Visa Sponsorship" 

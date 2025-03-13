@@ -99,7 +99,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       .from('job_postings')
       .select('*')
       .eq('id', id)
-      .single();
+      .maybeSingle(); // Changed from single() to maybeSingle() to avoid errors
 
     if (error) {
       console.error('Error fetching job by ID:', error);
@@ -112,7 +112,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
     }
 
     // Log the complete job data from database to verify all fields
-    console.log('Job data from database:', data);
+    console.log('Job data from database - full record:', data);
     
     // Map and return the job with all fields
     const mappedJob = mapDatabaseFieldsToJob(data);

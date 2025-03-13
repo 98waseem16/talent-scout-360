@@ -69,6 +69,11 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     window.history.replaceState({}, '', newUrl);
   }, [searchQuery, locationQuery, location.pathname]);
 
+  // Log filters when they change for debugging
+  useEffect(() => {
+    console.log('Filter values changed:', filters);
+  }, [filters]);
+
   const clearFilters = () => {
     setSearchQuery('');
     setLocationQuery('');
@@ -123,7 +128,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // This is a helper function to safely compare values for filtering
+  // Improved matching function that handles case insensitivity and null checks
   const matchesFilter = (jobValue: any, filterValue: string): boolean => {
     // If filter is set to 'all', always match
     if (filterValue === 'all') return true;
@@ -131,11 +136,15 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     // If job value is missing, don't match specific filters
     if (jobValue === null || jobValue === undefined || jobValue === '') return false;
     
-    // Case-insensitive string comparison
-    return String(jobValue).toLowerCase() === filterValue.toLowerCase();
+    // Convert both to lowercase strings for case-insensitive comparison
+    const jobValueStr = String(jobValue).toLowerCase().trim();
+    const filterValueStr = filterValue.toLowerCase().trim();
+    
+    // Check if the job value contains or exactly matches the filter value
+    return jobValueStr === filterValueStr;
   };
 
-  // Improved filtering logic with proper field mapping and debug logging
+  // Improved filtering logic with debugging
   const filteredJobs = jobs?.filter(job => {
     // Basic text search filters
     const searchFields = [
@@ -153,44 +162,54 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     // If basic filters don't match, return early
     if (!matchesSearch || !matchesLocation) return false;
     
-    // Department filter
-    if (!matchesFilter(job.department, filters.department)) return false;
+    // Debug logging for specific fields
+    if (filters.jobType !== 'all') {
+      console.log(`Job type filter: "${filters.jobType}" comparing with job.job_type: "${job.job_type}"`);
+    }
     
-    // Seniority level filter
-    if (!matchesFilter(job.seniority_level, filters.seniority)) return false;
+    if (filters.remote !== 'all') {
+      console.log(`Remote filter: "${filters.remote}" comparing with job.remote_onsite: "${job.remote_onsite}"`);
+    }
     
-    // Salary range filter
-    if (!matchesFilter(job.salary_range, filters.salaryRange)) return false;
-    
-    // Team size filter
-    if (!matchesFilter(job.team_size, filters.teamSize)) return false;
-    
-    // Investment stage filter
-    if (!matchesFilter(job.investment_stage, filters.investmentStage)) return false;
-    
-    // Remote/Onsite filter
-    if (!matchesFilter(job.remote_onsite, filters.remote)) return false;
-    
-    // Job type filter
-    if (!matchesFilter(job.job_type, filters.jobType)) return false;
-    
-    // Work hours filter
-    if (!matchesFilter(job.work_hours, filters.workHours)) return false;
-    
-    // Equity filter
-    if (!matchesFilter(job.equity, filters.equity)) return false;
-    
-    // Hiring urgency filter
-    if (!matchesFilter(job.hiring_urgency, filters.hiringUrgency)) return false;
-    
-    // Revenue model filter
-    if (!matchesFilter(job.revenue_model, filters.revenueModel)) return false;
+    // Field-specific filters with mapping to correct field names
+    const departmentMatches = matchesFilter(job.department, filters.department);
+    const seniorityMatches = matchesFilter(job.seniority_level, filters.seniority);
+    const salaryRangeMatches = matchesFilter(job.salary_range, filters.salaryRange);
+    const teamSizeMatches = matchesFilter(job.team_size, filters.teamSize);
+    const investmentStageMatches = matchesFilter(job.investment_stage, filters.investmentStage);
+    const remoteMatches = matchesFilter(job.remote_onsite, filters.remote);
+    const jobTypeMatches = matchesFilter(job.job_type, filters.jobType);
+    const workHoursMatches = matchesFilter(job.work_hours, filters.workHours);
+    const equityMatches = matchesFilter(job.equity, filters.equity);
+    const hiringUrgencyMatches = matchesFilter(job.hiring_urgency, filters.hiringUrgency);
+    const revenueModelMatches = matchesFilter(job.revenue_model, filters.revenueModel);
     
     // Visa sponsorship filter (boolean check)
-    if (filters.visaSponsorship && job.visa_sponsorship !== true) return false;
+    const visaSponsorshipMatches = !filters.visaSponsorship || job.visa_sponsorship === true;
     
-    // Job passed all filters
-    return true;
+    // Log detailed filter results for debugging
+    if (filters.jobType !== 'all' || filters.remote !== 'all') {
+      console.log(`Filter results for job "${job.title}":`, {
+        jobTypeMatches,
+        remoteMatches,
+        departmentMatches,
+        seniorityMatches
+      });
+    }
+    
+    // All filters must match
+    return departmentMatches &&
+           seniorityMatches &&
+           salaryRangeMatches &&
+           teamSizeMatches &&
+           investmentStageMatches &&
+           remoteMatches &&
+           jobTypeMatches &&
+           workHoursMatches &&
+           equityMatches &&
+           hiringUrgencyMatches &&
+           revenueModelMatches &&
+           visaSponsorshipMatches;
   }) || [];
 
   return {
