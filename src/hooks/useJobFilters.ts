@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Job } from '@/lib/types/job.types';
@@ -145,10 +144,11 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     return str.toString().trim().toLowerCase();
   };
 
-  // Debugging function to log filter information
+  // Enhanced debugging function to log filter information with proper type info
   const debugFilter = (jobValue: any, filterValue: string, filterType: string, jobId: string, result: boolean) => {
     console.log(`Filter debugging for job ${jobId} with ${filterType}:`, { 
       jobValue: String(jobValue), 
+      jobValueType: typeof jobValue,
       normalizedJobValue: normalizeString(jobValue),
       filterValue,
       normalizedFilterValue: normalizeString(filterValue),
@@ -156,20 +156,32 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     });
   };
 
-  // Enhanced matching function to be more flexible with filter matches
+  // Completely revised matching function with better type handling
   const matchesFilter = (jobValue: any, filterValue: string, filterType: string, jobId: string): boolean => {
     // If filter is set to 'all', always match
     if (filterValue === 'all') return true;
     
-    // If job value is missing, don't match specific filters
-    if (jobValue === null || jobValue === undefined || jobValue === '') {
+    // Extract primitive value from job value if it's an object
+    let processedJobValue = jobValue;
+    if (jobValue && typeof jobValue === 'object') {
+      // Try to get a value property if it exists
+      if ('value' in jobValue) {
+        processedJobValue = jobValue.value;
+      } else {
+        // Otherwise stringify the object
+        processedJobValue = JSON.stringify(jobValue);
+      }
+    }
+    
+    // If processed job value is still missing, don't match specific filters
+    if (processedJobValue === null || processedJobValue === undefined || processedJobValue === '') {
       const result = false;
       debugFilter(jobValue, filterValue, filterType, jobId, result);
       return result;
     }
     
     // Normalize both values for comparison
-    const normalizedJobValue = normalizeString(jobValue);
+    const normalizedJobValue = normalizeString(processedJobValue);
     const normalizedFilterValue = normalizeString(filterValue);
     
     // Try for exact match first, then for partial match
@@ -187,7 +199,8 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const fieldName = fieldMappings[filterType];
     if (!fieldName) return null;
     
-    // Get the value from the job
+    // Get the value from the job with field name diagnostic
+    console.log(`Getting job field value for ${filterType} using field name: ${String(fieldName)}`);
     const value = job[fieldName as keyof Job];
     
     // Special case handling for job_type/type
@@ -198,7 +211,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     return value;
   };
 
-  // Filtering logic with improved debugging
+  // Filtering logic with improved debugging and type checking
   const filteredJobs = jobs?.filter(job => {
     // Debug job data
     if (activeFilters.length > 0) {

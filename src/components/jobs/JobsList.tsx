@@ -20,7 +20,9 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
         id: job.id,
         title: job.title,
         department: job.department,
+        departmentType: typeof job.department,
         seniority_level: job.seniority_level,
+        seniorityType: typeof job.seniority_level,
         job_type: job.job_type,
         type: job.type,
         remote_onsite: job.remote_onsite
@@ -84,7 +86,16 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
           <div className="mt-4 p-4 border rounded bg-gray-50 text-left text-sm">
             <p className="font-medium">Debugging Information:</p>
             <p>Total jobs: {jobs?.length || 0}</p>
-            <p>Active filters: {filteredJobs.length === 0 ? "See console for details" : "None"}</p>
+            <p>Active filters: {filteredJobs.length === 0 && jobs?.length ? (
+              <ul className="list-disc pl-5 mt-2">
+                {jobs.slice(0, 2).map(job => (
+                  <li key={job.id} className="mb-2">
+                    <strong>Job:</strong> {job.title}<br />
+                    <strong>Seniority:</strong> "{job.seniority_level}" ({typeof job.seniority_level})
+                  </li>
+                ))}
+              </ul>
+            ) : "None"}</p>
           </div>
         </div>
       )}

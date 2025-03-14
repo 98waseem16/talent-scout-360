@@ -1,4 +1,3 @@
-
 import { JobDatabaseFields, JobFormData } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
@@ -42,15 +41,14 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   // Make sure job_type is always populated from either job_type or type field
   const jobType = dbFields.job_type || dbFields.type || 'Full-time';
   
-  // Log fields critical for filtering to help with debugging
-  console.log('Mapping job fields for filtering:', {
+  // Critical debug: Log raw field values to verify what we're getting from database
+  console.log('Raw job field values from database:', {
     id: dbFields.id,
     title: dbFields.title,
     department: dbFields.department,
     seniority_level: dbFields.seniority_level,
     job_type: dbFields.job_type,
-    type: dbFields.type,
-    resultingJobType: jobType
+    type: dbFields.type
   });
   
   // Create a standardized, normalized version of the job object
@@ -71,7 +69,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // Normalize all filter fields - ensure they're strings and consistent casing
+    // Normalize all filter fields as primitive string values, not objects
     department: formatFilterValue(dbFields.department),
     seniority_level: formatFilterValue(dbFields.seniority_level),
     job_type: formatFilterValue(jobType), // Use our normalized jobType
@@ -86,20 +84,36 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     visa_sponsorship: dbFields.visa_sponsorship === true
   };
   
+  // Debug the mapped job to verify our transformations worked
+  console.log('Job after mapping - field types:', {
+    id: mappedJob.id,
+    title: mappedJob.title,
+    department: typeof mappedJob.department,
+    seniority_level: typeof mappedJob.seniority_level,
+    job_type: typeof mappedJob.job_type,
+    type: typeof mappedJob.type
+  });
+  
   return mappedJob;
 };
 
-// Enhanced helper function to format filter values consistently
+// Improved helper function to format filter values as simple strings
 function formatFilterValue(value: any): string {
-  if (value === null || value === undefined) return '';
-  
-  // Convert to string and trim whitespace
-  const stringValue = String(value).trim();
-  
-  // Log problematic values for debugging
-  if (stringValue === '') {
-    console.log('Empty filter value after formatting:', { originalValue: value });
+  // Handle objects that might be returned (like undefined objects from console logs)
+  if (value && typeof value === 'object') {
+    // If it's an object with a value property, use that
+    if ('value' in value) {
+      return formatFilterValue(value.value);
+    }
+    // Otherwise convert the object to a string representation
+    return String(value).trim();
   }
   
-  return stringValue;
+  // Handle null/undefined
+  if (value === null || value === undefined) {
+    return '';
+  }
+  
+  // Convert to string and trim whitespace
+  return String(value).trim();
 }
