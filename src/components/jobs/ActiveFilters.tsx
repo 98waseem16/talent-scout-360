@@ -1,49 +1,42 @@
 
 import React from 'react';
 import { X } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 
 interface ActiveFilter {
-  key: string;
+  type: string;
   label: string;
-  displayValue: string;
 }
 
 interface ActiveFiltersProps {
   activeFilters: ActiveFilter[];
-  removeFilter: (key: string) => void;
-  clearAllFilters: () => void;
+  removeFilter: (type: string) => void;
+  clearFilters: () => void;
 }
 
 const ActiveFilters: React.FC<ActiveFiltersProps> = ({
   activeFilters,
   removeFilter,
-  clearAllFilters
+  clearFilters
 }) => {
   if (activeFilters.length === 0) return null;
 
   return (
     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
-      {activeFilters.map((filter) => (
-        <Badge 
-          key={filter.key} 
-          variant="secondary"
-          className="inline-flex items-center text-sm font-normal rounded-full px-3 py-1"
-        >
-          <span className="mr-1">{filter.label}: {filter.displayValue}</span>
+      {activeFilters.map((filter, index) => (
+        <div key={index} className="inline-flex items-center bg-secondary text-sm rounded-full px-3 py-1">
+          <span className="mr-1">{filter.label}</span>
           <button 
-            onClick={() => removeFilter(filter.key)}
+            onClick={() => removeFilter(filter.type)}
             className="text-muted-foreground hover:text-foreground"
-            aria-label={`Remove ${filter.label} filter`}
           >
             <X className="h-3 w-3" />
           </button>
-        </Badge>
+        </div>
       ))}
       
       {activeFilters.length > 1 && (
         <button 
-          onClick={clearAllFilters}
+          onClick={clearFilters}
           className="inline-flex items-center bg-primary/10 text-primary text-sm rounded-full px-3 py-1 hover:bg-primary/20 transition-colors"
         >
           Clear all

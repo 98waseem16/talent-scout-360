@@ -27,12 +27,10 @@ export const getJobs = async (): Promise<Job[]> => {
     
     // Map database records to our frontend Job model
     const jobs = data.map(record => {
-      console.log('Job record:', JSON.stringify(record));
       const mappedJob = mapDatabaseFieldsToJob(record);
       return mappedJob;
-    }).filter(Boolean) as Job[]; 
+    }).filter(Boolean) as Job[]; // Filter out any null results
     
-    console.log(`Mapped ${jobs.length} jobs successfully`);
     return jobs;
   } catch (error) {
     console.error('Error fetching jobs:', error);
@@ -80,7 +78,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       .from('job_postings')
       .select('*')
       .eq('id', id)
-      .maybeSingle();
+      .maybeSingle(); // Using maybeSingle() instead of single() to avoid errors when no job is found
 
     if (error) {
       console.error('Error fetching job by ID:', error);
