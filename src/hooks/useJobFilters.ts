@@ -126,7 +126,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   // The exact mapping between UI filter names and database field names
   const fieldMappings: Record<string, keyof Job> = {
     department: 'department',
-    seniority: 'seniority_level',
+    seniority: 'seniority_level', // CRITICAL: This maps 'seniority' filter to 'seniority_level' field
     salaryRange: 'salary_range',
     teamSize: 'team_size',
     investmentStage: 'investment_stage',
@@ -145,27 +145,41 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     return str.toString().trim().toLowerCase();
   };
 
-  // Improved matching function with both exact match and contains options
-  const matchesFilter = (jobValue: any, filterValue: string): boolean => {
+  // Debugging function to log filter information
+  const debugFilter = (jobValue: any, filterValue: string, filterType: string, jobId: string, result: boolean) => {
+    console.log(`Filter debugging for job ${jobId} with ${filterType}:`, { 
+      jobValue: String(jobValue), 
+      normalizedJobValue: normalizeString(jobValue),
+      filterValue,
+      normalizedFilterValue: normalizeString(filterValue),
+      matches: result
+    });
+  };
+
+  // Enhanced matching function to be more flexible with filter matches
+  const matchesFilter = (jobValue: any, filterValue: string, filterType: string, jobId: string): boolean => {
     // If filter is set to 'all', always match
     if (filterValue === 'all') return true;
     
     // If job value is missing, don't match specific filters
     if (jobValue === null || jobValue === undefined || jobValue === '') {
-      return false;
+      const result = false;
+      debugFilter(jobValue, filterValue, filterType, jobId, result);
+      return result;
     }
     
     // Normalize both values for comparison
     const normalizedJobValue = normalizeString(jobValue);
     const normalizedFilterValue = normalizeString(filterValue);
     
-    // First try an exact match
-    if (normalizedJobValue === normalizedFilterValue) {
-      return true;
-    }
+    // Try for exact match first, then for partial match
+    const exactMatch = normalizedJobValue === normalizedFilterValue;
+    const partialMatch = normalizedJobValue.includes(normalizedFilterValue) || 
+                        normalizedFilterValue.includes(normalizedJobValue);
     
-    // Then try a contains match
-    return normalizedJobValue.includes(normalizedFilterValue);
+    const result = exactMatch || partialMatch;
+    debugFilter(jobValue, filterValue, filterType, jobId, result);
+    return result;
   };
 
   // Get the correct job field value with proper fallbacks
@@ -174,7 +188,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     if (!fieldName) return null;
     
     // Get the value from the job
-    const value = job[fieldName];
+    const value = job[fieldName as keyof Job];
     
     // Special case handling for job_type/type
     if (filterType === 'jobType') {
@@ -184,8 +198,20 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     return value;
   };
 
-  // Filtering logic
+  // Filtering logic with improved debugging
   const filteredJobs = jobs?.filter(job => {
+    // Debug job data
+    if (activeFilters.length > 0) {
+      console.log(`Filtering job: ${job.id} - ${job.title}`, {
+        department: job.department,
+        seniority_level: job.seniority_level,
+        job_type: job.job_type,
+        type: job.type,
+        remote_onsite: job.remote_onsite,
+        activeFilters: activeFilters.map(f => `${f.type}:${f.label}`).join(', ')
+      });
+    }
+
     // Basic text search filters
     const searchFields = [
       job.title || '', 
@@ -225,7 +251,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       // For all other filters (string comparison)
       const jobValue = getJobFieldValue(job, filterType);
       
-      if (!matchesFilter(jobValue, filterValue as string)) {
+      if (!matchesFilter(jobValue, filterValue as string, filterType, job.id)) {
         return false;
       }
     }

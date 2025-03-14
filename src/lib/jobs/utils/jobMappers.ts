@@ -42,6 +42,17 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   // Make sure job_type is always populated from either job_type or type field
   const jobType = dbFields.job_type || dbFields.type || 'Full-time';
   
+  // Log fields critical for filtering to help with debugging
+  console.log('Mapping job fields for filtering:', {
+    id: dbFields.id,
+    title: dbFields.title,
+    department: dbFields.department,
+    seniority_level: dbFields.seniority_level,
+    job_type: dbFields.job_type,
+    type: dbFields.type,
+    resultingJobType: jobType
+  });
+  
   // Create a standardized, normalized version of the job object
   const mappedJob = {
     id: dbFields.id,
@@ -78,8 +89,17 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   return mappedJob;
 };
 
-// Helper function to format filter values consistently
+// Enhanced helper function to format filter values consistently
 function formatFilterValue(value: any): string {
   if (value === null || value === undefined) return '';
-  return String(value).trim();
+  
+  // Convert to string and trim whitespace
+  const stringValue = String(value).trim();
+  
+  // Log problematic values for debugging
+  if (stringValue === '') {
+    console.log('Empty filter value after formatting:', { originalValue: value });
+  }
+  
+  return stringValue;
 }

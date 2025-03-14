@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import JobCard from '@/components/JobCard';
 import { Job } from '@/lib/types/job.types';
@@ -12,6 +12,24 @@ interface JobsListProps {
 }
 
 const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJobs }) => {
+  // Debug log to show all available jobs and their fields
+  useEffect(() => {
+    if (jobs && jobs.length > 0) {
+      console.log(`Total jobs available: ${jobs.length}`);
+      console.log('First 3 jobs with filter fields:', jobs.slice(0, 3).map(job => ({
+        id: job.id,
+        title: job.title,
+        department: job.department,
+        seniority_level: job.seniority_level,
+        job_type: job.job_type,
+        type: job.type,
+        remote_onsite: job.remote_onsite
+      })));
+      
+      console.log(`Filtered jobs: ${filteredJobs.length}`);
+    }
+  }, [jobs, filteredJobs]);
+
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -63,6 +81,11 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
           <p className="text-muted-foreground">
             Try adjusting your search criteria or filters
           </p>
+          <div className="mt-4 p-4 border rounded bg-gray-50 text-left text-sm">
+            <p className="font-medium">Debugging Information:</p>
+            <p>Total jobs: {jobs?.length || 0}</p>
+            <p>Active filters: {filteredJobs.length === 0 ? "See console for details" : "None"}</p>
+          </div>
         </div>
       )}
     </div>
