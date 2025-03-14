@@ -131,7 +131,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     teamSize: 'team_size',
     investmentStage: 'investment_stage',
     remote: 'remote_onsite',
-    jobType: 'job_type',  // Fixed to always use job_type
+    jobType: 'job_type',
     workHours: 'work_hours',
     equity: 'equity',
     hiringUrgency: 'hiring_urgency',
@@ -145,7 +145,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     return str.toString().trim().toLowerCase();
   };
 
-  // Case-insensitive matching function
+  // Improved matching function with both exact match and contains options
   const matchesFilter = (jobValue: any, filterValue: string): boolean => {
     // If filter is set to 'all', always match
     if (filterValue === 'all') return true;
@@ -159,23 +159,29 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const normalizedJobValue = normalizeString(jobValue);
     const normalizedFilterValue = normalizeString(filterValue);
     
-    // Check for exact or partial match (contains)
-    return normalizedJobValue === normalizedFilterValue || 
-           normalizedJobValue.includes(normalizedFilterValue);
+    // First try an exact match
+    if (normalizedJobValue === normalizedFilterValue) {
+      return true;
+    }
+    
+    // Then try a contains match
+    return normalizedJobValue.includes(normalizedFilterValue);
   };
 
-  // Get the correct job field value
+  // Get the correct job field value with proper fallbacks
   const getJobFieldValue = (job: Job, filterType: string): any => {
     const fieldName = fieldMappings[filterType];
     if (!fieldName) return null;
-
-    // Special case handling for job_type
+    
+    // Get the value from the job
+    const value = job[fieldName];
+    
+    // Special case handling for job_type/type
     if (filterType === 'jobType') {
-      // Always use job_type but if it's empty, fall back to type
-      return job.job_type || job.type;
+      return value || job.type || '';
     }
     
-    return job[fieldName];
+    return value;
   };
 
   // Filtering logic
@@ -209,8 +215,8 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       
       // For visa_sponsorship (boolean check)
       if (filterType === 'visaSponsorship') {
-        const jobValue = job.visa_sponsorship === true;
-        if (!jobValue) {
+        const jobHasVisaSponsorship = job.visa_sponsorship === true;
+        if (!jobHasVisaSponsorship) {
           return false;
         }
         continue;
@@ -218,11 +224,6 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       
       // For all other filters (string comparison)
       const jobValue = getJobFieldValue(job, filterType);
-      
-      // Skip invalid or empty values
-      if (jobValue === null || jobValue === undefined || jobValue === '') {
-        return false;
-      }
       
       if (!matchesFilter(jobValue, filterValue as string)) {
         return false;

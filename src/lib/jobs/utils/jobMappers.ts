@@ -23,7 +23,7 @@ export const mapJobFormDataToDatabaseFields = (
     revenue_model: formData.revenue_model,
     department: formData.department,
     seniority_level: formData.seniority_level,
-    job_type: formData.job_type || formData.type || 'Full-time',
+    job_type: formData.job_type || formData.type || 'Full-time', // Ensure job_type is populated
     salary_range: formData.salary_range,
     equity: formData.equity,
     remote_onsite: formData.remote_onsite,
@@ -49,7 +49,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     company: dbFields.company || '',
     location: dbFields.location || '',
     salary: dbFields.salary || '',
-    type: dbFields.type || jobType, // Make sure type is always populated
+    type: dbFields.type || jobType, // Ensure type is always populated
     posted: dbFields.posted || '',
     description: dbFields.description || '',
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
