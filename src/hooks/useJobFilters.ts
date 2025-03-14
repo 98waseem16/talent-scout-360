@@ -3,38 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Job } from '@/lib/types/job.types';
 
-interface JobFilters {
-  department: string;
-  seniority: string;
-  salaryRange: string;
-  teamSize: string;
-  investmentStage: string;
-  remote: string;
-  jobType: string;
-  workHours: string;
-  equity: string;
-  hiringUrgency: string;
-  revenueModel: string;
-  visaSponsorship: boolean;
-}
-
-interface UseJobFiltersReturn {
-  searchQuery: string;
-  locationQuery: string;
-  filters: JobFilters;
-  isFilterOpen: boolean;
-  activeFilters: { type: string; label: string }[];
-  filteredJobs: Job[];
-  setSearchQuery: (query: string) => void;
-  setLocationQuery: (location: string) => void;
-  setFilters: React.Dispatch<React.SetStateAction<JobFilters>>;
-  setIsFilterOpen: (isOpen: boolean) => void;
-  clearFilters: () => void;
-  clearAllFilters: () => void;
-  removeFilter: (type: string) => void;
-}
-
-export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
+export const useJobFilters = (jobs: Job[] | undefined) => {
   const location = useLocation();
   const queryParams = new URLSearchParams(location.search);
   const initialQuery = queryParams.get('query') || '';
@@ -44,19 +13,19 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   const [locationQuery, setLocationQuery] = useState(initialLocation);
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
-  const [filters, setFilters] = useState<JobFilters>({
+  // Create initial filters object with all filters set to 'all' or false
+  const [filters, setFilters] = useState<Record<string, string | boolean>>({
     department: 'all',
-    seniority: 'all',
-    salaryRange: 'all',
-    teamSize: 'all',
-    investmentStage: 'all',
-    remote: 'all',
-    jobType: 'all',
-    workHours: 'all',
+    seniority_level: 'all',
+    job_type: 'all',
+    salary_range: 'all',
+    remote_onsite: 'all',
+    team_size: 'all',
+    investment_stage: 'all',
+    revenue_model: 'all',
     equity: 'all',
-    hiringUrgency: 'all',
-    revenueModel: 'all',
-    visaSponsorship: false
+    hiring_urgency: 'all',
+    visa_sponsorship: false
   });
 
   // Update URL with search params
@@ -69,108 +38,83 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     window.history.replaceState({}, '', newUrl);
   }, [searchQuery, locationQuery, location.pathname]);
 
+  // Clear all filters (text search and dropdowns)
   const clearFilters = () => {
     setSearchQuery('');
     setLocationQuery('');
     clearAllFilters();
   };
 
+  // Reset only dropdown filters to defaults
   const clearAllFilters = () => {
     setFilters({
       department: 'all',
-      seniority: 'all',
-      salaryRange: 'all',
-      teamSize: 'all',
-      investmentStage: 'all',
-      remote: 'all',
-      jobType: 'all',
-      workHours: 'all',
+      seniority_level: 'all',
+      job_type: 'all',
+      salary_range: 'all',
+      remote_onsite: 'all',
+      team_size: 'all',
+      investment_stage: 'all',
+      revenue_model: 'all',
       equity: 'all',
-      hiringUrgency: 'all',
-      revenueModel: 'all',
-      visaSponsorship: false
+      hiring_urgency: 'all',
+      visa_sponsorship: false
     });
   };
 
-  const removeFilter = (type: string) => {
-    if (type === 'search') {
+  // Remove a specific filter
+  const removeFilter = (key: string) => {
+    if (key === 'search') {
       setSearchQuery('');
-    } else if (type === 'location') {
+    } else if (key === 'location') {
       setLocationQuery('');
+    } else if (key === 'visa_sponsorship') {
+      setFilters(prev => ({ ...prev, [key]: false }));
     } else {
-      setFilters(prev => ({ 
-        ...prev, 
-        [type]: type === 'visaSponsorship' ? false : 'all' 
-      }));
+      setFilters(prev => ({ ...prev, [key]: 'all' }));
     }
   };
 
-  // Generate the active filters display
+  // Get human-readable display names for filter values
+  const getFilterDisplayName = (key: string, value: string | boolean): string => {
+    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+    
+    // Convert camelCase to Title Case with spaces
+    const keyDisplay = key
+      .replace(/_/g, ' ')
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+      
+    return value;
+  };
+
+  // Generate active filters for display
   const activeFilters = [
-    ...(searchQuery ? [{ type: 'search', label: `"${searchQuery}"` }] : []),
-    ...(locationQuery ? [{ type: 'location', label: locationQuery }] : []),
-    ...(filters.department !== 'all' ? [{ type: 'department', label: filters.department }] : []),
-    ...(filters.seniority !== 'all' ? [{ type: 'seniority', label: filters.seniority }] : []),
-    ...(filters.salaryRange !== 'all' ? [{ type: 'salaryRange', label: filters.salaryRange }] : []),
-    ...(filters.teamSize !== 'all' ? [{ type: 'teamSize', label: filters.teamSize }] : []),
-    ...(filters.investmentStage !== 'all' ? [{ type: 'investmentStage', label: filters.investmentStage }] : []),
-    ...(filters.remote !== 'all' ? [{ type: 'remote', label: filters.remote }] : []),
-    ...(filters.jobType !== 'all' ? [{ type: 'jobType', label: filters.jobType }] : []),
-    ...(filters.workHours !== 'all' ? [{ type: 'workHours', label: filters.workHours }] : []),
-    ...(filters.equity !== 'all' ? [{ type: 'equity', label: filters.equity }] : []),
-    ...(filters.hiringUrgency !== 'all' ? [{ type: 'hiringUrgency', label: filters.hiringUrgency }] : []),
-    ...(filters.revenueModel !== 'all' ? [{ type: 'revenueModel', label: filters.revenueModel }] : []),
-    ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
+    ...(searchQuery ? [{ key: 'search', label: 'Search', displayValue: searchQuery }] : []),
+    ...(locationQuery ? [{ key: 'location', label: 'Location', displayValue: locationQuery }] : []),
+    ...Object.entries(filters)
+      .filter(([key, value]) => {
+        if (typeof value === 'boolean') return value === true;
+        return value !== 'all';
+      })
+      .map(([key, value]) => ({
+        key,
+        label: key
+          .replace(/_/g, ' ')
+          .split(' ')
+          .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(' '),
+        displayValue: getFilterDisplayName(key, value)
+      }))
   ];
 
-  // CRITICAL FIX: The exact mapping between UI filter names and database field names
-  const fieldMappings: Record<string, keyof Job> = {
-    department: 'department',
-    seniority: 'seniority_level',
-    salaryRange: 'salary_range',
-    teamSize: 'team_size',
-    investmentStage: 'investment_stage',
-    remote: 'remote_onsite',
-    jobType: 'job_type',
-    workHours: 'work_hours',
-    equity: 'equity',
-    hiringUrgency: 'hiring_urgency',
-    revenueModel: 'revenue_model',
-    visaSponsorship: 'visa_sponsorship'
-  };
-
-  // Case-insensitive matching function
-  const matchesFilter = (jobValue: any, filterValue: string): boolean => {
-    // If filter is set to 'all', always match
-    if (filterValue === 'all') return true;
-    
-    // If job value is missing, don't match specific filters
-    if (jobValue === null || jobValue === undefined || jobValue === '') {
-      return false;
-    }
-    
-    // Convert both to lowercase strings for case-insensitive comparison
-    const jobValueStr = String(jobValue).toLowerCase().trim();
-    const filterValueStr = filterValue.toLowerCase().trim();
-    
-    // Check if the job value contains the filter value (partial match)
-    return jobValueStr.includes(filterValueStr);
-  };
-
-  // Filtered jobs logic with consistent field access
+  // Filter jobs based on all active filters
   const filteredJobs = jobs?.filter(job => {
     // Basic text search filters
-    const searchFields = [
-      job.title || '', 
-      job.company || '', 
-      job.description || ''
-    ].map(field => field.toLowerCase());
-    
-    const matchesSearch = searchQuery === '' || 
-      searchFields.some(field => field.includes(searchQuery.toLowerCase()));
-      
-    const matchesLocation = locationQuery === '' ||
-      ((job.location || '').toLowerCase().includes(locationQuery.toLowerCase()));
+    const matchesSearch = !searchQuery || searchInJob(job, searchQuery);
+    const matchesLocation = !locationQuery || 
+      (job.location?.toLowerCase().includes(locationQuery.toLowerCase()));
     
     // If basic filters don't match, return early
     if (!matchesSearch || !matchesLocation) {
@@ -178,37 +122,47 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     }
     
     // Check each active filter
-    for (const [filterType, filterValue] of Object.entries(filters)) {
-      // Skip 'all' filters and false boolean filters
-      if (filterValue === 'all' || filterValue === false) continue;
+    return Object.entries(filters).every(([key, value]) => {
+      // Skip filters set to 'all' or false (for boolean filters)
+      if (value === 'all' || value === false) return true;
       
-      // For visa_sponsorship (boolean check)
-      if (filterType === 'visaSponsorship') {
-        if (job.visa_sponsorship !== true) {
-          return false;
-        }
-        continue;
+      // Handle visa_sponsorship (boolean filter)
+      if (key === 'visa_sponsorship') {
+        return job.visa_sponsorship === true;
       }
       
-      // For all other filters (string comparison)
-      const fieldName = fieldMappings[filterType];
-      if (!fieldName) continue;
+      // Get the actual job field value, ensuring it's lowercase for comparison
+      const jobFieldValue = job[key as keyof Job];
       
-      const jobValue = job[fieldName];
-      
-      // Skip if no value exists for this field
-      if (jobValue === undefined || jobValue === null || jobValue === '') {
+      // Handle null/undefined/empty values
+      if (jobFieldValue === null || jobFieldValue === undefined || jobFieldValue === '') {
         return false;
       }
       
-      // Match the filter
-      if (!matchesFilter(jobValue, filterValue as string)) {
-        return false;
-      }
-    }
-    
-    return true;
+      // Convert job value to lowercase string for comparison
+      const jobValueStr = String(jobFieldValue).toLowerCase();
+      const filterValueStr = String(value).toLowerCase();
+      
+      // Check if the job value contains the filter value (for case-insensitive partial matching)
+      return jobValueStr.includes(filterValueStr);
+    });
   }) || [];
+
+  // Helper to search in job fields
+  function searchInJob(job: Job, query: string): boolean {
+    const searchFields = [
+      job.title || '',
+      job.company || '',
+      job.description || '',
+      job.department || '',
+      job.seniority_level || ''
+    ];
+    
+    const lowercaseQuery = query.toLowerCase();
+    return searchFields.some(field => 
+      field.toLowerCase().includes(lowercaseQuery)
+    );
+  }
 
   return {
     searchQuery,

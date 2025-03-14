@@ -46,7 +46,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     company: dbFields.company || '',
     location: dbFields.location || '',
     salary: dbFields.salary || '',
-    type: dbFields.type || dbFields.job_type || 'Full-time', // Ensure type is always populated
+    type: dbFields.type || dbFields.job_type || 'Full-time', 
     posted: dbFields.posted || '',
     description: dbFields.description || '',
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
@@ -57,8 +57,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // Critical fix: Normalize all filter fields properly
-    // Make sure all filter fields are cleaned consistently (trimmed and lowercased)
+    // Normalize all filter fields for consistent filtering
     department: normalizeFilterField(dbFields.department),
     seniority_level: normalizeFilterField(dbFields.seniority_level),
     job_type: normalizeFilterField(dbFields.job_type) || normalizeFilterField(dbFields.type) || 'full-time',
