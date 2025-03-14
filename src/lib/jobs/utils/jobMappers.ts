@@ -1,4 +1,3 @@
-
 import { JobDatabaseFields, JobFormData } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
@@ -42,14 +41,12 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   // Make sure job_type is always populated from either job_type or type field
   const jobType = dbFields.job_type || dbFields.type || 'Full-time';
   
-  // Log raw job fields from the database for debugging
-  console.log('Job fields from database:', {
+  // Critical debug: Log raw field values to verify what we're getting from database
+  console.log('Raw job field values from database:', {
     id: dbFields.id,
     title: dbFields.title,
     department: dbFields.department,
-    department_type: typeof dbFields.department,
     seniority_level: dbFields.seniority_level,
-    seniority_type: typeof dbFields.seniority_level,
     job_type: dbFields.job_type,
     type: dbFields.type
   });
@@ -72,10 +69,10 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // Ensure all filter fields are primitive strings, not objects
+    // Normalize all filter fields as primitive string values, not objects
     department: formatFilterValue(dbFields.department),
     seniority_level: formatFilterValue(dbFields.seniority_level),
-    job_type: formatFilterValue(jobType),
+    job_type: formatFilterValue(jobType), // Use our normalized jobType
     salary_range: formatFilterValue(dbFields.salary_range),
     team_size: formatFilterValue(dbFields.team_size),
     investment_stage: formatFilterValue(dbFields.investment_stage),
@@ -87,42 +84,36 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     visa_sponsorship: dbFields.visa_sponsorship === true
   };
   
-  // Debug the mapped job
-  console.log('Job after mapping:', {
+  // Debug the mapped job to verify our transformations worked
+  console.log('Job after mapping - field types:', {
     id: mappedJob.id,
     title: mappedJob.title,
-    department: mappedJob.department,
-    seniority_level: mappedJob.seniority_level,
-    job_type: mappedJob.job_type
+    department: typeof mappedJob.department,
+    seniority_level: typeof mappedJob.seniority_level,
+    job_type: typeof mappedJob.job_type,
+    type: typeof mappedJob.type
   });
   
   return mappedJob;
 };
 
-// Improved helper function to ensure all filter values are simple strings
+// Improved helper function to format filter values as simple strings
 function formatFilterValue(value: any): string {
+  // Handle objects that might be returned (like undefined objects from console logs)
+  if (value && typeof value === 'object') {
+    // If it's an object with a value property, use that
+    if ('value' in value) {
+      return formatFilterValue(value.value);
+    }
+    // Otherwise convert the object to a string representation
+    return String(value).trim();
+  }
+  
   // Handle null/undefined
   if (value === null || value === undefined) {
     return '';
   }
   
-  // Handle objects that might contain values
-  if (typeof value === 'object') {
-    // Try to extract a value property if it exists
-    if (value && 'value' in value) {
-      return formatFilterValue(value.value);
-    }
-    
-    // If it's an object with a toString method that doesn't return [object Object]
-    const stringValue = String(value);
-    if (stringValue !== '[object Object]') {
-      return stringValue.trim();
-    }
-    
-    // For other objects, return an empty string
-    return '';
-  }
-  
-  // For non-objects, ensure we return a trimmed string
+  // Convert to string and trim whitespace
   return String(value).trim();
 }

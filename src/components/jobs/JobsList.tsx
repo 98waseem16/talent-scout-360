@@ -12,7 +12,7 @@ interface JobsListProps {
 }
 
 const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJobs }) => {
-  // Enhanced debug logging to show all available jobs and their fields
+  // Debug log to show all available jobs and their fields
   useEffect(() => {
     if (jobs && jobs.length > 0) {
       console.log(`Total jobs available: ${jobs.length}`);
@@ -86,22 +86,16 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
           <div className="mt-4 p-4 border rounded bg-gray-50 text-left text-sm">
             <p className="font-medium">Debugging Information:</p>
             <p>Total jobs: {jobs?.length || 0}</p>
-            {jobs?.length && jobs.length > 0 ? (
-              <div className="mt-2">
-                <p className="font-medium mt-2">Active filters:</p>
-                <div className="mt-2 pl-4">
-                  {jobs.slice(0, 3).map(job => (
-                    <div key={job.id} className="mb-2 border-b pb-2">
-                      <p><strong>Job:</strong> {job.title}</p>
-                      <p><strong>Seniority:</strong> "{job.seniority_level || ''}" ({typeof job.seniority_level})</p>
-                      <p><strong>Department:</strong> "{job.department || ''}" ({typeof job.department})</p>
-                      <p><strong>Type:</strong> "{job.job_type || job.type || ''}"</p>
-                      <p><strong>Remote:</strong> "{job.remote_onsite || ''}"</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : "None"}
+            <p>Active filters: {filteredJobs.length === 0 && jobs?.length ? (
+              <ul className="list-disc pl-5 mt-2">
+                {jobs.slice(0, 2).map(job => (
+                  <li key={job.id} className="mb-2">
+                    <strong>Job:</strong> {job.title}<br />
+                    <strong>Seniority:</strong> "{job.seniority_level}" ({typeof job.seniority_level})
+                  </li>
+                ))}
+              </ul>
+            ) : "None"}</p>
           </div>
         </div>
       )}
