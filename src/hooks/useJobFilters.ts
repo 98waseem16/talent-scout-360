@@ -69,11 +69,6 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     window.history.replaceState({}, '', newUrl);
   }, [searchQuery, locationQuery, location.pathname]);
 
-  // Log filters when they change for debugging
-  useEffect(() => {
-    console.log('DEBUG - Current filters applied:', filters);
-  }, [filters]);
-
   const clearFilters = () => {
     setSearchQuery('');
     setLocationQuery('');
@@ -128,7 +123,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // CRITICAL FIX: The exact mapping between UI filter names and database field names
+  // The exact mapping between UI filter names and database field names
   const fieldMappings: Record<string, keyof Job> = {
     department: 'department',
     seniority: 'seniority_level',
@@ -136,7 +131,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     teamSize: 'team_size',
     investmentStage: 'investment_stage',
     remote: 'remote_onsite',
-    jobType: 'job_type',
+    jobType: 'job_type',  // Fixed to always use job_type
     workHours: 'work_hours',
     equity: 'equity',
     hiringUrgency: 'hiring_urgency',
@@ -144,72 +139,62 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     visaSponsorship: 'visa_sponsorship'
   };
 
-  // Case-insensitive matching function with enhanced debugging
+  // Helper to normalize strings for comparison
+  const normalizeString = (str: string | null | undefined): string => {
+    if (str === null || str === undefined) return '';
+    return str.toString().trim().toLowerCase();
+  };
+
+  // Case-insensitive matching function
   const matchesFilter = (jobValue: any, filterValue: string): boolean => {
     // If filter is set to 'all', always match
     if (filterValue === 'all') return true;
     
     // If job value is missing, don't match specific filters
     if (jobValue === null || jobValue === undefined || jobValue === '') {
-      console.log(`DEBUG - Filter match failed: job value is empty/null/undefined`);
       return false;
     }
     
-    // Convert both to lowercase strings for case-insensitive comparison
-    const jobValueStr = String(jobValue).toLowerCase().trim();
-    const filterValueStr = filterValue.toLowerCase().trim();
+    // Normalize both values for comparison
+    const normalizedJobValue = normalizeString(jobValue);
+    const normalizedFilterValue = normalizeString(filterValue);
     
-    // Debug the actual values being compared
-    console.log(`DEBUG - Comparing: Job value "${jobValueStr}" with filter "${filterValueStr}"`);
-    
-    // Check if the job value exactly matches or contains the filter value
-    const exactMatch = jobValueStr === filterValueStr;
-    const containsMatch = jobValueStr.includes(filterValueStr);
-    
-    console.log(`DEBUG - Match result: exact=${exactMatch}, contains=${containsMatch}`);
-    
-    return exactMatch || containsMatch;
+    // Check for exact or partial match (contains)
+    return normalizedJobValue === normalizedFilterValue || 
+           normalizedJobValue.includes(normalizedFilterValue);
   };
 
-  // Get the correct job field value with better fallback handling
+  // Get the correct job field value
   const getJobFieldValue = (job: Job, filterType: string): any => {
     const fieldName = fieldMappings[filterType];
-    if (!fieldName) {
-      console.log(`DEBUG - No field mapping found for filter type: ${filterType}`);
-      return null;
-    }
+    if (!fieldName) return null;
 
-    // Special case handling for job_type with fallback to type
+    // Special case handling for job_type
     if (filterType === 'jobType') {
+      // Always use job_type but if it's empty, fall back to type
       return job.job_type || job.type;
     }
     
-    const value = job[fieldName];
-    console.log(`DEBUG - Field value for ${filterType} (${fieldName}):`, value);
-    return value;
+    return job[fieldName];
   };
 
-  // Detailed filtered jobs logic with expanded logging for troubleshooting
+  // Filtering logic
   const filteredJobs = jobs?.filter(job => {
-    // Detailed debugging for this specific job
-    console.log(`\nDEBUG - Filtering job: "${job.title}" (${job.id})`);
-    
     // Basic text search filters
     const searchFields = [
       job.title || '', 
       job.company || '', 
       job.description || ''
-    ].map(field => field.toLowerCase());
+    ].map(field => normalizeString(field));
     
     const matchesSearch = searchQuery === '' || 
-      searchFields.some(field => field.includes(searchQuery.toLowerCase()));
+      searchFields.some(field => field.includes(normalizeString(searchQuery)));
       
     const matchesLocation = locationQuery === '' ||
-      ((job.location || '').toLowerCase().includes(locationQuery.toLowerCase()));
+      normalizeString(job.location).includes(normalizeString(locationQuery));
     
     // If basic filters don't match, return early
     if (!matchesSearch || !matchesLocation) {
-      console.log(`DEBUG - Job "${job.title}" filtered out: Search/Location mismatch`);
       return false;
     }
     
@@ -218,17 +203,6 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       .filter(([key, value]) => value !== 'all' && value !== false)
       .map(([key]) => key);
     
-    if (activeFilterKeys.length > 0) {
-      console.log(`DEBUG - Checking against active filters:`, 
-        activeFilterKeys.map(key => `${key}=${filters[key as keyof JobFilters]}`).join(', '));
-    
-      // Log all job field values for debugging
-      console.log(`DEBUG - Job field values:`);
-      Object.entries(fieldMappings).forEach(([filterKey, jobField]) => {
-        console.log(`  ${filterKey} (${jobField}): ${job[jobField]}`);
-      });
-    }
-    
     // Check each active filter
     for (const filterType of activeFilterKeys) {
       const filterValue = filters[filterType as keyof JobFilters];
@@ -236,10 +210,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       // For visa_sponsorship (boolean check)
       if (filterType === 'visaSponsorship') {
         const jobValue = job.visa_sponsorship === true;
-        console.log(`DEBUG - Visa sponsorship: job has ${jobValue ? 'visa' : 'no visa'} sponsorship`);
-        
         if (!jobValue) {
-          console.log(`DEBUG - Job "${job.title}" filtered out: No visa sponsorship`);
           return false;
         }
         continue;
@@ -250,19 +221,14 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       
       // Skip invalid or empty values
       if (jobValue === null || jobValue === undefined || jobValue === '') {
-        console.log(`DEBUG - Job "${job.title}" filtered out: No value for ${filterType}`);
         return false;
       }
       
-      const result = matchesFilter(jobValue, filterValue as string);
-      console.log(`DEBUG - Filter "${filterType}": comparing "${filterValue}" with job value "${jobValue}" - ${result ? 'MATCHED' : 'FAILED'}`);
-      
-      if (!result) {
+      if (!matchesFilter(jobValue, filterValue as string)) {
         return false;
       }
     }
     
-    console.log(`DEBUG - Job "${job.title}" MATCHES all filters`);
     return true;
   }) || [];
 
