@@ -41,7 +41,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Log filter state whenever it changes
+  // Enhanced logging of filter state whenever it changes
   useEffect(() => {
     console.log('Current filters in sidebar:', filters);
     
@@ -51,6 +51,14 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
       
     if (activeFilters.length > 0) {
       console.log('Active filters:', activeFilters.map(([key, value]) => `${key}: ${value}`));
+      
+      // Special debug for seniority filter
+      if (filters.seniority !== 'all') {
+        console.log('Filter debugging for seniority:', {
+          value: filters.seniority,
+          type: typeof filters.seniority
+        });
+      }
     }
   }, [filters]);
 

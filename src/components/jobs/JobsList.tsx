@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import JobCard from '@/components/JobCard';
@@ -11,7 +12,7 @@ interface JobsListProps {
 }
 
 const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJobs }) => {
-  // Debug log to show all available jobs and their fields
+  // Enhanced debug logging to show all available jobs and their fields
   useEffect(() => {
     if (jobs && jobs.length > 0) {
       console.log(`Total jobs available: ${jobs.length}`);
@@ -87,7 +88,7 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
             <p>Total jobs: {jobs?.length || 0}</p>
             {jobs?.length && jobs.length > 0 ? (
               <div className="mt-2">
-                <p>Active filters:</p>
+                <p className="font-medium mt-2">Active filters:</p>
                 <div className="mt-2 pl-4">
                   {jobs.slice(0, 3).map(job => (
                     <div key={job.id} className="mb-2 border-b pb-2">
@@ -95,6 +96,7 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
                       <p><strong>Seniority:</strong> "{job.seniority_level || ''}" ({typeof job.seniority_level})</p>
                       <p><strong>Department:</strong> "{job.department || ''}" ({typeof job.department})</p>
                       <p><strong>Type:</strong> "{job.job_type || job.type || ''}"</p>
+                      <p><strong>Remote:</strong> "{job.remote_onsite || ''}"</p>
                     </div>
                   ))}
                 </div>

@@ -42,12 +42,14 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   // Make sure job_type is always populated from either job_type or type field
   const jobType = dbFields.job_type || dbFields.type || 'Full-time';
   
-  // Better debugging of raw fields
-  console.log('Raw job field values from database:', {
+  // Log raw job fields from the database for debugging
+  console.log('Job fields from database:', {
     id: dbFields.id,
     title: dbFields.title,
     department: dbFields.department,
+    department_type: typeof dbFields.department,
     seniority_level: dbFields.seniority_level,
+    seniority_type: typeof dbFields.seniority_level,
     job_type: dbFields.job_type,
     type: dbFields.type
   });
@@ -70,7 +72,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // Critically important: Ensure all filter fields are primitive strings, not objects
+    // Ensure all filter fields are primitive strings, not objects
     department: formatFilterValue(dbFields.department),
     seniority_level: formatFilterValue(dbFields.seniority_level),
     job_type: formatFilterValue(jobType),
@@ -111,8 +113,14 @@ function formatFilterValue(value: any): string {
       return formatFilterValue(value.value);
     }
     
-    // For other objects, try to get a meaningful string representation
-    return String(value).replace('[object Object]', '').trim();
+    // If it's an object with a toString method that doesn't return [object Object]
+    const stringValue = String(value);
+    if (stringValue !== '[object Object]') {
+      return stringValue.trim();
+    }
+    
+    // For other objects, return an empty string
+    return '';
   }
   
   // For non-objects, ensure we return a trimmed string
