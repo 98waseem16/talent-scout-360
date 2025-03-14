@@ -40,19 +40,16 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   }
   
   // Log the exact field names and values for debugging
-  console.log('DEBUG - Database field names and values:', Object.keys(dbFields).reduce((acc, key) => {
-    acc[key] = typeof dbFields[key] === 'string' ? dbFields[key].toLowerCase() : dbFields[key];
-    return acc;
-  }, {} as Record<string, any>));
+  console.log('DEBUG - Raw DB fields:', dbFields);
   
-  // Ensure all fields are properly mapped and have appropriate fallbacks
+  // Create a standardized, normalized version of the job object
   const mappedJob = {
     id: dbFields.id,
     title: dbFields.title || '',
     company: dbFields.company || '',
     location: dbFields.location || '',
     salary: dbFields.salary || '',
-    type: dbFields.type || dbFields.job_type || 'Full-time', // Map both type and job_type for backwards compatibility
+    type: dbFields.type || dbFields.job_type || 'Full-time', // Ensure type is always populated
     posted: dbFields.posted || '',
     description: dbFields.description || '',
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
@@ -63,22 +60,23 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // CRITICAL FIX: Ensure filter fields are properly mapped with consistent lowercase values
-    department: dbFields.department ? String(dbFields.department).trim() : '',
-    seniority_level: dbFields.seniority_level ? String(dbFields.seniority_level).trim() : '',
-    job_type: dbFields.job_type ? String(dbFields.job_type).trim() : (dbFields.type ? String(dbFields.type).trim() : 'Full-time'),
-    salary_range: dbFields.salary_range ? String(dbFields.salary_range).trim() : '',
-    team_size: dbFields.team_size ? String(dbFields.team_size).trim() : '',
-    investment_stage: dbFields.investment_stage ? String(dbFields.investment_stage).trim() : '',
-    remote_onsite: dbFields.remote_onsite ? String(dbFields.remote_onsite).trim() : '',
-    work_hours: dbFields.work_hours ? String(dbFields.work_hours).trim() : '',
-    equity: dbFields.equity ? String(dbFields.equity).trim() : '',
-    hiring_urgency: dbFields.hiring_urgency ? String(dbFields.hiring_urgency).trim() : '',
-    revenue_model: dbFields.revenue_model ? String(dbFields.revenue_model).trim() : '',
+    // Normalize all filter fields - ensure they're strings, trimmed and lowercase for consistent matching
+    department: dbFields.department ? String(dbFields.department).trim().toLowerCase() : '',
+    seniority_level: dbFields.seniority_level ? String(dbFields.seniority_level).trim().toLowerCase() : '',
+    job_type: dbFields.job_type ? String(dbFields.job_type).trim().toLowerCase() : 
+              (dbFields.type ? String(dbFields.type).trim().toLowerCase() : 'full-time'),
+    salary_range: dbFields.salary_range ? String(dbFields.salary_range).trim().toLowerCase() : '',
+    team_size: dbFields.team_size ? String(dbFields.team_size).trim().toLowerCase() : '',
+    investment_stage: dbFields.investment_stage ? String(dbFields.investment_stage).trim().toLowerCase() : '',
+    remote_onsite: dbFields.remote_onsite ? String(dbFields.remote_onsite).trim().toLowerCase() : '',
+    work_hours: dbFields.work_hours ? String(dbFields.work_hours).trim().toLowerCase() : '',
+    equity: dbFields.equity ? String(dbFields.equity).trim().toLowerCase() : '',
+    hiring_urgency: dbFields.hiring_urgency ? String(dbFields.hiring_urgency).trim().toLowerCase() : '',
+    revenue_model: dbFields.revenue_model ? String(dbFields.revenue_model).trim().toLowerCase() : '',
     visa_sponsorship: dbFields.visa_sponsorship === true
   };
   
-  console.log('DEBUG - After mapping - Mapped job filter fields:', {
+  console.log('DEBUG - Normalized job fields for filtering:', {
     department: mappedJob.department,
     seniority_level: mappedJob.seniority_level,
     job_type: mappedJob.job_type,

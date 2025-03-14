@@ -22,25 +22,28 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
       to={`/jobs/${job.id}`}
       style={{ animationDelay }}
       className={cn(
-        "block opacity-0 animate-slide-up w-full rounded-xl overflow-hidden hover-scale relative",
-        isFeatured ? "glass-card border border-transparent" : "bg-white shadow-sm border border-border"
+        "block opacity-0 animate-slide-up w-full relative",
+        "hover-scale"
       )}
     >
-      {/* Add glow effect only for featured jobs, and only on the edges */}
+      {/* Glow effect container that's slightly larger than the card */}
       {isFeatured && (
-        <div className="absolute inset-0 -z-10 rounded-xl overflow-hidden">
+        <div className="absolute -inset-1 rounded-xl overflow-hidden">
           <GlowEffect
             colors={['#9b87f5', '#D946EF', '#F97316', '#0EA5E9']}
             mode="flowHorizontal"
             blur="medium"
-            scale={1.1}
+            scale={1.2}
             duration={8}
-            className="absolute -inset-1"
           />
         </div>
       )}
       
-      <div className="relative p-6 z-10 bg-white/80 backdrop-blur-sm rounded-xl">
+      {/* Actual card content with background */}
+      <div className={cn(
+        "relative z-10 p-6 rounded-xl overflow-hidden",
+        isFeatured ? "bg-white/90 backdrop-blur-sm border border-transparent" : "bg-white shadow-sm border border-border"
+      )}>
         <div className="flex items-start gap-4">
           <div className="h-12 w-12 rounded-md bg-secondary/50 flex items-center justify-center overflow-hidden">
             <img 
