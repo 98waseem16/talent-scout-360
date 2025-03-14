@@ -73,7 +73,7 @@ const Jobs: React.FC = () => {
                   <ActiveFilters 
                     activeFilters={activeFilters}
                     removeFilter={removeFilter}
-                    clearFilters={clearFilters}
+                    clearAllFilters={clearAllFilters} 
                   />
                 </div>
               </div>
