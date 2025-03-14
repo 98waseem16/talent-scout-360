@@ -76,9 +76,10 @@ export const useJobFilters = (jobs: Job[] | undefined) => {
   };
 
   // Normalize a string value for consistent comparison
-  const normalizeValue = (value: string | boolean | null | undefined): string => {
+  const normalizeValue = (value: string | boolean | string[] | null | undefined): string => {
     if (value === null || value === undefined) return '';
     if (typeof value === 'boolean') return value ? 'true' : 'false';
+    if (Array.isArray(value)) return value.join(' ').toLowerCase().trim();
     return value.toString().toLowerCase().trim();
   };
 
