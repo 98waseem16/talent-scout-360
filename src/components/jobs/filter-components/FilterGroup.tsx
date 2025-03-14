@@ -26,12 +26,17 @@ const FilterGroup: React.FC<FilterGroupProps> = ({
   onChange,
   options
 }) => {
+  // Handle selecting "all" or a specific value
+  const handleValueChange = (newValue: string) => {
+    onChange(newValue);
+  };
+
   return (
     <div className="space-y-1.5">
       <label className="text-sm font-medium text-muted-foreground">
         {label}
       </label>
-      <Select value={value} onValueChange={onChange}>
+      <Select value={value} onValueChange={handleValueChange}>
         <SelectTrigger className="w-full text-sm">
           <SelectValue placeholder={`All ${label.toLowerCase()}`} />
         </SelectTrigger>

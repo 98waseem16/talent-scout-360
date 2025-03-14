@@ -75,18 +75,11 @@ export const useJobFilters = (jobs: Job[] | undefined) => {
     }
   };
 
-  // Get human-readable display names for filter values
-  const getFilterDisplayName = (key: string, value: string | boolean): string => {
-    if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-    
-    // Convert camelCase to Title Case with spaces
-    const keyDisplay = key
-      .replace(/_/g, ' ')
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-      
-    return value;
+  // Normalize a string value for consistent comparison
+  const normalizeValue = (value: string | boolean | null | undefined): string => {
+    if (value === null || value === undefined) return '';
+    if (typeof value === 'boolean') return value ? 'true' : 'false';
+    return value.toString().toLowerCase().trim();
   };
 
   // Generate active filters for display
@@ -105,7 +98,7 @@ export const useJobFilters = (jobs: Job[] | undefined) => {
           .split(' ')
           .map(word => word.charAt(0).toUpperCase() + word.slice(1))
           .join(' '),
-        displayValue: getFilterDisplayName(key, value)
+        displayValue: typeof value === 'boolean' ? 'Yes' : value
       }))
   ];
 
@@ -114,7 +107,7 @@ export const useJobFilters = (jobs: Job[] | undefined) => {
     // Basic text search filters
     const matchesSearch = !searchQuery || searchInJob(job, searchQuery);
     const matchesLocation = !locationQuery || 
-      (job.location?.toLowerCase().includes(locationQuery.toLowerCase()));
+      (job.location && normalizeValue(job.location).includes(normalizeValue(locationQuery)));
     
     // If basic filters don't match, return early
     if (!matchesSearch || !matchesLocation) {
@@ -131,7 +124,7 @@ export const useJobFilters = (jobs: Job[] | undefined) => {
         return job.visa_sponsorship === true;
       }
       
-      // Get the actual job field value, ensuring it's lowercase for comparison
+      // Get the actual job field value
       const jobFieldValue = job[key as keyof Job];
       
       // Handle null/undefined/empty values
@@ -139,12 +132,12 @@ export const useJobFilters = (jobs: Job[] | undefined) => {
         return false;
       }
       
-      // Convert job value to lowercase string for comparison
-      const jobValueStr = String(jobFieldValue).toLowerCase();
-      const filterValueStr = String(value).toLowerCase();
+      // Normalize both values for comparison
+      const normalizedJobValue = normalizeValue(jobFieldValue);
+      const normalizedFilterValue = normalizeValue(value);
       
       // Check if the job value contains the filter value (for case-insensitive partial matching)
-      return jobValueStr.includes(filterValueStr);
+      return normalizedJobValue.includes(normalizedFilterValue);
     });
   }) || [];
 
@@ -158,9 +151,10 @@ export const useJobFilters = (jobs: Job[] | undefined) => {
       job.seniority_level || ''
     ];
     
-    const lowercaseQuery = query.toLowerCase();
+    const normalizedQuery = normalizeValue(query);
+    
     return searchFields.some(field => 
-      field.toLowerCase().includes(lowercaseQuery)
+      normalizeValue(field).includes(normalizedQuery)
     );
   }
 

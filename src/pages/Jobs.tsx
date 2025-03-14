@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getJobs } from '@/lib/jobs';
 import { useJobFilters } from '@/hooks/useJobFilters';
@@ -33,6 +33,15 @@ const Jobs: React.FC = () => {
     clearAllFilters,
     removeFilter
   } = useJobFilters(jobs);
+
+  // Debug logging to check the data and filters
+  useEffect(() => {
+    if (jobs) {
+      console.log('Jobs data:', jobs);
+      console.log('Current filters:', filters);
+      console.log('Filtered jobs count:', filteredJobs.length);
+    }
+  }, [jobs, filters, filteredJobs]);
 
   return (
     <>
@@ -73,7 +82,7 @@ const Jobs: React.FC = () => {
                   <ActiveFilters 
                     activeFilters={activeFilters}
                     removeFilter={removeFilter}
-                    clearAllFilters={clearAllFilters} 
+                    clearAllFilters={clearAllFilters}
                   />
                 </div>
               </div>
