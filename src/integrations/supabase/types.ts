@@ -22,7 +22,6 @@ export type Database = {
           hiring_urgency: string | null
           id: string
           investment_stage: string | null
-          job_type: string | null
           location: string
           logo: string
           posted: string
@@ -53,7 +52,6 @@ export type Database = {
           hiring_urgency?: string | null
           id?: string
           investment_stage?: string | null
-          job_type?: string | null
           location: string
           logo: string
           posted?: string
@@ -84,7 +82,6 @@ export type Database = {
           hiring_urgency?: string | null
           id?: string
           investment_stage?: string | null
-          job_type?: string | null
           location?: string
           logo?: string
           posted?: string
