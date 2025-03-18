@@ -160,8 +160,8 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       return true;
     }
     
-    if (jobValue === null || jobValue === undefined || jobValue === '') {
-      console.log('Job value is null/undefined/empty, returning false');
+    if (jobValue === null || jobValue === undefined) {
+      console.log('Job value is null/undefined, returning false');
       return false;
     }
     
@@ -170,17 +170,13 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     
     console.log(`Normalized values - Job: "${normalizedJobValue}" | Filter: "${normalizedFilterValue}"`);
     
-    const exactMatch = normalizedJobValue === normalizedFilterValue;
-    const jobContainsFilter = normalizedJobValue.includes(normalizedFilterValue);
-    const filterContainsJob = normalizedFilterValue.includes(normalizedJobValue);
+    const isMatch = normalizedJobValue === normalizedFilterValue || 
+                   normalizedJobValue.includes(normalizedFilterValue) || 
+                   normalizedFilterValue.includes(normalizedJobValue);
     
-    const seniorSpecialCase = 
-      (normalizedFilterValue === 'senior' && normalizedJobValue.includes('senior')) ||
-      (normalizedJobValue === 'senior' && normalizedFilterValue.includes('senior'));
+    console.log(`Match result: ${isMatch}`);
     
-    console.log(`Match results - Exact: ${exactMatch}, JobContainsFilter: ${jobContainsFilter}, FilterContainsJob: ${filterContainsJob}, SeniorSpecial: ${seniorSpecialCase}`);
-    
-    return exactMatch || jobContainsFilter || filterContainsJob || seniorSpecialCase;
+    return isMatch;
   };
 
   const filteredJobs = jobs?.filter(job => {

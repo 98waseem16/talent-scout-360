@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import JobCard from '@/components/JobCard';
@@ -28,18 +29,20 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
         remoteType: typeof job.remote_onsite
       })));
       
+      // Check for jobs with senior in the title or seniority level
       const seniorJobs = jobs.filter(job => {
-        const seniorityLevel = job.seniority_level ? job.seniority_level.toLowerCase() : '';
-        return seniorityLevel.includes('senior');
+        const title = job.title.toLowerCase();
+        const seniority = (job.seniority_level || '').toLowerCase();
+        return title.includes('senior') || seniority.includes('senior');
       });
       
       console.log(`Jobs with Senior in title or seniority: ${seniorJobs.length}`);
       if (seniorJobs.length > 0) {
         console.log('Senior Jobs:', seniorJobs.map(job => ({
+          id: job.id,
           title: job.title,
           seniority_level: `"${job.seniority_level}"`,
-          exactMatch: job.seniority_level === 'Senior',
-          containsSenior: job.seniority_level.toLowerCase().includes('senior')
+          seniorityType: typeof job.seniority_level
         })));
       }
       

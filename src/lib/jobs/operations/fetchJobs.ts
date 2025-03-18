@@ -24,26 +24,23 @@ export const getJobs = async (): Promise<Job[]> => {
       return staticJobs;
     }
 
-    // Log first job data to debug with enhanced field checking
+    // Debug raw database results
+    console.log('DEBUG - Raw database results:', data.length);
+    
     if (data[0]) {
-      console.log('DEBUG - Sample job from database - raw record:', data[0]);
-      console.log('DEBUG - Raw seniority_level value:', data[0].seniority_level);
-      console.log('DEBUG - Raw seniority_level type:', typeof data[0].seniority_level);
+      console.log('DEBUG - First job raw data:', {
+        id: data[0].id,
+        title: data[0].title,
+        department: data[0].department,
+        department_type: typeof data[0].department,
+        seniority_level: data[0].seniority_level,
+        seniority_level_type: typeof data[0].seniority_level,
+        remote_onsite: data[0].remote_onsite,
+        remote_onsite_type: typeof data[0].remote_onsite
+      });
     }
     
-    // Log entire job data for analysis
-    console.log('DEBUG - All jobs field values for filtering:', data.map(job => ({
-      id: job.id, 
-      title: job.title,
-      seniority_level: job.seniority_level,
-      seniority_level_type: typeof job.seniority_level,
-      department: job.department,
-      department_type: typeof job.department,
-      type: job.type,
-      type_type: typeof job.type
-    })));
-    
-    // Map database records to our frontend Job model with special care for string fields
+    // Map database records to our frontend Job model
     const jobs = data.map(record => {
       const mappedJob = mapDatabaseFieldsToJob(record);
       return mappedJob;
@@ -52,39 +49,18 @@ export const getJobs = async (): Promise<Job[]> => {
     // Log mapped jobs for debugging
     console.log(`Successfully mapped ${jobs.length} jobs from database`);
     if (jobs.length > 0) {
-      console.log('DEBUG - Sample mapped job with all filter fields:', {
+      console.log('DEBUG - First mapped job:', {
         id: jobs[0].id,
         title: jobs[0].title,
         department: `"${jobs[0].department}"`,
+        department_type: typeof jobs[0].department,
         seniority_level: `"${jobs[0].seniority_level}"`,
+        seniority_level_type: typeof jobs[0].seniority_level,
         type: `"${jobs[0].type}"`,
-        salary_range: `"${jobs[0].salary_range}"`,
-        team_size: `"${jobs[0].team_size}"`,
-        investment_stage: `"${jobs[0].investment_stage}"`,
+        type_type: typeof jobs[0].type,
         remote_onsite: `"${jobs[0].remote_onsite}"`,
-        work_hours: `"${jobs[0].work_hours}"`,
-        equity: `"${jobs[0].equity}"`,
-        hiring_urgency: `"${jobs[0].hiring_urgency}"`,
-        revenue_model: `"${jobs[0].revenue_model}"`,
-        visa_sponsorship: jobs[0].visa_sponsorship
+        remote_onsite_type: typeof jobs[0].remote_onsite
       });
-      
-      // Check for jobs with senior in the title or seniority level
-      const seniorJobs = jobs.filter(job => {
-        const title = job.title.toLowerCase();
-        const seniority = job.seniority_level.toLowerCase();
-        return title.includes('senior') || seniority.includes('senior');
-      });
-      
-      if (seniorJobs.length > 0) {
-        console.log(`Found ${seniorJobs.length} jobs with Senior in title or seniority level:`, 
-          seniorJobs.map(job => ({
-            title: job.title,
-            seniority_level: `"${job.seniority_level}"`,
-            hasMatchingSeniority: job.seniority_level.toLowerCase().includes('senior')
-          }))
-        );
-      }
     }
     
     return jobs;

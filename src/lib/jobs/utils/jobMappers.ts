@@ -38,17 +38,19 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return null;
   }
   
-  // Enhanced logging of raw database values to debug filtering issues
-  console.log('Raw job field values from database:', {
+  // Log raw database fields for debugging
+  console.log('Raw database fields:', {
     id: dbFields.id,
     title: dbFields.title,
     department: dbFields.department,
+    department_type: typeof dbFields.department,
     seniority_level: dbFields.seniority_level,
+    seniority_level_type: typeof dbFields.seniority_level,
     type: dbFields.type,
-    raw_type: typeof dbFields.type
+    type_type: typeof dbFields.type
   });
   
-  // Create a standardized job object with all fields properly converted to strings
+  // Create a standardized job object with all fields properly converted
   const mappedJob = {
     id: dbFields.id,
     title: dbFields.title || '',
@@ -66,28 +68,30 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // Convert all filter fields to proper string values, never allow 'undefined'
-    department: dbFields.department === null || dbFields.department === undefined ? '' : String(dbFields.department),
-    seniority_level: dbFields.seniority_level === null || dbFields.seniority_level === undefined ? '' : String(dbFields.seniority_level),
-    salary_range: dbFields.salary_range === null || dbFields.salary_range === undefined ? '' : String(dbFields.salary_range),
-    team_size: dbFields.team_size === null || dbFields.team_size === undefined ? '' : String(dbFields.team_size),
-    investment_stage: dbFields.investment_stage === null || dbFields.investment_stage === undefined ? '' : String(dbFields.investment_stage),
-    remote_onsite: dbFields.remote_onsite === null || dbFields.remote_onsite === undefined ? '' : String(dbFields.remote_onsite),
-    work_hours: dbFields.work_hours === null || dbFields.work_hours === undefined ? '' : String(dbFields.work_hours),
-    equity: dbFields.equity === null || dbFields.equity === undefined ? '' : String(dbFields.equity),
-    hiring_urgency: dbFields.hiring_urgency === null || dbFields.hiring_urgency === undefined ? '' : String(dbFields.hiring_urgency),
-    revenue_model: dbFields.revenue_model === null || dbFields.revenue_model === undefined ? '' : String(dbFields.revenue_model),
-    visa_sponsorship: dbFields.visa_sponsorship === true
+    // Fix: Properly handle null/undefined values for filter fields
+    // Convert all null/undefined values to empty strings, not the string "undefined"
+    department: dbFields.department || '',
+    seniority_level: dbFields.seniority_level || '',
+    salary_range: dbFields.salary_range || '',
+    team_size: dbFields.team_size || '',
+    investment_stage: dbFields.investment_stage || '',
+    remote_onsite: dbFields.remote_onsite || '',
+    work_hours: dbFields.work_hours || '',
+    equity: dbFields.equity || '',
+    hiring_urgency: dbFields.hiring_urgency || '',
+    revenue_model: dbFields.revenue_model || '',
+    visa_sponsorship: Boolean(dbFields.visa_sponsorship)
   };
   
-  // Add enhanced logging to verify mapped field values
-  console.log('Job after mapping - filter field actual values:', {
+  // Log the mapped job for verification
+  console.log('Job after mapping:', {
     id: mappedJob.id,
     title: mappedJob.title,
-    department: mappedJob.department,
+    department: `"${mappedJob.department}"`,
+    department_type: typeof mappedJob.department,
     seniority_level: `"${mappedJob.seniority_level}"`,
     seniority_level_type: typeof mappedJob.seniority_level,
-    type: mappedJob.type,
+    type: `"${mappedJob.type}"`,
     type_type: typeof mappedJob.type
   });
   
