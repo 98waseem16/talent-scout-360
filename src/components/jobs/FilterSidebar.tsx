@@ -45,7 +45,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   useEffect(() => {
     console.log('Current filters in sidebar:', filters);
     
-    // Log active filters with their values
+    // Log active filters with actual values, not string representations
     const activeFilters = Object.entries(filters)
       .filter(([key, value]) => value !== 'all' && value !== false);
       

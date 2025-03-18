@@ -16,16 +16,17 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
     if (jobs && jobs.length > 0) {
       console.log(`Total jobs available: ${jobs.length}`);
       
+      // Enhanced debugging with actual values, not string representations
       console.log('First 3 jobs with filter fields:', jobs.slice(0, 3).map(job => ({
         id: job.id,
         title: job.title,
-        department: `"${job.department}"`,
+        department: job.department,
         departmentType: typeof job.department,
-        seniority_level: `"${job.seniority_level}"`,
+        seniority_level: job.seniority_level,
         seniorityType: typeof job.seniority_level,
-        type: `"${job.type}"`,
+        type: job.type,
         typeType: typeof job.type,
-        remote_onsite: `"${job.remote_onsite}"`,
+        remote_onsite: job.remote_onsite,
         remoteType: typeof job.remote_onsite
       })));
       
@@ -41,7 +42,7 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
         console.log('Senior Jobs:', seniorJobs.map(job => ({
           id: job.id,
           title: job.title,
-          seniority_level: `"${job.seniority_level}"`,
+          seniority_level: job.seniority_level,
           seniorityType: typeof job.seniority_level
         })));
       }
@@ -52,9 +53,9 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
         console.log('First filtered job:', {
           id: filteredJobs[0].id,
           title: filteredJobs[0].title,
-          department: `"${filteredJobs[0].department}"`,
-          seniority_level: `"${filteredJobs[0].seniority_level}"`,
-          type: `"${filteredJobs[0].type}"`
+          department: filteredJobs[0].department,
+          seniority_level: filteredJobs[0].seniority_level,
+          type: filteredJobs[0].type
         });
       }
     }
