@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import JobCard from '@/components/JobCard';
@@ -12,34 +11,47 @@ interface JobsListProps {
 }
 
 const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJobs }) => {
-  // Enhanced debugging to better understand job data
   useEffect(() => {
     if (jobs && jobs.length > 0) {
       console.log(`Total jobs available: ${jobs.length}`);
       
-      // Log first few jobs with their filter fields as primitive values
       console.log('First 3 jobs with filter fields:', jobs.slice(0, 3).map(job => ({
         id: job.id,
         title: job.title,
-        department: job.department,
+        department: `"${job.department}"`,
         departmentType: typeof job.department,
-        seniority_level: job.seniority_level,
+        seniority_level: `"${job.seniority_level}"`,
         seniorityType: typeof job.seniority_level,
-        type: job.type,
+        type: `"${job.type}"`,
         typeType: typeof job.type,
-        remote_onsite: job.remote_onsite
+        remote_onsite: `"${job.remote_onsite}"`,
+        remoteType: typeof job.remote_onsite
       })));
+      
+      const seniorJobs = jobs.filter(job => {
+        const seniorityLevel = job.seniority_level ? job.seniority_level.toLowerCase() : '';
+        return seniorityLevel.includes('senior');
+      });
+      
+      console.log(`Jobs with Senior in title or seniority: ${seniorJobs.length}`);
+      if (seniorJobs.length > 0) {
+        console.log('Senior Jobs:', seniorJobs.map(job => ({
+          title: job.title,
+          seniority_level: `"${job.seniority_level}"`,
+          exactMatch: job.seniority_level === 'Senior',
+          containsSenior: job.seniority_level.toLowerCase().includes('senior')
+        })));
+      }
       
       console.log(`Filtered jobs: ${filteredJobs.length}`);
       
-      // If we have filtered jobs, log their values too
       if (filteredJobs.length > 0) {
         console.log('First filtered job:', {
           id: filteredJobs[0].id,
           title: filteredJobs[0].title,
-          department: filteredJobs[0].department,
-          seniority_level: filteredJobs[0].seniority_level,
-          type: filteredJobs[0].type
+          department: `"${filteredJobs[0].department}"`,
+          seniority_level: `"${filteredJobs[0].seniority_level}"`,
+          type: `"${filteredJobs[0].type}"`
         });
       }
     }
@@ -101,12 +113,13 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
             <p>Total jobs: {jobs?.length || 0}</p>
             <p>Active filters: {filteredJobs.length === 0 && jobs?.length ? (
               <ul className="list-disc pl-5 mt-2">
-                {jobs.slice(0, 2).map(job => (
+                {jobs.slice(0, 3).map(job => (
                   <li key={job.id} className="mb-2">
                     <strong>Job:</strong> {job.title}<br />
                     <strong>Department:</strong> "{job.department}" ({typeof job.department})<br />
                     <strong>Seniority:</strong> "{job.seniority_level}" ({typeof job.seniority_level})<br />
-                    <strong>Type:</strong> "{job.type}" ({typeof job.type})
+                    <strong>Type:</strong> "{job.type}" ({typeof job.type})<br />
+                    <strong>Remote:</strong> "{job.remote_onsite}" ({typeof job.remote_onsite})
                   </li>
                 ))}
               </ul>

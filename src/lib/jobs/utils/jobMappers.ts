@@ -38,16 +38,17 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return null;
   }
   
-  // Log raw field values directly as primitive values
+  // Enhanced logging of raw database values to debug filtering issues
   console.log('Raw job field values from database:', {
     id: dbFields.id,
     title: dbFields.title,
     department: dbFields.department,
     seniority_level: dbFields.seniority_level,
-    type: dbFields.type
+    type: dbFields.type,
+    raw_type: typeof dbFields.type
   });
   
-  // Create a standardized job object with all fields as their primitive values
+  // Create a standardized job object with all fields properly converted to strings
   const mappedJob = {
     id: dbFields.id,
     title: dbFields.title || '',
@@ -65,27 +66,29 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // Always store these as primitive string values
-    department: String(dbFields.department || ''),
-    seniority_level: String(dbFields.seniority_level || ''),
-    salary_range: String(dbFields.salary_range || ''),
-    team_size: String(dbFields.team_size || ''),
-    investment_stage: String(dbFields.investment_stage || ''),
-    remote_onsite: String(dbFields.remote_onsite || ''),
-    work_hours: String(dbFields.work_hours || ''),
-    equity: String(dbFields.equity || ''),
-    hiring_urgency: String(dbFields.hiring_urgency || ''),
-    revenue_model: String(dbFields.revenue_model || ''),
+    // Convert all filter fields to proper string values, never allow 'undefined'
+    department: dbFields.department === null || dbFields.department === undefined ? '' : String(dbFields.department),
+    seniority_level: dbFields.seniority_level === null || dbFields.seniority_level === undefined ? '' : String(dbFields.seniority_level),
+    salary_range: dbFields.salary_range === null || dbFields.salary_range === undefined ? '' : String(dbFields.salary_range),
+    team_size: dbFields.team_size === null || dbFields.team_size === undefined ? '' : String(dbFields.team_size),
+    investment_stage: dbFields.investment_stage === null || dbFields.investment_stage === undefined ? '' : String(dbFields.investment_stage),
+    remote_onsite: dbFields.remote_onsite === null || dbFields.remote_onsite === undefined ? '' : String(dbFields.remote_onsite),
+    work_hours: dbFields.work_hours === null || dbFields.work_hours === undefined ? '' : String(dbFields.work_hours),
+    equity: dbFields.equity === null || dbFields.equity === undefined ? '' : String(dbFields.equity),
+    hiring_urgency: dbFields.hiring_urgency === null || dbFields.hiring_urgency === undefined ? '' : String(dbFields.hiring_urgency),
+    revenue_model: dbFields.revenue_model === null || dbFields.revenue_model === undefined ? '' : String(dbFields.revenue_model),
     visa_sponsorship: dbFields.visa_sponsorship === true
   };
   
-  // Log the mapped job to verify our transformations
-  console.log('Job after mapping - field types:', {
+  // Add enhanced logging to verify mapped field values
+  console.log('Job after mapping - filter field actual values:', {
     id: mappedJob.id,
     title: mappedJob.title,
-    department: typeof mappedJob.department,
-    seniority_level: typeof mappedJob.seniority_level,
-    type: typeof mappedJob.type
+    department: mappedJob.department,
+    seniority_level: `"${mappedJob.seniority_level}"`,
+    seniority_level_type: typeof mappedJob.seniority_level,
+    type: mappedJob.type,
+    type_type: typeof mappedJob.type
   });
   
   return mappedJob;
