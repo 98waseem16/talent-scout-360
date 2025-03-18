@@ -23,11 +23,6 @@ export const createJobListing = async (jobData: JobFormData): Promise<string> =>
     // Ensure user_id is set correctly
     dbFields.user_id = session.session.user.id;
     
-    // Ensure all required fields are present
-    if (!dbFields.requirements) dbFields.requirements = [];
-    if (!dbFields.benefits) dbFields.benefits = [];
-    if (!dbFields.responsibilities) dbFields.responsibilities = [];
-    
     const { data, error } = await supabase
       .from('job_postings')
       .insert(dbFields)
@@ -79,11 +74,6 @@ export const updateJobListing = async (id: string, jobData: JobFormData): Promis
     
     // Ensure user_id is set correctly
     dbFields.user_id = session.session.user.id;
-    
-    // Ensure all required fields are present
-    if (!dbFields.requirements) dbFields.requirements = [];
-    if (!dbFields.benefits) dbFields.benefits = [];
-    if (!dbFields.responsibilities) dbFields.responsibilities = [];
     
     // Add updated_at field
     const fieldsWithTimestamp = {
@@ -140,10 +130,7 @@ export const seedJobs = async () => {
       requirements: job.requirements,
       benefits: job.benefits,
       logo: job.logo,
-      featured: job.featured,
-      // Add default values for required fields
-      application_url: job.application_url || 'https://example.com/apply',
-      user_id: '00000000-0000-0000-0000-000000000000' // Default system user ID
+      featured: job.featured
     }));
 
     const { error } = await supabase

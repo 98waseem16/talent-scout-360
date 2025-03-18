@@ -1,11 +1,10 @@
+
 import { useState, useEffect } from 'react';
 import { getJobById } from '@/lib/jobs/jobsApi';
 import { toast } from 'sonner';
 import { JobFormData } from '@/lib/types/job.types';
-import { useAuth } from '@/contexts/AuthContext';
 
 export const useJobFormData = (id?: string) => {
-  const { user } = useAuth();
   const [formData, setFormData] = useState<JobFormData>({
     title: '',
     company: '',
@@ -30,7 +29,6 @@ export const useJobFormData = (id?: string) => {
     hiring_urgency: '',
     featured: false,
     application_url: '',
-    user_id: user?.id || '', // Add user_id with fallback
   });
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -66,7 +64,6 @@ export const useJobFormData = (id?: string) => {
               visa_sponsorship: jobData.visa_sponsorship || false,
               hiring_urgency: jobData.hiring_urgency || '',
               application_url: jobData.application_url || '',
-              user_id: user?.id || '', // Add user_id with fallback
             });
           }
         } catch (error) {
@@ -77,7 +74,7 @@ export const useJobFormData = (id?: string) => {
 
       fetchJobData();
     }
-  }, [id, isEditMode, user]);
+  }, [id, isEditMode]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>

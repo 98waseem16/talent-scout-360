@@ -7,7 +7,7 @@ export interface Job {
   company: string;
   location: string;
   salary: string;
-  type: string; // Changed from literal type union to accept any string
+  type: 'Full-time' | 'Part-time' | 'Contract' | 'Remote';
   posted: string;
   description: string;
   responsibilities: string[];
@@ -16,17 +16,6 @@ export interface Job {
   logo: string;
   featured?: boolean;
   application_url: string;
-  department?: string;
-  seniority_level?: string;
-  salary_range?: string;
-  team_size?: string;
-  investment_stage?: string;
-  remote_onsite?: string;
-  work_hours?: string;
-  equity?: string;
-  hiring_urgency?: string;
-  revenue_model?: string;
-  visa_sponsorship?: boolean;
 }
 
 export const staticJobs: Job[] = [
@@ -434,9 +423,8 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
 
 export const seedJobs = async () => {
   try {
-    const enhancedStaticJobs = staticJobs.map(job => {
-      // Add missing filter fields to each static job
-      return {
+    const { error } = await supabase.from('job_postings').insert(
+      staticJobs.map(job => ({
         title: job.title,
         company: job.company,
         location: job.location,
@@ -448,33 +436,12 @@ export const seedJobs = async () => {
         benefits: job.benefits,
         logo: job.logo,
         featured: job.featured,
-        application_url: job.application_url,
-        // Additional filter fields with appropriate values
-        department: job.title.includes('Engineer') ? 'Engineering' : 
-                   job.title.includes('Designer') ? 'Design' :
-                   job.title.includes('Marketing') ? 'Marketing' : 
-                   job.title.includes('Product') ? 'Product' : 'Operations',
-        seniority_level: job.title.includes('Senior') ? 'Senior' : 
-                         job.title.includes('Junior') ? 'Entry-Level' : 'Mid-Level',
-        salary_range: job.salary.includes('120') ? '$120K+' : 
-                     job.salary.includes('90') ? '$80K-$120K' : '$60K-$80K',
-        team_size: '11-50',
-        investment_stage: 'Series A',
-        remote_onsite: job.type === 'Remote' ? 'Fully Remote' : 
-                      job.location.includes('Remote') ? 'Fully Remote' : 'Hybrid',
-        work_hours: 'Flexible',
-        equity: job.title.includes('Senior') ? '0.5%-1%' : 
-               job.title.includes('VP') || job.title.includes('C-Level') ? '1%+' : '0.1%-0.5%',
-        hiring_urgency: 'Within a Month',
-        revenue_model: 'SaaS',
-        visa_sponsorship: false
-      };
-    });
-
-    const { error } = await supabase.from('job_postings').insert(enhancedStaticJobs);
+        application_url: job.application_url
+      }))
+    );
 
     if (error) throw error;
-    console.log('Sample jobs seeded successfully with filter fields');
+    console.log('Sample jobs seeded successfully');
   } catch (error) {
     console.error('Error seeding jobs:', error);
   }

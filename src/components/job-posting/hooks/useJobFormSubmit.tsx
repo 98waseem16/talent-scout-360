@@ -48,7 +48,7 @@ export const useJobFormSubmit = (id?: string) => {
     try {
       console.log('Submitting job form data:', formData);
       
-      // Prepare job data with user_id
+      // Prepare job data with default logo URL and user_id
       let jobDataToSubmit: JobFormData = {
         ...formData,
         user_id: user.id

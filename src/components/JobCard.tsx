@@ -3,7 +3,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Briefcase, MapPin, DollarSign, Clock } from 'lucide-react';
-import type { Job } from '@/lib/types/job.types';
+import type { Job } from '@/lib/jobs';
 import { GlowEffect } from '@/components/ui/glow-effect';
 
 interface JobCardProps {
