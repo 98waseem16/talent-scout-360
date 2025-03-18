@@ -1,5 +1,5 @@
 
-import { JobDatabaseFields, JobFormData } from '../../types/job.types';
+import { JobDatabaseFields, JobFormData, Job } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
   formData: JobFormData
@@ -32,7 +32,7 @@ export const mapJobFormDataToDatabaseFields = (
   };
 };
 
-export const mapDatabaseFieldsToJob = (dbFields: any) => {
+export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
   if (!dbFields) {
     console.error('mapDatabaseFieldsToJob received null or undefined dbFields');
     return null;
@@ -77,17 +77,17 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: cleanStringField(dbFields.application_url),
     user_id: cleanStringField(dbFields.user_id),
     
-    // Critical filter fields - ensure they're clean strings
-    department: cleanStringField(dbFields.department),
-    seniority_level: cleanStringField(dbFields.seniority_level),
-    salary_range: cleanStringField(dbFields.salary_range),
-    team_size: cleanStringField(dbFields.team_size),
-    investment_stage: cleanStringField(dbFields.investment_stage),
-    remote_onsite: cleanStringField(dbFields.remote_onsite),
-    work_hours: cleanStringField(dbFields.work_hours),
-    equity: cleanStringField(dbFields.equity),
-    hiring_urgency: cleanStringField(dbFields.hiring_urgency),
-    revenue_model: cleanStringField(dbFields.revenue_model),
+    // Critical filter fields - ensure they're clean strings and have default values if missing
+    department: cleanStringField(dbFields.department) || 'Engineering', // Default value
+    seniority_level: cleanStringField(dbFields.seniority_level) || 'Mid-Level', // Default value
+    salary_range: cleanStringField(dbFields.salary_range) || '$80K-$120K', // Default value
+    team_size: cleanStringField(dbFields.team_size) || '11-50', // Default value
+    investment_stage: cleanStringField(dbFields.investment_stage) || 'Series A', // Default value
+    remote_onsite: cleanStringField(dbFields.remote_onsite) || 'Hybrid', // Default value
+    work_hours: cleanStringField(dbFields.work_hours) || 'Flexible', // Default value
+    equity: cleanStringField(dbFields.equity) || 'None', // Default value
+    hiring_urgency: cleanStringField(dbFields.hiring_urgency) || 'Within a Month', // Default value
+    revenue_model: cleanStringField(dbFields.revenue_model) || 'SaaS', // Default value
     visa_sponsorship: Boolean(dbFields.visa_sponsorship)
   };
   
