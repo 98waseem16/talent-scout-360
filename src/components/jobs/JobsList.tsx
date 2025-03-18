@@ -17,7 +17,7 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
     if (jobs && jobs.length > 0) {
       console.log(`Total jobs available: ${jobs.length}`);
       
-      // Log first few jobs with their filter fields (as primitive values)
+      // Log first few jobs with their filter fields as primitive values
       console.log('First 3 jobs with filter fields:', jobs.slice(0, 3).map(job => ({
         id: job.id,
         title: job.title,

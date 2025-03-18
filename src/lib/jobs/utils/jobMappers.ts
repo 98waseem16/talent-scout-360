@@ -1,3 +1,4 @@
+
 import { JobDatabaseFields, JobFormData } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
@@ -37,7 +38,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return null;
   }
   
-  // Critical debug: Log raw field values to verify what we're getting from database
+  // Log raw field values directly as primitive values
   console.log('Raw job field values from database:', {
     id: dbFields.id,
     title: dbFields.title,
@@ -46,14 +47,14 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     type: dbFields.type
   });
   
-  // Create a standardized, normalized version of the job object
+  // Create a standardized job object with all fields as their primitive values
   const mappedJob = {
     id: dbFields.id,
     title: dbFields.title || '',
     company: dbFields.company || '',
     location: dbFields.location || '',
     salary: dbFields.salary || '',
-    type: dbFields.type || 'Full-time', // Use only type field
+    type: dbFields.type || 'Full-time',
     posted: dbFields.posted || '',
     description: dbFields.description || '',
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
@@ -64,21 +65,21 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id,
     
-    // Normalize all filter fields as primitive string values, not objects
-    department: formatFilterValue(dbFields.department),
-    seniority_level: formatFilterValue(dbFields.seniority_level),
-    salary_range: formatFilterValue(dbFields.salary_range),
-    team_size: formatFilterValue(dbFields.team_size),
-    investment_stage: formatFilterValue(dbFields.investment_stage),
-    remote_onsite: formatFilterValue(dbFields.remote_onsite),
-    work_hours: formatFilterValue(dbFields.work_hours),
-    equity: formatFilterValue(dbFields.equity),
-    hiring_urgency: formatFilterValue(dbFields.hiring_urgency),
-    revenue_model: formatFilterValue(dbFields.revenue_model),
+    // Always store these as primitive string values
+    department: String(dbFields.department || ''),
+    seniority_level: String(dbFields.seniority_level || ''),
+    salary_range: String(dbFields.salary_range || ''),
+    team_size: String(dbFields.team_size || ''),
+    investment_stage: String(dbFields.investment_stage || ''),
+    remote_onsite: String(dbFields.remote_onsite || ''),
+    work_hours: String(dbFields.work_hours || ''),
+    equity: String(dbFields.equity || ''),
+    hiring_urgency: String(dbFields.hiring_urgency || ''),
+    revenue_model: String(dbFields.revenue_model || ''),
     visa_sponsorship: dbFields.visa_sponsorship === true
   };
   
-  // Debug the mapped job to verify our transformations worked
+  // Log the mapped job to verify our transformations
   console.log('Job after mapping - field types:', {
     id: mappedJob.id,
     title: mappedJob.title,
@@ -89,24 +90,3 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   
   return mappedJob;
 };
-
-// Improved helper function to format filter values as simple strings
-function formatFilterValue(value: any): string {
-  // Handle null/undefined
-  if (value === null || value === undefined) {
-    return '';
-  }
-  
-  // Handle objects that might be returned (like undefined objects from console logs)
-  if (value && typeof value === 'object') {
-    // If it's an object with a value property, use that
-    if ('value' in value) {
-      return formatFilterValue(value.value);
-    }
-    // Otherwise convert the object to a string representation
-    return String(value).trim();
-  }
-  
-  // Convert to string and trim whitespace
-  return String(value).trim();
-}

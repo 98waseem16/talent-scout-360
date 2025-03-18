@@ -131,7 +131,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     teamSize: 'team_size',
     investmentStage: 'investment_stage',
     remote: 'remote_onsite',
-    jobType: 'type', // Changed to use only 'type'
+    jobType: 'type',
     workHours: 'work_hours',
     equity: 'equity',
     hiringUrgency: 'hiring_urgency',
@@ -145,26 +145,22 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     return str.toString().trim().toLowerCase();
   };
 
-  // Enhanced debugging function to log filter information with proper type info
-  const debugFilter = (jobValue: any, filterValue: string, filterType: string, jobId: string, result: boolean) => {
-    console.log(`Filter debugging for job ${jobId} with ${filterType}:`, { 
-      jobValue: String(jobValue),
-      jobValueType: typeof jobValue,
-      normalizedJobValue: normalizeString(jobValue),
-      filterValue,
-      normalizedFilterValue: normalizeString(filterValue),
-      matches: result
-    });
+  // Get the correct job field value
+  const getJobFieldValue = (job: Job, filterType: string): any => {
+    const fieldName = fieldMappings[filterType];
+    if (!fieldName) return null;
+    
+    console.log(`Getting job field value for ${filterType} using field name: ${String(fieldName)}`);
+    return job[fieldName as keyof Job];
   };
 
-  // Improved matching function with better type handling
-  const matchesFilter = (jobValue: any, filterValue: string, filterType: string, jobId: string): boolean => {
+  // Improved matching function with better string handling
+  const matchesFilter = (jobValue: any, filterValue: string): boolean => {
     // If filter is set to 'all', always match
     if (filterValue === 'all') return true;
     
     // Handle missing job values
     if (jobValue === null || jobValue === undefined || jobValue === '') {
-      debugFilter(jobValue, filterValue, filterType, jobId, false);
       return false;
     }
     
@@ -173,23 +169,9 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const normalizedFilterValue = normalizeString(filterValue);
     
     // Check for exact or partial match
-    const exactMatch = normalizedJobValue === normalizedFilterValue;
-    const partialMatch = normalizedJobValue.includes(normalizedFilterValue) || 
-                        normalizedFilterValue.includes(normalizedJobValue);
-    
-    const result = exactMatch || partialMatch;
-    debugFilter(jobValue, filterValue, filterType, jobId, result);
-    return result;
-  };
-
-  // Get the correct job field value
-  const getJobFieldValue = (job: Job, filterType: string): any => {
-    const fieldName = fieldMappings[filterType];
-    if (!fieldName) return null;
-    
-    // Log field access for debugging
-    console.log(`Getting job field value for ${filterType} using field name: ${String(fieldName)}`);
-    return job[fieldName as keyof Job];
+    return normalizedJobValue === normalizedFilterValue || 
+           normalizedJobValue.includes(normalizedFilterValue) || 
+           normalizedFilterValue.includes(normalizedJobValue);
   };
 
   // Improved filtering logic
@@ -244,7 +226,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       // For all other filters (string comparison)
       const jobValue = getJobFieldValue(job, filterType);
       
-      if (!matchesFilter(jobValue, filterValue as string, filterType, job.id)) {
+      if (!matchesFilter(jobValue, filterValue as string)) {
         return false;
       }
     }
