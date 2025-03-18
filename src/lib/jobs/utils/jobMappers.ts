@@ -1,3 +1,4 @@
+
 import { JobDatabaseFields, JobFormData } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
@@ -37,42 +38,58 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return null;
   }
   
-  // Create a standardized job object with all fields properly converted
+  // CRITICAL FIX: Convert string values of "undefined" or "null" to empty strings
+  const cleanStringField = (value: any): string => {
+    if (value === null || value === undefined || value === "undefined" || value === "null") {
+      return '';
+    }
+    return String(value);
+  };
+  
+  // For debug purposes, show the original values for key filter fields
+  console.log(`🔄 MAPPING JOB: "${dbFields.title}" (ID: ${dbFields.id})`);
+  console.log(`  Original seniority_level: "${dbFields.seniority_level}" (${typeof dbFields.seniority_level})`);
+  console.log(`  Original department: "${dbFields.department}" (${typeof dbFields.department})`);
+  console.log(`  Original remote_onsite: "${dbFields.remote_onsite}" (${typeof dbFields.remote_onsite})`);
+  console.log(`  Original type: "${dbFields.type}" (${typeof dbFields.type})`);
+  
+  // Create a standardized job object with proper value conversions
   const mappedJob = {
     id: dbFields.id,
-    title: dbFields.title || '',
-    company: dbFields.company || '',
-    location: dbFields.location || '',
-    salary: dbFields.salary || '',
-    type: dbFields.type || 'Full-time',
-    posted: dbFields.posted || '',
-    description: dbFields.description || '',
+    title: cleanStringField(dbFields.title),
+    company: cleanStringField(dbFields.company),
+    location: cleanStringField(dbFields.location),
+    salary: cleanStringField(dbFields.salary),
+    type: cleanStringField(dbFields.type) || 'Full-time',
+    posted: cleanStringField(dbFields.posted),
+    description: cleanStringField(dbFields.description),
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
     requirements: Array.isArray(dbFields.requirements) ? dbFields.requirements : [],
     benefits: Array.isArray(dbFields.benefits) ? dbFields.benefits : [],
-    logo: dbFields.logo || '/placeholder.svg',
+    logo: cleanStringField(dbFields.logo) || '/placeholder.svg',
     featured: Boolean(dbFields.featured),
-    application_url: dbFields.application_url || '',
-    user_id: dbFields.user_id || '',
+    application_url: cleanStringField(dbFields.application_url),
+    user_id: cleanStringField(dbFields.user_id),
     
-    // Critical fix: Ensure all fields have proper default values and are not undefined strings
-    department: dbFields.department || '',
-    seniority_level: dbFields.seniority_level || '',
-    salary_range: dbFields.salary_range || '',
-    team_size: dbFields.team_size || '',
-    investment_stage: dbFields.investment_stage || '',
-    remote_onsite: dbFields.remote_onsite || '',
-    work_hours: dbFields.work_hours || '',
-    equity: dbFields.equity || '',
-    hiring_urgency: dbFields.hiring_urgency || '',
-    revenue_model: dbFields.revenue_model || '',
+    // Critical filter fields - ensure they're clean strings
+    department: cleanStringField(dbFields.department),
+    seniority_level: cleanStringField(dbFields.seniority_level),
+    salary_range: cleanStringField(dbFields.salary_range),
+    team_size: cleanStringField(dbFields.team_size),
+    investment_stage: cleanStringField(dbFields.investment_stage),
+    remote_onsite: cleanStringField(dbFields.remote_onsite),
+    work_hours: cleanStringField(dbFields.work_hours),
+    equity: cleanStringField(dbFields.equity),
+    hiring_urgency: cleanStringField(dbFields.hiring_urgency),
+    revenue_model: cleanStringField(dbFields.revenue_model),
     visa_sponsorship: Boolean(dbFields.visa_sponsorship)
   };
   
-  // More focused logging on key fields that need debugging
-  if (dbFields.seniority_level) {
-    console.log(`Job mapping - Found seniority_level: "${dbFields.seniority_level}" for job: ${mappedJob.title}`);
-  }
+  // After mapping, log the critical fields to verify proper conversions
+  console.log(`  Mapped seniority_level: "${mappedJob.seniority_level}" (${typeof mappedJob.seniority_level})`);
+  console.log(`  Mapped department: "${mappedJob.department}" (${typeof mappedJob.department})`);
+  console.log(`  Mapped remote_onsite: "${mappedJob.remote_onsite}" (${typeof mappedJob.remote_onsite})`);
+  console.log(`  Mapped type: "${mappedJob.type}" (${typeof mappedJob.type})`);
   
   return mappedJob;
 };

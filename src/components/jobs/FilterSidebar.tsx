@@ -41,6 +41,12 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
+  // Add debugging to detect filter changes 
+  const handleFilterChange = (field: string, value: string) => {
+    console.log(`🔄 Filter change in sidebar: ${field} = "${value}"`);
+    setFilters(prev => ({ ...prev, [field]: value }));
+  };
+
   return (
     <aside 
       className={`w-full md:w-64 md:sticky top-24 transition-all duration-300 ${
@@ -50,7 +56,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
       <div className="bg-white rounded-xl border border-border shadow-sm p-5 mb-6">
         <JobFilters 
           filters={filters} 
-          setFilters={setFilters} 
+          setFilters={handleFilterChange} 
           clearAllFilters={clearAllFilters} 
         />
       </div>

@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, Filter, Building, Briefcase, DollarSign, Users, BarChart2, Globe, Clock } from 'lucide-react';
 import FilterSelect from './FilterSelect';
 import { Switch } from '@/components/ui/switch';
@@ -24,7 +24,7 @@ const departmentOptions: FilterOption[] = [
   { label: 'Finance', value: 'Finance' },
 ];
 
-// Seniority options
+// Seniority options - CRITICAL: These MUST match exact values in database
 const seniorityOptions: FilterOption[] = [
   { label: 'Internship', value: 'Internship' },
   { label: 'Entry-Level', value: 'Entry-Level' },
@@ -128,21 +128,32 @@ interface JobFiltersProps {
     revenueModel: string;
     visaSponsorship: boolean;
   };
-  setFilters: React.Dispatch<React.SetStateAction<any>>;
+  setFilters: (field: string, value: string) => void;
   clearAllFilters: () => void;
 }
 
 const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFilters }) => {
+  // Add useEffect to log the current filter state when component renders
+  useEffect(() => {
+    console.log('🧩 JobFilters component filters state:', filters);
+    
+    if (filters.seniority && filters.seniority !== 'all') {
+      console.log(`🔍 Current seniority filter value: "${filters.seniority}"`);
+    }
+  }, [filters]);
+
   const handleFilterChange = (field: string, value: string) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
+    console.log(`🔄 Filter change in JobFilters: ${field} = "${value}"`);
+    setFilters(field, value);
   };
 
   const handleSwitchChange = (field: string, checked: boolean) => {
-    setFilters(prev => ({ ...prev, [field]: checked }));
+    console.log(`🔄 Switch change in JobFilters: ${field} = ${checked}`);
+    setFilters(field, checked.toString());
   };
 
   const hasActiveFilters = Object.values(filters).some(value => 
-    typeof value === 'boolean' ? value : value !== ''
+    typeof value === 'boolean' ? value : value !== 'all'
   );
 
   return (

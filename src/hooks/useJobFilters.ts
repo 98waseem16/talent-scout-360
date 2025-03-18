@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Job } from '@/lib/types/job.types';
@@ -57,6 +58,13 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     revenueModel: 'all',
     visaSponsorship: false
   });
+
+  // CRITICAL: Debug filter state when it changes
+  useEffect(() => {
+    if (filters.seniority !== 'all') {
+      console.log(`🔍 FILTER CHANGE: Seniority filter set to "${filters.seniority}"`);
+    }
+  }, [filters.seniority]);
 
   useEffect(() => {
     const params = new URLSearchParams();
@@ -120,10 +128,10 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Updated field name mappings to match the Job object properties exactly
+  // Exact field mappings from UI filter names to Job object property names
   const fieldMappings: Record<string, keyof Job> = {
     department: 'department',
-    seniority: 'seniority_level', // This is critical - UI uses 'seniority' but DB uses 'seniority_level'
+    seniority: 'seniority_level', // UI filter name -> DB field name
     salaryRange: 'salary_range',
     teamSize: 'team_size',
     investmentStage: 'investment_stage',
@@ -136,55 +144,85 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     visaSponsorship: 'visa_sponsorship'
   };
 
-  // Improved string normalization to handle edge cases
+  // Improved string normalization
   const normalizeString = (str: string | null | undefined): string => {
     if (str === null || str === undefined) return '';
     return String(str).trim().toLowerCase();
   };
 
-  // Enhanced function to get job field value with better logging
+  // Get job field value with enhanced debug logging
   const getJobFieldValue = (job: Job, filterType: string): any => {
     const fieldName = fieldMappings[filterType];
     if (!fieldName) {
-      console.log(`No field mapping found for filter type: ${filterType}`);
+      console.error(`Missing field mapping for filter type: ${filterType}`);
       return null;
     }
     
     const value = job[fieldName as keyof Job];
     
-    // Add detailed logging for seniority filter to help debug
-    if (filterType === 'seniority') {
-      console.log(`Getting field value for seniority using field name: ${String(fieldName)}`);
-      console.log(`Job title: ${job.title}, Seniority value: "${value}", Type: ${typeof value}`);
+    // Add detailed logging for seniority filter
+    if (filterType === 'seniority' && filters.seniority !== 'all') {
+      console.log(`🧪 FILTER CHECK: Job "${job.title}" (ID: ${job.id})`);
+      console.log(`🧪 FILTER CHECK: Checking "${filterType}" filter using DB field "${String(fieldName)}"`);
+      console.log(`🧪 FILTER CHECK: Raw DB value = "${value}" (${typeof value})`);
     }
     
     return value;
   };
 
-  // Improved matching logic with better output
-  const matchesFilter = (jobValue: any, filterValue: string): boolean => {
-    // Return true for "all" filter value
+  // Value matching logic with additional debugging
+  const matchesFilter = (jobValue: any, filterValue: string, filterType: string): boolean => {
+    // Return true for "all" filter
     if (filterValue === 'all') return true;
     
     // Check for empty job values
     if (jobValue === null || jobValue === undefined || jobValue === '') {
+      if (filterType === 'seniority' && filters.seniority !== 'all') {
+        console.log(`❌ NO MATCH: Job value is empty/null/undefined`);
+      }
       return false;
     }
     
     const normalizedJobValue = normalizeString(jobValue);
     const normalizedFilterValue = normalizeString(filterValue);
     
-    // Debug output for seniority filter
-    if (normalizedFilterValue.includes('senior')) {
-      console.log(`Senior filter - Job value: "${normalizedJobValue}" | Filter: "${normalizedFilterValue}"`);
+    // Enhanced debug for seniority filter
+    if (filterType === 'seniority' && filters.seniority !== 'all') {
+      console.log(`🔍 MATCHING: Job value = "${normalizedJobValue}" | Filter value = "${normalizedFilterValue}"`);
     }
     
-    // More flexible matching to handle partial matches
-    return normalizedJobValue === normalizedFilterValue || 
-           normalizedJobValue.includes(normalizedFilterValue) || 
-           normalizedFilterValue.includes(normalizedJobValue);
+    // Check for exact match first
+    if (normalizedJobValue === normalizedFilterValue) {
+      if (filterType === 'seniority' && filters.seniority !== 'all') {
+        console.log(`✅ EXACT MATCH FOUND!`);
+      }
+      return true;
+    }
+    
+    // Check if job value contains filter value
+    if (normalizedJobValue.includes(normalizedFilterValue)) {
+      if (filterType === 'seniority' && filters.seniority !== 'all') {
+        console.log(`✅ PARTIAL MATCH FOUND! Job value contains filter value`);
+      }
+      return true;
+    }
+    
+    // Check if filter value contains job value (less common)
+    if (normalizedFilterValue.includes(normalizedJobValue)) {
+      if (filterType === 'seniority' && filters.seniority !== 'all') {
+        console.log(`✅ PARTIAL MATCH FOUND! Filter value contains job value`);
+      }
+      return true;
+    }
+    
+    if (filterType === 'seniority' && filters.seniority !== 'all') {
+      console.log(`❌ NO MATCH: Values don't match or contain each other`);
+    }
+    
+    return false;
   };
 
+  // More robust filtering with detailed logging
   const filteredJobs = jobs?.filter(job => {
     // Text search filtering
     const searchFields = [
@@ -203,14 +241,16 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       return false;
     }
     
-    // Field filter matching
+    // Get active filter types
     const activeFilterKeys = Object.entries(filters)
       .filter(([key, value]) => value !== 'all' && value !== false)
       .map(([key]) => key);
     
-    // Extra debugging for seniority level
+    // Special debugging for seniority filter
     if (filters.seniority !== 'all') {
-      console.log(`Seniority check for job "${job.title}" - Filter value: "${filters.seniority}", Job value: "${job.seniority_level}" (${typeof job.seniority_level})`);
+      console.log(`\n📋 FILTERING JOB: "${job.title}" (ID: ${job.id})`);
+      console.log(`📋 Seniority filter value: "${filters.seniority}"`);
+      console.log(`📋 Job seniority_level: "${job.seniority_level}" (${typeof job.seniority_level})`);
     }
     
     // Check each active filter
@@ -226,12 +266,15 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       }
       
       const jobValue = getJobFieldValue(job, filterType);
-      if (!matchesFilter(jobValue, filterValue as string)) {
-        // Only log failures for Senior filter to reduce noise
-        if (filterType === 'seniority' && (filterValue as string).toLowerCase().includes('senior')) {
-          console.log(`Senior filter failed - Job title: "${job.title}", Job value: "${jobValue}", Filter: "${filterValue}"`);
+      
+      // Critical: Use the updated matchesFilter with filter type for debugging
+      if (!matchesFilter(jobValue, filterValue as string, filterType)) {
+        if (filterType === 'seniority' && filters.seniority !== 'all') {
+          console.log(`❌ JOB REJECTED: Failed "${filterType}" filter check`);
         }
         return false;
+      } else if (filterType === 'seniority' && filters.seniority !== 'all') {
+        console.log(`✅ JOB ACCEPTED: Passed "${filterType}" filter check`);
       }
     }
     

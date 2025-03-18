@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import JobCard from '@/components/JobCard';
@@ -13,26 +14,42 @@ interface JobsListProps {
 const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJobs }) => {
   useEffect(() => {
     if (jobs && jobs.length > 0) {
-      console.log(`Total jobs available: ${jobs.length}`);
+      console.log(`🔢 Total jobs loaded: ${jobs.length}`);
       
-      // Enhanced debugging focusing on seniority level fields
+      // Enhanced debugging for seniority levels
+      console.log('\n📊 JOB SENIORITY LEVEL DATA ANALYSIS:');
+      
+      // Count jobs by seniority level
+      const seniorityLevels = new Map<string, number>();
+      jobs.forEach(job => {
+        const level = job.seniority_level || 'undefined/null';
+        seniorityLevels.set(level, (seniorityLevels.get(level) || 0) + 1);
+      });
+      
+      // Log the distribution
+      console.log('Seniority level distribution:');
+      seniorityLevels.forEach((count, level) => {
+        console.log(`- "${level}": ${count} jobs`);
+      });
+      
+      // Count jobs with "Senior" in title or seniority for deeper analysis
       const seniorJobs = jobs.filter(job => {
         const title = (job.title || '').toLowerCase();
         const seniority = (job.seniority_level || '').toLowerCase();
         return title.includes('senior') || seniority.includes('senior');
       });
       
-      console.log(`Jobs with Senior in title or seniority_level: ${seniorJobs.length}`);
+      console.log(`\n🔍 Jobs with "Senior" in title or seniority_level: ${seniorJobs.length}`);
       if (seniorJobs.length > 0) {
-        console.log('Senior Jobs:', seniorJobs.map(job => ({
-          id: job.id,
-          title: job.title,
-          seniority_level: job.seniority_level,
-          seniorityType: typeof job.seniority_level
-        })));
+        console.log('First 5 Senior Jobs:');
+        seniorJobs.slice(0, 5).forEach(job => {
+          console.log(`- ID: ${job.id}`);
+          console.log(`  Title: ${job.title}`);
+          console.log(`  Seniority: "${job.seniority_level}" (${typeof job.seniority_level})`);
+        });
       }
       
-      console.log(`Filtered jobs: ${filteredJobs.length}`);
+      console.log(`\n🔢 Filtered jobs count: ${filteredJobs.length}`);
     }
   }, [jobs, filteredJobs]);
 
