@@ -22,7 +22,6 @@ export const mapJobFormDataToDatabaseFields = (
     revenue_model: formData.revenue_model,
     department: formData.department,
     seniority_level: formData.seniority_level,
-    job_type: formData.job_type || formData.type || 'Full-time', // Ensure job_type is populated
     salary_range: formData.salary_range,
     equity: formData.equity,
     remote_onsite: formData.remote_onsite,
@@ -38,16 +37,12 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return null;
   }
   
-  // Make sure job_type is always populated from either job_type or type field
-  const jobType = dbFields.job_type || dbFields.type || 'Full-time';
-  
   // Critical debug: Log raw field values to verify what we're getting from database
   console.log('Raw job field values from database:', {
     id: dbFields.id,
     title: dbFields.title,
     department: dbFields.department,
     seniority_level: dbFields.seniority_level,
-    job_type: dbFields.job_type,
     type: dbFields.type
   });
   
@@ -58,7 +53,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     company: dbFields.company || '',
     location: dbFields.location || '',
     salary: dbFields.salary || '',
-    type: dbFields.type || jobType, // Ensure type is always populated
+    type: dbFields.type || 'Full-time', // Use only type field
     posted: dbFields.posted || '',
     description: dbFields.description || '',
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
@@ -72,7 +67,6 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     // Normalize all filter fields as primitive string values, not objects
     department: formatFilterValue(dbFields.department),
     seniority_level: formatFilterValue(dbFields.seniority_level),
-    job_type: formatFilterValue(jobType), // Use our normalized jobType
     salary_range: formatFilterValue(dbFields.salary_range),
     team_size: formatFilterValue(dbFields.team_size),
     investment_stage: formatFilterValue(dbFields.investment_stage),
@@ -90,7 +84,6 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     title: mappedJob.title,
     department: typeof mappedJob.department,
     seniority_level: typeof mappedJob.seniority_level,
-    job_type: typeof mappedJob.job_type,
     type: typeof mappedJob.type
   });
   
@@ -99,6 +92,11 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
 
 // Improved helper function to format filter values as simple strings
 function formatFilterValue(value: any): string {
+  // Handle null/undefined
+  if (value === null || value === undefined) {
+    return '';
+  }
+  
   // Handle objects that might be returned (like undefined objects from console logs)
   if (value && typeof value === 'object') {
     // If it's an object with a value property, use that
@@ -107,11 +105,6 @@ function formatFilterValue(value: any): string {
     }
     // Otherwise convert the object to a string representation
     return String(value).trim();
-  }
-  
-  // Handle null/undefined
-  if (value === null || value === undefined) {
-    return '';
   }
   
   // Convert to string and trim whitespace

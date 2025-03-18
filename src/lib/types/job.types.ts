@@ -20,7 +20,6 @@ export interface Job {
   revenue_model?: string;
   department?: string;
   seniority_level?: string;
-  job_type?: string;
   salary_range?: string;
   equity?: string;
   remote_onsite?: string;
@@ -49,7 +48,6 @@ export interface JobFormData {
   revenue_model?: string;
   department?: string;
   seniority_level?: string;
-  job_type?: string;
   salary_range?: string;
   equity?: string;
   remote_onsite?: string;
@@ -81,7 +79,6 @@ export interface JobDatabaseFields {
   revenue_model?: string;
   department?: string;
   seniority_level?: string;
-  job_type?: string;
   salary_range?: string;
   equity?: string;
   remote_onsite?: string;

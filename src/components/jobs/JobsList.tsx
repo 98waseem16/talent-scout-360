@@ -12,10 +12,12 @@ interface JobsListProps {
 }
 
 const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJobs }) => {
-  // Debug log to show all available jobs and their fields
+  // Enhanced debugging to better understand job data
   useEffect(() => {
     if (jobs && jobs.length > 0) {
       console.log(`Total jobs available: ${jobs.length}`);
+      
+      // Log first few jobs with their filter fields (as primitive values)
       console.log('First 3 jobs with filter fields:', jobs.slice(0, 3).map(job => ({
         id: job.id,
         title: job.title,
@@ -23,12 +25,23 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
         departmentType: typeof job.department,
         seniority_level: job.seniority_level,
         seniorityType: typeof job.seniority_level,
-        job_type: job.job_type,
         type: job.type,
+        typeType: typeof job.type,
         remote_onsite: job.remote_onsite
       })));
       
       console.log(`Filtered jobs: ${filteredJobs.length}`);
+      
+      // If we have filtered jobs, log their values too
+      if (filteredJobs.length > 0) {
+        console.log('First filtered job:', {
+          id: filteredJobs[0].id,
+          title: filteredJobs[0].title,
+          department: filteredJobs[0].department,
+          seniority_level: filteredJobs[0].seniority_level,
+          type: filteredJobs[0].type
+        });
+      }
     }
   }, [jobs, filteredJobs]);
 
@@ -91,7 +104,9 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
                 {jobs.slice(0, 2).map(job => (
                   <li key={job.id} className="mb-2">
                     <strong>Job:</strong> {job.title}<br />
-                    <strong>Seniority:</strong> "{job.seniority_level}" ({typeof job.seniority_level})
+                    <strong>Department:</strong> "{job.department}" ({typeof job.department})<br />
+                    <strong>Seniority:</strong> "{job.seniority_level}" ({typeof job.seniority_level})<br />
+                    <strong>Type:</strong> "{job.type}" ({typeof job.type})
                   </li>
                 ))}
               </ul>

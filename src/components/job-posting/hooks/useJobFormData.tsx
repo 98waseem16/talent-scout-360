@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { getJobById } from '@/lib/jobs/jobsApi';
 import { toast } from 'sonner';
@@ -20,7 +21,6 @@ export const useJobFormData = (id?: string) => {
     revenue_model: '',
     department: '',
     seniority_level: '',
-    job_type: '',
     salary_range: '',
     equity: '',
     remote_onsite: '',
@@ -28,7 +28,7 @@ export const useJobFormData = (id?: string) => {
     visa_sponsorship: false,
     hiring_urgency: '',
     featured: false,
-    application_url: '', // Add this field
+    application_url: '',
   });
 
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -57,14 +57,13 @@ export const useJobFormData = (id?: string) => {
               revenue_model: jobData.revenue_model || '',
               department: jobData.department || '',
               seniority_level: jobData.seniority_level || '',
-              job_type: jobData.job_type || '',
               salary_range: jobData.salary_range || '',
               equity: jobData.equity || '',
               remote_onsite: jobData.remote_onsite || '',
               work_hours: jobData.work_hours || '',
               visa_sponsorship: jobData.visa_sponsorship || false,
               hiring_urgency: jobData.hiring_urgency || '',
-              application_url: jobData.application_url || '', // Added field here
+              application_url: jobData.application_url || '',
             });
           }
         } catch (error) {
