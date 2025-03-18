@@ -64,7 +64,7 @@ const JobInsights: React.FC<JobInsightsProps> = ({ job }) => {
         <InsightItem 
           icon={<Briefcase className="h-4 w-4" />} 
           label="Job Type" 
-          value={job.job_type || job.type || "Not specified"}
+          value={job.type || "Not specified"}
         />
         
         {/* Department */}
