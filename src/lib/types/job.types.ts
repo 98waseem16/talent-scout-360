@@ -1,3 +1,4 @@
+
 export interface Job {
   id: string;
   title: string;
@@ -29,17 +30,17 @@ export interface Job {
 export interface JobFormData {
   title: string;
   company: string;
-  location?: string;
-  type?: string;
-  salary?: string;
-  description?: string;
-  responsibilities?: string[];
-  requirements?: string[];
-  benefits?: string[];
-  logo?: string;
+  location: string; // Changed from optional to required
+  type: string; // Changed from optional to required
+  salary: string; // Changed from optional to required
+  description: string; // Changed from optional to required
+  responsibilities: string[]; // Changed from optional to required
+  requirements: string[]; // Changed from optional to required
+  benefits: string[]; // Changed from optional to required
+  logo: string; // Changed from optional to required
   featured?: boolean;
-  application_url?: string;
-  user_id: string;
+  application_url: string; // Changed from optional to required
+  user_id?: string; // Changed from required to optional for initialization
   department?: string;
   seniority_level?: string;
   salary_range?: string;
@@ -57,17 +58,17 @@ export interface JobDatabaseFields {
   id?: string;
   title: string;
   company: string;
-  location?: string;
-  type?: string;
-  salary?: string;
+  location: string; // Changed from optional to required
+  type: string; // Changed from optional to required
+  salary: string; // Changed from optional to required
   posted?: string;
-  description?: string;
-  responsibilities?: string[];
-  requirements?: string[];
-  benefits?: string[];
-  logo?: string;
+  description: string; // Changed from optional to required
+  responsibilities: string[]; // Changed from optional to required
+  requirements: string[]; // Changed from optional to required
+  benefits: string[]; // Changed from optional to required
+  logo: string; // Changed from optional to required
   featured?: boolean;
-  application_url?: string;
+  application_url: string; // Changed from optional to required
   user_id: string;
   department?: string;
   seniority_level?: string;

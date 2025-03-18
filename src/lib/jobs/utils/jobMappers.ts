@@ -7,17 +7,17 @@ export const mapJobFormDataToDatabaseFields = (
   return {
     title: formData.title,
     company: formData.company,
-    location: formData.location || '',
+    location: formData.location,
     type: formData.type || 'Full-time',
-    salary: formData.salary || '',
-    description: formData.description || '',
-    responsibilities: formData.responsibilities || [],
-    requirements: formData.requirements || [],
-    benefits: formData.benefits || [],
+    salary: formData.salary,
+    description: formData.description,
+    responsibilities: formData.responsibilities,
+    requirements: formData.requirements,
+    benefits: formData.benefits,
     logo: formData.logo || '/placeholder.svg',
     featured: formData.featured || false,
-    application_url: formData.application_url || '',
-    user_id: formData.user_id,
+    application_url: formData.application_url,
+    user_id: formData.user_id || '',
     investment_stage: formData.investment_stage || '',
     team_size: formData.team_size || '',
     revenue_model: formData.revenue_model || '',
@@ -46,6 +46,14 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     return String(value);
   };
   
+  // Ensure arrays are properly handled
+  const ensureArray = (value: any): string[] => {
+    if (Array.isArray(value)) {
+      return value;
+    }
+    return [];
+  };
+  
   // For debug purposes, show the original values for key filter fields
   console.log(`🔄 MAPPING JOB: "${dbFields.title}" (ID: ${dbFields.id})`);
   console.log(`  Original seniority_level: "${dbFields.seniority_level}" (${typeof dbFields.seniority_level})`);
@@ -69,13 +77,12 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     type: jobType, // Using the validated job type
     posted: cleanStringField(dbFields.posted),
     description: cleanStringField(dbFields.description),
-    responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
-    requirements: Array.isArray(dbFields.requirements) ? dbFields.requirements : [],
-    benefits: Array.isArray(dbFields.benefits) ? dbFields.benefits : [],
+    responsibilities: ensureArray(dbFields.responsibilities),
+    requirements: ensureArray(dbFields.requirements),
+    benefits: ensureArray(dbFields.benefits),
     logo: cleanStringField(dbFields.logo) || '/placeholder.svg',
     featured: Boolean(dbFields.featured),
     application_url: cleanStringField(dbFields.application_url),
-    user_id: cleanStringField(dbFields.user_id),
     
     // Critical filter fields - ensure they're clean strings and have default values if missing
     department: cleanStringField(dbFields.department) || 'Engineering', // Default value
