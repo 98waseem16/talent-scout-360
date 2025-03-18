@@ -5,7 +5,7 @@ export interface Job {
   company: string;
   location: string;
   salary: string;
-  type: 'Full-time' | 'Part-time' | 'Contract' | 'Remote';
+  type: string; // Changed from literal type union to accept any string
   posted: string;
   description: string;
   responsibilities: string[];

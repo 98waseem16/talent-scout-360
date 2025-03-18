@@ -53,6 +53,12 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   console.log(`  Original remote_onsite: "${dbFields.remote_onsite}" (${typeof dbFields.remote_onsite})`);
   console.log(`  Original type: "${dbFields.type}" (${typeof dbFields.type})`);
   
+  // Validate and default the job type if needed
+  let jobType = cleanStringField(dbFields.type);
+  if (!jobType) {
+    jobType = 'Full-time'; // Default value
+  }
+  
   // Create a standardized job object with proper value conversions
   const mappedJob = {
     id: dbFields.id,
@@ -60,7 +66,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     company: cleanStringField(dbFields.company),
     location: cleanStringField(dbFields.location),
     salary: cleanStringField(dbFields.salary),
-    type: cleanStringField(dbFields.type) || 'Full-time',
+    type: jobType, // Using the validated job type
     posted: cleanStringField(dbFields.posted),
     description: cleanStringField(dbFields.description),
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
