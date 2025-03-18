@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import JobCard from '@/components/JobCard';
@@ -16,28 +15,14 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
     if (jobs && jobs.length > 0) {
       console.log(`Total jobs available: ${jobs.length}`);
       
-      // Enhanced debugging with actual values, not string representations
-      console.log('First 3 jobs with filter fields:', jobs.slice(0, 3).map(job => ({
-        id: job.id,
-        title: job.title,
-        department: job.department,
-        departmentType: typeof job.department,
-        seniority_level: job.seniority_level,
-        seniorityType: typeof job.seniority_level,
-        type: job.type,
-        typeType: typeof job.type,
-        remote_onsite: job.remote_onsite,
-        remoteType: typeof job.remote_onsite
-      })));
-      
-      // Check for jobs with senior in the title or seniority level
+      // Enhanced debugging focusing on seniority level fields
       const seniorJobs = jobs.filter(job => {
-        const title = job.title.toLowerCase();
+        const title = (job.title || '').toLowerCase();
         const seniority = (job.seniority_level || '').toLowerCase();
         return title.includes('senior') || seniority.includes('senior');
       });
       
-      console.log(`Jobs with Senior in title or seniority: ${seniorJobs.length}`);
+      console.log(`Jobs with Senior in title or seniority_level: ${seniorJobs.length}`);
       if (seniorJobs.length > 0) {
         console.log('Senior Jobs:', seniorJobs.map(job => ({
           id: job.id,
@@ -48,16 +33,6 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
       }
       
       console.log(`Filtered jobs: ${filteredJobs.length}`);
-      
-      if (filteredJobs.length > 0) {
-        console.log('First filtered job:', {
-          id: filteredJobs[0].id,
-          title: filteredJobs[0].title,
-          department: filteredJobs[0].department,
-          seniority_level: filteredJobs[0].seniority_level,
-          type: filteredJobs[0].type
-        });
-      }
     }
   }, [jobs, filteredJobs]);
 

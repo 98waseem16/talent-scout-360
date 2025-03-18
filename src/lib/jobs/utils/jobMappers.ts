@@ -1,4 +1,3 @@
-
 import { JobDatabaseFields, JobFormData } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
@@ -56,8 +55,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: dbFields.application_url || '',
     user_id: dbFields.user_id || '',
     
-    // Critical fix: Convert all null/undefined/empty values to empty strings
-    // Never return "undefined" as a string value
+    // Critical fix: Ensure all fields have proper default values and are not undefined strings
     department: dbFields.department || '',
     seniority_level: dbFields.seniority_level || '',
     salary_range: dbFields.salary_range || '',
@@ -71,19 +69,10 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     visa_sponsorship: Boolean(dbFields.visa_sponsorship)
   };
   
-  // Log the mapped job for verification
-  console.log('Job after mapping:', {
-    id: mappedJob.id,
-    title: mappedJob.title,
-    department: mappedJob.department,
-    department_type: typeof mappedJob.department,
-    seniority_level: mappedJob.seniority_level,
-    seniority_level_type: typeof mappedJob.seniority_level,
-    type: mappedJob.type,
-    type_type: typeof mappedJob.type,
-    remote_onsite: mappedJob.remote_onsite,
-    remote_onsite_type: typeof mappedJob.remote_onsite
-  });
+  // More focused logging on key fields that need debugging
+  if (dbFields.seniority_level) {
+    console.log(`Job mapping - Found seniority_level: "${dbFields.seniority_level}" for job: ${mappedJob.title}`);
+  }
   
   return mappedJob;
 };

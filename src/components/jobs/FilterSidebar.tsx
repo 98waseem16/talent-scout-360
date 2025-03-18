@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import JobFilters from '@/components/job-filters/JobFilters';
 
 interface FilterSidebarProps {
@@ -41,20 +41,6 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Enhanced logging for filter changes
-  useEffect(() => {
-    console.log('Current filters in sidebar:', filters);
-    
-    // Log active filters with actual values, not string representations
-    const activeFilters = Object.entries(filters)
-      .filter(([key, value]) => value !== 'all' && value !== false);
-      
-    if (activeFilters.length > 0) {
-      console.log('Active filters:', 
-        activeFilters.map(([key, value]) => `${key}: ${value} (${typeof value})`));
-    }
-  }, [filters]);
-
   return (
     <aside 
       className={`w-full md:w-64 md:sticky top-24 transition-all duration-300 ${
