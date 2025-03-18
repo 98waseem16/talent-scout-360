@@ -7,10 +7,20 @@ interface JobDescriptionProps {
 }
 
 const JobDescription: React.FC<JobDescriptionProps> = ({ job }) => {
+  // Format description text to preserve line breaks and spacing
+  const formattedDescription = job.description
+    .split('\n')
+    .map((line, index) => (
+      <React.Fragment key={index}>
+        {line}
+        {index < job.description.split('\n').length - 1 && <br />}
+      </React.Fragment>
+    ));
+
   return (
     <section className="bg-white rounded-xl border border-border shadow-sm p-6 md:p-8">
       <h2 className="text-xl font-medium mb-4">Job Description</h2>
-      <p className="text-muted-foreground mb-6">{job.description}</p>
+      <p className="text-muted-foreground mb-6 whitespace-pre-line">{job.description}</p>
       
       <h3 className="text-lg font-medium mb-3">Responsibilities</h3>
       <ul className="list-disc pl-5 space-y-2 text-muted-foreground mb-6">
