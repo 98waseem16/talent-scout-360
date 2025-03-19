@@ -41,9 +41,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Add debugging to detect filter changes 
+  // Add debugging to trace filter changes
   const handleFilterChange = (field: string, value: string) => {
-    console.log(`🔄 Filter change in sidebar: ${field} = "${value}"`);
+    console.log(`🔄 FilterSidebar: Changing filter "${field}" to value "${value}"`);
     setFilters(prev => ({ ...prev, [field]: value }));
   };
 

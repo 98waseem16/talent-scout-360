@@ -38,20 +38,20 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return null;
   }
   
-  // CRITICAL FIX: Convert string values of "undefined" or "null" to empty strings
+  // CRITICAL: Print actual database values for debugging
+  console.log(`🔄 DEBUG - Original Job Fields for "${dbFields.title}" (ID: ${dbFields.id}):`);
+  console.log(`  seniority_level: "${dbFields.seniority_level}" (${typeof dbFields.seniority_level})`);
+  console.log(`  department: "${dbFields.department}" (${typeof dbFields.department})`);
+  console.log(`  remote_onsite: "${dbFields.remote_onsite}" (${typeof dbFields.remote_onsite})`);
+  console.log(`  type: "${dbFields.type}" (${typeof dbFields.type})`);
+  
+  // Convert string values of "undefined" or "null" to empty strings
   const cleanStringField = (value: any): string => {
     if (value === null || value === undefined || value === "undefined" || value === "null") {
       return '';
     }
     return String(value);
   };
-  
-  // For debug purposes, show the original values for key filter fields
-  console.log(`🔄 MAPPING JOB: "${dbFields.title}" (ID: ${dbFields.id})`);
-  console.log(`  Original seniority_level: "${dbFields.seniority_level}" (${typeof dbFields.seniority_level})`);
-  console.log(`  Original department: "${dbFields.department}" (${typeof dbFields.department})`);
-  console.log(`  Original remote_onsite: "${dbFields.remote_onsite}" (${typeof dbFields.remote_onsite})`);
-  console.log(`  Original type: "${dbFields.type}" (${typeof dbFields.type})`);
   
   // Validation functions for each filter type
   const validateJobType = (typeValue: any): 'Full-time' | 'Part-time' | 'Contract' | 'Remote' => {
@@ -142,10 +142,11 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   };
   
   // After mapping, log the critical fields to verify proper conversions
-  console.log(`  Mapped seniority_level: "${mappedJob.seniority_level}" (${typeof mappedJob.seniority_level})`);
-  console.log(`  Mapped department: "${mappedJob.department}" (${typeof mappedJob.department})`);
-  console.log(`  Mapped remote_onsite: "${mappedJob.remote_onsite}" (${typeof mappedJob.remote_onsite})`);
-  console.log(`  Mapped type: "${mappedJob.type}" (${typeof mappedJob.type})`);
+  console.log(`🔄 DEBUG - Mapped Job Fields for "${mappedJob.title}" (ID: ${mappedJob.id}):`);
+  console.log(`  seniority_level: "${mappedJob.seniority_level}" (${typeof mappedJob.seniority_level})`);
+  console.log(`  department: "${mappedJob.department}" (${typeof mappedJob.department})`);
+  console.log(`  remote_onsite: "${mappedJob.remote_onsite}" (${typeof mappedJob.remote_onsite})`);
+  console.log(`  type: "${mappedJob.type}" (${typeof mappedJob.type})`);
   
   return mappedJob;
 };
