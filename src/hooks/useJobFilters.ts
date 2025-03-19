@@ -128,10 +128,11 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Exact field mappings from UI filter names to Job object property names
+  // FIXED: Exact field mappings from UI filter names to Job object property names
+  // This is the critical fix - ensuring each UI filter key maps to the correct database field name
   const fieldMappings: Record<string, keyof Job> = {
     department: 'department',
-    seniority: 'seniority_level', // UI filter name -> DB field name
+    seniority: 'seniority_level',
     salaryRange: 'salary_range',
     teamSize: 'team_size',
     investmentStage: 'investment_stage',
@@ -144,7 +145,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     visaSponsorship: 'visa_sponsorship'
   };
 
-  // Improved string normalization
+  // Improved string normalization with tracing
   const normalizeString = (str: string | null | undefined): string => {
     if (str === null || str === undefined) return '';
     return String(str).trim().toLowerCase();
@@ -160,8 +161,9 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     
     const value = job[fieldName as keyof Job];
     
-    // Add detailed logging for seniority filter
-    if (filterType === 'seniority' && filters.seniority !== 'all') {
+    // Add detailed logging for problematic filters
+    if ((filterType === 'seniority' || filterType === 'department' || filterType === 'remote') 
+        && filters[filterType as keyof JobFilters] !== 'all') {
       console.log(`🧪 FILTER CHECK: Job "${job.title}" (ID: ${job.id})`);
       console.log(`🧪 FILTER CHECK: Checking "${filterType}" filter using DB field "${String(fieldName)}"`);
       console.log(`🧪 FILTER CHECK: Raw DB value = "${value}" (${typeof value})`);
@@ -177,7 +179,8 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     
     // Check for empty job values
     if (jobValue === null || jobValue === undefined || jobValue === '') {
-      if (filterType === 'seniority' && filters.seniority !== 'all') {
+      if ((filterType === 'seniority' || filterType === 'department' || filterType === 'remote') 
+          && filters[filterType as keyof JobFilters] !== 'all') {
         console.log(`❌ NO MATCH: Job value is empty/null/undefined`);
       }
       return false;
@@ -186,14 +189,16 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const normalizedJobValue = normalizeString(jobValue);
     const normalizedFilterValue = normalizeString(filterValue);
     
-    // Enhanced debug for seniority filter
-    if (filterType === 'seniority' && filters.seniority !== 'all') {
+    // Enhanced debug for problematic filters
+    if ((filterType === 'seniority' || filterType === 'department' || filterType === 'remote') 
+        && filters[filterType as keyof JobFilters] !== 'all') {
       console.log(`🔍 MATCHING: Job value = "${normalizedJobValue}" | Filter value = "${normalizedFilterValue}"`);
     }
     
-    // Check for exact match first
+    // Check for exact match first (most important for enumerated values)
     if (normalizedJobValue === normalizedFilterValue) {
-      if (filterType === 'seniority' && filters.seniority !== 'all') {
+      if ((filterType === 'seniority' || filterType === 'department' || filterType === 'remote') 
+          && filters[filterType as keyof JobFilters] !== 'all') {
         console.log(`✅ EXACT MATCH FOUND!`);
       }
       return true;
@@ -201,7 +206,8 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     
     // Check if job value contains filter value
     if (normalizedJobValue.includes(normalizedFilterValue)) {
-      if (filterType === 'seniority' && filters.seniority !== 'all') {
+      if ((filterType === 'seniority' || filterType === 'department' || filterType === 'remote') 
+          && filters[filterType as keyof JobFilters] !== 'all') {
         console.log(`✅ PARTIAL MATCH FOUND! Job value contains filter value`);
       }
       return true;
@@ -209,13 +215,15 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     
     // Check if filter value contains job value (less common)
     if (normalizedFilterValue.includes(normalizedJobValue)) {
-      if (filterType === 'seniority' && filters.seniority !== 'all') {
+      if ((filterType === 'seniority' || filterType === 'department' || filterType === 'remote') 
+          && filters[filterType as keyof JobFilters] !== 'all') {
         console.log(`✅ PARTIAL MATCH FOUND! Filter value contains job value`);
       }
       return true;
     }
     
-    if (filterType === 'seniority' && filters.seniority !== 'all') {
+    if ((filterType === 'seniority' || filterType === 'department' || filterType === 'remote') 
+        && filters[filterType as keyof JobFilters] !== 'all') {
       console.log(`❌ NO MATCH: Values don't match or contain each other`);
     }
     
@@ -246,11 +254,24 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       .filter(([key, value]) => value !== 'all' && value !== false)
       .map(([key]) => key);
     
-    // Special debugging for seniority filter
-    if (filters.seniority !== 'all') {
+    // Special debugging for problematic filters
+    if (filters.seniority !== 'all' || filters.department !== 'all' || filters.remote !== 'all') {
       console.log(`\n📋 FILTERING JOB: "${job.title}" (ID: ${job.id})`);
-      console.log(`📋 Seniority filter value: "${filters.seniority}"`);
-      console.log(`📋 Job seniority_level: "${job.seniority_level}" (${typeof job.seniority_level})`);
+      
+      if (filters.seniority !== 'all') {
+        console.log(`📋 Seniority filter value: "${filters.seniority}"`);
+        console.log(`📋 Job seniority_level: "${job.seniority_level}" (${typeof job.seniority_level})`);
+      }
+      
+      if (filters.department !== 'all') {
+        console.log(`📋 Department filter value: "${filters.department}"`);
+        console.log(`📋 Job department: "${job.department}" (${typeof job.department})`);
+      }
+      
+      if (filters.remote !== 'all') {
+        console.log(`📋 Remote filter value: "${filters.remote}"`);
+        console.log(`📋 Job remote_onsite: "${job.remote_onsite}" (${typeof job.remote_onsite})`);
+      }
     }
     
     // Check each active filter
@@ -267,13 +288,15 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       
       const jobValue = getJobFieldValue(job, filterType);
       
-      // Critical: Use the updated matchesFilter with filter type for debugging
+      // Use the updated matchesFilter with filter type for debugging
       if (!matchesFilter(jobValue, filterValue as string, filterType)) {
-        if (filterType === 'seniority' && filters.seniority !== 'all') {
+        if ((filterType === 'seniority' || filterType === 'department' || filterType === 'remote') 
+            && filters[filterType as keyof JobFilters] !== 'all') {
           console.log(`❌ JOB REJECTED: Failed "${filterType}" filter check`);
         }
         return false;
-      } else if (filterType === 'seniority' && filters.seniority !== 'all') {
+      } else if ((filterType === 'seniority' || filterType === 'department' || filterType === 'remote') 
+                && filters[filterType as keyof JobFilters] !== 'all') {
         console.log(`✅ JOB ACCEPTED: Passed "${filterType}" filter check`);
       }
     }

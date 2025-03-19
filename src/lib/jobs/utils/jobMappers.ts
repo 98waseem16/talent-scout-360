@@ -53,7 +53,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   console.log(`  Original remote_onsite: "${dbFields.remote_onsite}" (${typeof dbFields.remote_onsite})`);
   console.log(`  Original type: "${dbFields.type}" (${typeof dbFields.type})`);
   
-  // Validate and normalize job type to ensure it's one of the allowed values
+  // Validation functions for each filter type
   const validateJobType = (typeValue: any): 'Full-time' | 'Part-time' | 'Contract' | 'Remote' => {
     const cleanType = cleanStringField(typeValue);
     const validTypes = ['Full-time', 'Part-time', 'Contract', 'Remote'];
@@ -64,6 +64,49 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     
     console.warn(`Invalid job type "${cleanType}" - defaulting to "Full-time"`);
     return 'Full-time'; // Default to Full-time if invalid
+  };
+  
+  // Validate department to ensure it matches one of our allowed values
+  const validateDepartment = (value: any): string => {
+    const cleanValue = cleanStringField(value);
+    const validDepartments = [
+      'Engineering', 'Product', 'Design', 'Marketing', 'Sales',
+      'Operations', 'HR', 'Customer Support', 'Legal', 'Finance'
+    ];
+    
+    // For department, we'll allow any value but log a warning if it's not in our list
+    if (cleanValue && !validDepartments.includes(cleanValue)) {
+      console.warn(`Unusual department value: "${cleanValue}"`);
+    }
+    
+    return cleanValue;
+  };
+  
+  // Validate seniority level to ensure it matches one of our allowed values
+  const validateSeniorityLevel = (value: any): string => {
+    const cleanValue = cleanStringField(value);
+    const validLevels = [
+      'Internship', 'Entry-Level', 'Mid-Level', 'Senior', 
+      'Lead', 'Director', 'VP', 'C-Level'
+    ];
+    
+    if (cleanValue && !validLevels.includes(cleanValue)) {
+      console.warn(`Unusual seniority level: "${cleanValue}"`);
+    }
+    
+    return cleanValue;
+  };
+  
+  // Validate remote/onsite to ensure it matches one of our allowed values
+  const validateRemoteOnsite = (value: any): string => {
+    const cleanValue = cleanStringField(value);
+    const validOptions = ['Fully Remote', 'Hybrid', 'Onsite'];
+    
+    if (cleanValue && !validOptions.includes(cleanValue)) {
+      console.warn(`Unusual remote/onsite value: "${cleanValue}"`);
+    }
+    
+    return cleanValue;
   };
   
   // Create a standardized job object with proper value conversions
@@ -84,13 +127,13 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: cleanStringField(dbFields.application_url),
     user_id: cleanStringField(dbFields.user_id),
     
-    // Critical filter fields - ensure they're clean strings
-    department: cleanStringField(dbFields.department),
-    seniority_level: cleanStringField(dbFields.seniority_level),
+    // Critical filter fields - ensure they're clean strings and valid values
+    department: validateDepartment(dbFields.department),
+    seniority_level: validateSeniorityLevel(dbFields.seniority_level),
     salary_range: cleanStringField(dbFields.salary_range),
     team_size: cleanStringField(dbFields.team_size),
     investment_stage: cleanStringField(dbFields.investment_stage),
-    remote_onsite: cleanStringField(dbFields.remote_onsite),
+    remote_onsite: validateRemoteOnsite(dbFields.remote_onsite),
     work_hours: cleanStringField(dbFields.work_hours),
     equity: cleanStringField(dbFields.equity),
     hiring_urgency: cleanStringField(dbFields.hiring_urgency),
