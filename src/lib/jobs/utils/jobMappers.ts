@@ -45,11 +45,11 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
   console.log(`  remote_onsite: "${dbFields.remote_onsite || ''}"`);
   console.log(`  type: "${dbFields.type || ''}"`);
   
-  // Clean field function preserves exact case but handles nulls properly
-  // CRITICAL FIX: Return undefined for empty values instead of empty strings
+  // FIXED cleanField function to preserve empty strings instead of converting to undefined
+  // This is critical for filter matching to work correctly with the 'all' filter value
   const cleanField = (value: any): string | undefined => {
-    if (value === null || value === undefined || value === '') {
-      return undefined;
+    if (value === null || value === undefined) {
+      return ''; // Return empty string instead of undefined
     }
     return String(value).trim(); // No lowercase - preserve exact values
   };
@@ -89,7 +89,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     application_url: cleanField(dbFields.application_url) || '',
     user_id: cleanField(dbFields.user_id) || '',
     
-    // CRITICAL FIX: Preserve database values exactly as is - don't use empty strings
+    // CRITICAL FIX: Use empty strings instead of undefined for filter fields
     department: cleanField(dbFields.department),
     seniority_level: cleanField(dbFields.seniority_level),
     salary_range: cleanField(dbFields.salary_range),
@@ -105,9 +105,9 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
   
   // After mapping, log the mapped fields for verification
   console.log(`📊 MAPPED JOB FIELDS for "${mappedJob.title}" (ID: ${mappedJob.id}):`);
-  console.log(`  seniority_level: ${mappedJob.seniority_level === undefined ? 'undefined' : `"${mappedJob.seniority_level}"`}`);
-  console.log(`  department: ${mappedJob.department === undefined ? 'undefined' : `"${mappedJob.department}"`}`);
-  console.log(`  remote_onsite: ${mappedJob.remote_onsite === undefined ? 'undefined' : `"${mappedJob.remote_onsite}"`}`);
+  console.log(`  seniority_level: ${mappedJob.seniority_level === '' ? '""' : `"${mappedJob.seniority_level}"`}`);
+  console.log(`  department: ${mappedJob.department === '' ? '""' : `"${mappedJob.department}"`}`);
+  console.log(`  remote_onsite: ${mappedJob.remote_onsite === '' ? '""' : `"${mappedJob.remote_onsite}"`}`);
   console.log(`  type: "${mappedJob.type}"`);
   
   return mappedJob;

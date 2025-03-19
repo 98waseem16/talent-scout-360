@@ -150,14 +150,14 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     return value;
   };
 
-  // IMPROVED FILTER MATCHING: Fixed handling of undefined values - critical fix
+  // FIXED FILTER MATCHING: Improved handling of empty strings
   const matchesFilter = (jobValue: any, filterValue: string): boolean => {
     // Return true for "all" filter
     if (filterValue === 'all') return true;
     
-    // CRITICAL FIX: If job value is undefined, it shouldn't match any specific filter
-    if (jobValue === undefined || jobValue === null || jobValue === '') {
-      console.log(`❌ NO MATCH: job value is ${jobValue === undefined ? 'undefined' : 'null/empty'} vs filter "${filterValue}"`);
+    // Handle empty strings properly - empty strings shouldn't match specific filters
+    if (jobValue === null || jobValue === undefined || jobValue === '') {
+      console.log(`❌ NO MATCH: job value is empty vs filter "${filterValue}"`);
       return false;
     }
     
@@ -165,7 +165,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const jobValueStr = String(jobValue);
     const filterValueStr = String(filterValue);
     
-    // Check for EXACT match first (preserve case exactly)
+    // Check for EXACT match first (case sensitive)
     const exactMatch = jobValueStr === filterValueStr;
     
     // Fall back to case-insensitive contains match
