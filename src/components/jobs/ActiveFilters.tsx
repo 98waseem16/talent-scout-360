@@ -46,6 +46,10 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         return `Dept: ${filter.label}`;
       case 'visa_sponsorship':
         return 'Visa Sponsorship';
+      case 'search':
+        return `Search: ${filter.label}`;
+      case 'location':
+        return `Location: ${filter.label}`;
       default:
         return filter.label;
     }

@@ -1,16 +1,16 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { X, Filter, Building, Briefcase, DollarSign, Users, BarChart2, Globe, Clock } from 'lucide-react';
 import FilterSelect from './FilterSelect';
 import { Switch } from '@/components/ui/switch';
 
-// Filter option types
+// Filter option type
 interface FilterOption {
   label: string;
   value: string;
 }
 
-// Department options - CRITICAL: These MUST match exact values in database
+// Department options
 const departmentOptions: FilterOption[] = [
   { label: 'Engineering', value: 'Engineering' },
   { label: 'Product', value: 'Product' },
@@ -24,7 +24,7 @@ const departmentOptions: FilterOption[] = [
   { label: 'Finance', value: 'Finance' },
 ];
 
-// Seniority options - CRITICAL: These MUST match exact values in database
+// Seniority options
 const seniorityOptions: FilterOption[] = [
   { label: 'Internship', value: 'Internship' },
   { label: 'Entry-Level', value: 'Entry-Level' },
@@ -36,7 +36,7 @@ const seniorityOptions: FilterOption[] = [
   { label: 'C-Level', value: 'C-Level' },
 ];
 
-// Salary range options - CRITICAL: These MUST match exact values in database
+// Salary range options
 const salaryRangeOptions: FilterOption[] = [
   { label: 'Negotiable', value: 'Negotiable' },
   { label: '$40K-$60K', value: '$40K-$60K' },
@@ -45,7 +45,7 @@ const salaryRangeOptions: FilterOption[] = [
   { label: '$120K+', value: '$120K+' },
 ];
 
-// Team size options - CRITICAL: These MUST match exact values in database
+// Team size options
 const teamSizeOptions: FilterOption[] = [
   { label: '1-10', value: '1-10' },
   { label: '11-50', value: '11-50' },
@@ -54,7 +54,7 @@ const teamSizeOptions: FilterOption[] = [
   { label: '501+', value: '501+' },
 ];
 
-// Investment stage options - CRITICAL: These MUST match exact values in database
+// Investment stage options
 const investmentStageOptions: FilterOption[] = [
   { label: 'Pre-seed', value: 'Pre-seed' },
   { label: 'Seed', value: 'Seed' },
@@ -65,30 +65,29 @@ const investmentStageOptions: FilterOption[] = [
   { label: 'Profitable', value: 'Profitable' },
 ];
 
-// Remote/onsite options - CRITICAL: These MUST match exact values in database
+// Remote/onsite options
 const remoteOptions: FilterOption[] = [
   { label: 'Fully Remote', value: 'Fully Remote' },
   { label: 'Hybrid', value: 'Hybrid' },
   { label: 'Onsite', value: 'Onsite' },
 ];
 
-// Job type options - CRITICAL: These MUST match exact values in database
+// Job type options
 const jobTypeOptions: FilterOption[] = [
   { label: 'Full-time', value: 'Full-time' },
   { label: 'Part-time', value: 'Part-time' },
   { label: 'Contract', value: 'Contract' },
-  { label: 'Freelance', value: 'Freelance' },
-  { label: 'Internship', value: 'Internship' },
+  { label: 'Remote', value: 'Remote' },
 ];
 
-// Work hours options - CRITICAL: These MUST match exact values in database
+// Work hours options
 const workHoursOptions: FilterOption[] = [
   { label: 'Flexible', value: 'Flexible' },
   { label: 'Fixed', value: 'Fixed' },
   { label: 'Async Work', value: 'Async Work' },
 ];
 
-// Equity options - CRITICAL: These MUST match exact values in database
+// Equity options
 const equityOptions: FilterOption[] = [
   { label: 'None', value: 'None' },
   { label: '0.1%-0.5%', value: '0.1%-0.5%' },
@@ -96,14 +95,14 @@ const equityOptions: FilterOption[] = [
   { label: '1%+', value: '1%+' },
 ];
 
-// Hiring urgency options - CRITICAL: These MUST match exact values in database
+// Hiring urgency options
 const hiringUrgencyOptions: FilterOption[] = [
   { label: 'Immediate Hire', value: 'Immediate Hire' },
   { label: 'Within a Month', value: 'Within a Month' },
   { label: 'Open to Future Applicants', value: 'Open to Future Applicants' },
 ];
 
-// Revenue model options - CRITICAL: These MUST match exact values in database
+// Revenue model options
 const revenueModelOptions: FilterOption[] = [
   { label: 'SaaS', value: 'SaaS' },
   { label: 'Marketplace', value: 'Marketplace' },
@@ -133,36 +132,19 @@ interface JobFiltersProps {
 }
 
 const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFilters }) => {
-  // Enhanced logging of filter state and selected values
-  useEffect(() => {
-    console.log('🧩 JobFilters component filters state:', {
-      department: filters.department,
-      seniority_level: filters.seniority_level,
-      remote_onsite: filters.remote_onsite,
-      type: filters.type
-    });
-    
-    // Log details for critical filters
-    if (filters.seniority_level && filters.seniority_level !== 'all') {
-      console.log(`🔍 Current seniority_level filter value: "${filters.seniority_level}"`);
-      // Log matching seniority option
-      const matchingOption = seniorityOptions.find(opt => opt.value === filters.seniority_level);
-      console.log(`🔍 Matching seniority option: ${matchingOption ? JSON.stringify(matchingOption) : 'none'}`);
-    }
-  }, [filters]);
-
-  // Forward filter changes with detailed logging
+  // Handle changes from select components
   const handleFilterChange = (field: string, value: string) => {
-    console.log(`🔄 Filter change in JobFilters: ${field} = "${value}"`);
+    console.log(`JobFilters: Change ${field} to "${value}"`);
     setFilters(field, value);
   };
 
-  // Handle switch changes properly
-  const handleSwitchChange = (field: string, checked: boolean) => {
-    console.log(`🔄 Switch change in JobFilters: ${field} = ${checked}`);
-    setFilters(field, checked);
+  // Handle visa sponsorship switch
+  const handleSwitchChange = (checked: boolean) => {
+    console.log(`JobFilters: Change visa_sponsorship to ${checked}`);
+    setFilters('visa_sponsorship', checked);
   };
 
+  // Check if any filter is active
   const hasActiveFilters = Object.values(filters).some(value => 
     typeof value === 'boolean' ? value : value !== 'all'
   );
@@ -185,6 +167,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
       </div>
       
       <div className="space-y-4">
+        {/* Department */}
         <FilterSelect
           label="Department"
           icon={<Building className="h-4 w-4" />}
@@ -194,6 +177,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           placeholder="All departments"
         />
         
+        {/* Seniority Level */}
         <FilterSelect
           label="Seniority Level"
           icon={<Briefcase className="h-4 w-4" />}
@@ -203,6 +187,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           placeholder="All levels"
         />
         
+        {/* Salary Range */}
         <FilterSelect
           label="Salary Range"
           icon={<DollarSign className="h-4 w-4" />}
@@ -212,6 +197,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           placeholder="All salary ranges"
         />
         
+        {/* Job Type */}
         <FilterSelect
           label="Job Type"
           icon={<Briefcase className="h-4 w-4" />}
@@ -221,6 +207,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           placeholder="All job types"
         />
         
+        {/* Remote / Onsite */}
         <FilterSelect
           label="Remote / Onsite"
           icon={<Globe className="h-4 w-4" />}
@@ -230,11 +217,12 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           placeholder="All locations"
         />
         
+        {/* Visa Sponsorship Switch */}
         <div className="flex items-center space-x-2 pt-2">
           <Switch
             id="visa-sponsorship"
             checked={filters.visa_sponsorship}
-            onCheckedChange={(checked) => handleSwitchChange('visa_sponsorship', checked)}
+            onCheckedChange={handleSwitchChange}
           />
           <label htmlFor="visa-sponsorship" className="text-sm cursor-pointer">
             Visa Sponsorship Available
@@ -243,6 +231,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
         
         <hr className="my-4" />
         
+        {/* Advanced Filters Dropdown */}
         <details className="group">
           <summary className="flex cursor-pointer items-center justify-between font-medium text-sm text-muted-foreground">
             <span>Advanced Filters</span>
@@ -265,6 +254,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           </summary>
           
           <div className="pt-4 space-y-4">
+            {/* Team Size */}
             <FilterSelect
               label="Team Size"
               icon={<Users className="h-4 w-4" />}
@@ -274,6 +264,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
               placeholder="All team sizes"
             />
             
+            {/* Investment Stage */}
             <FilterSelect
               label="Investment Stage"
               icon={<BarChart2 className="h-4 w-4" />}
@@ -283,6 +274,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
               placeholder="All investment stages"
             />
             
+            {/* Work Hours */}
             <FilterSelect
               label="Work Hours"
               icon={<Clock className="h-4 w-4" />}
@@ -292,6 +284,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
               placeholder="All work hours"
             />
             
+            {/* Equity */}
             <FilterSelect
               label="Equity"
               icon={<BarChart2 className="h-4 w-4" />}
@@ -301,6 +294,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
               placeholder="All equity options"
             />
             
+            {/* Hiring Urgency */}
             <FilterSelect
               label="Hiring Urgency"
               icon={<Clock className="h-4 w-4" />}
@@ -310,6 +304,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
               placeholder="All hiring urgencies"
             />
             
+            {/* Revenue Model */}
             <FilterSelect
               label="Revenue Model"
               icon={<DollarSign className="h-4 w-4" />}

@@ -41,32 +41,10 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Properly forward filter changes with better logging for debugging
+  // Handle filter changes from the JobFilters component
   const handleFilterChange = (field: string, value: string | boolean) => {
-    console.log(`🔄 FilterSidebar: Changing filter "${field}" to value="${value}" (type: ${typeof value})`);
-    
-    // Special handling for the visa_sponsorship boolean value
-    if (field === 'visa_sponsorship') {
-      // Ensure value is treated as a boolean
-      let boolValue: boolean;
-      if (typeof value === 'string') {
-        boolValue = value === 'true';
-      } else {
-        boolValue = Boolean(value);
-      }
-      
-      console.log(`🔄 Setting visa_sponsorship to ${boolValue} (${typeof boolValue})`);
-      setFilters(prev => ({ ...prev, [field]: boolValue }));
-    } else {
-      // For all other string filters
-      if (typeof value !== 'string') {
-        console.error(`🚨 FilterSidebar received non-string value for field "${field}": ${value}`);
-        return;
-      }
-      
-      console.log(`🔄 Setting filter "${field}" to "${value}"`);
-      setFilters(prev => ({ ...prev, [field]: value }));
-    }
+    console.log(`FilterSidebar: Changing filter "${field}" to ${typeof value === 'boolean' ? value : `"${value}"`}`);
+    setFilters(prev => ({ ...prev, [field]: value }));
   };
 
   return (

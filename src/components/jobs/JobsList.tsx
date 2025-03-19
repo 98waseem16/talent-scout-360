@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import JobCard from '@/components/JobCard';
 import { Job } from '@/lib/types/job.types';
@@ -12,47 +12,7 @@ interface JobsListProps {
 }
 
 const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJobs }) => {
-  useEffect(() => {
-    if (jobs && jobs.length > 0) {
-      console.log(`🔢 Total jobs loaded: ${jobs.length}`);
-      
-      // Enhanced debugging for seniority levels
-      console.log('\n📊 JOB SENIORITY LEVEL DATA ANALYSIS:');
-      
-      // Count jobs by seniority level
-      const seniorityLevels = new Map<string, number>();
-      jobs.forEach(job => {
-        const level = job.seniority_level || 'undefined/null';
-        seniorityLevels.set(level, (seniorityLevels.get(level) || 0) + 1);
-      });
-      
-      // Log the distribution
-      console.log('Seniority level distribution:');
-      seniorityLevels.forEach((count, level) => {
-        console.log(`- "${level}": ${count} jobs`);
-      });
-      
-      // Count jobs with "Senior" in title or seniority for deeper analysis
-      const seniorJobs = jobs.filter(job => {
-        const title = (job.title || '').toLowerCase();
-        const seniority = (job.seniority_level || '').toLowerCase();
-        return title.includes('senior') || seniority.includes('senior');
-      });
-      
-      console.log(`\n🔍 Jobs with "Senior" in title or seniority_level: ${seniorJobs.length}`);
-      if (seniorJobs.length > 0) {
-        console.log('First 5 Senior Jobs:');
-        seniorJobs.slice(0, 5).forEach(job => {
-          console.log(`- ID: ${job.id}`);
-          console.log(`  Title: ${job.title}`);
-          console.log(`  Seniority: "${job.seniority_level}" (${typeof job.seniority_level})`);
-        });
-      }
-      
-      console.log(`\n🔢 Filtered jobs count: ${filteredJobs.length}`);
-    }
-  }, [jobs, filteredJobs]);
-
+  // Display loading state
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -76,6 +36,7 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
     );
   }
 
+  // Display error state
   if (error) {
     return (
       <div className="text-center py-16">
@@ -87,6 +48,7 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
     );
   }
 
+  // Display empty state or job results
   return (
     <div className="space-y-6">
       {filteredJobs.length > 0 ? (
@@ -104,23 +66,6 @@ const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJob
           <p className="text-muted-foreground">
             Try adjusting your search criteria or filters
           </p>
-          <div className="mt-4 p-4 border rounded bg-gray-50 text-left text-sm">
-            <p className="font-medium">Debugging Information:</p>
-            <p>Total jobs: {jobs?.length || 0}</p>
-            <p>Active filters: {filteredJobs.length === 0 && jobs?.length ? (
-              <ul className="list-disc pl-5 mt-2">
-                {jobs.slice(0, 3).map(job => (
-                  <li key={job.id} className="mb-2">
-                    <strong>Job:</strong> {job.title}<br />
-                    <strong>Department:</strong> "{job.department}" ({typeof job.department})<br />
-                    <strong>Seniority:</strong> "{job.seniority_level}" ({typeof job.seniority_level})<br />
-                    <strong>Type:</strong> "{job.type}" ({typeof job.type})<br />
-                    <strong>Remote:</strong> "{job.remote_onsite}" ({typeof job.remote_onsite})
-                  </li>
-                ))}
-              </ul>
-            ) : "None"}</p>
-          </div>
         </div>
       )}
     </div>
