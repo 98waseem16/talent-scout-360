@@ -6,31 +6,31 @@ interface FilterSidebarProps {
   isFilterOpen: boolean;
   filters: {
     department: string;
-    seniority: string;
-    salaryRange: string;
-    teamSize: string;
-    investmentStage: string;
-    remote: string;
-    jobType: string;
-    workHours: string;
+    seniority_level: string;
+    salary_range: string;
+    team_size: string;
+    investment_stage: string;
+    remote_onsite: string;
+    type: string;
+    work_hours: string;
     equity: string;
-    hiringUrgency: string;
-    revenueModel: string;
-    visaSponsorship: boolean;
+    hiring_urgency: string;
+    revenue_model: string;
+    visa_sponsorship: boolean;
   };
   setFilters: React.Dispatch<React.SetStateAction<{
     department: string;
-    seniority: string;
-    salaryRange: string;
-    teamSize: string;
-    investmentStage: string;
-    remote: string;
-    jobType: string;
-    workHours: string;
+    seniority_level: string;
+    salary_range: string;
+    team_size: string;
+    investment_stage: string;
+    remote_onsite: string;
+    type: string;
+    work_hours: string;
     equity: string;
-    hiringUrgency: string;
-    revenueModel: string;
-    visaSponsorship: boolean;
+    hiring_urgency: string;
+    revenue_model: string;
+    visa_sponsorship: boolean;
   }>>;
   clearAllFilters: () => void;
 }
@@ -45,8 +45,8 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   const handleFilterChange = (field: string, value: string | boolean) => {
     console.log(`🔄 FilterSidebar: Changing filter "${field}" to value="${value}" (type: ${typeof value})`);
     
-    // Special handling for the visaSponsorship boolean value
-    if (field === 'visaSponsorship') {
+    // Special handling for the visa_sponsorship boolean value
+    if (field === 'visa_sponsorship') {
       // Ensure value is treated as a boolean
       let boolValue: boolean;
       if (typeof value === 'string') {
@@ -55,7 +55,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
         boolValue = Boolean(value);
       }
       
-      console.log(`🔄 Setting visaSponsorship to ${boolValue} (${typeof boolValue})`);
+      console.log(`🔄 Setting visa_sponsorship to ${boolValue} (${typeof boolValue})`);
       setFilters(prev => ({ ...prev, [field]: boolValue }));
     } else {
       // For all other string filters

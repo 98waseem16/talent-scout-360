@@ -5,17 +5,17 @@ import { Job } from '@/lib/types/job.types';
 
 interface JobFilters {
   department: string;
-  seniority: string;
-  salaryRange: string;
-  teamSize: string;
-  investmentStage: string;
-  remote: string;
-  jobType: string;
-  workHours: string;
+  seniority_level: string;
+  salary_range: string;
+  team_size: string;
+  investment_stage: string;
+  remote_onsite: string;
+  type: string;
+  work_hours: string;
   equity: string;
-  hiringUrgency: string;
-  revenueModel: string;
-  visaSponsorship: boolean;
+  hiring_urgency: string;
+  revenue_model: string;
+  visa_sponsorship: boolean;
 }
 
 interface UseJobFiltersReturn {
@@ -46,17 +46,17 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   
   const [filters, setFilters] = useState<JobFilters>({
     department: 'all',
-    seniority: 'all',
-    salaryRange: 'all',
-    teamSize: 'all',
-    investmentStage: 'all',
-    remote: 'all',
-    jobType: 'all',
-    workHours: 'all',
+    seniority_level: 'all',
+    salary_range: 'all',
+    team_size: 'all',
+    investment_stage: 'all',
+    remote_onsite: 'all',
+    type: 'all',
+    work_hours: 'all',
     equity: 'all',
-    hiringUrgency: 'all',
-    revenueModel: 'all',
-    visaSponsorship: false
+    hiring_urgency: 'all',
+    revenue_model: 'all',
+    visa_sponsorship: false
   });
 
   // Debug filter state when it changes
@@ -92,17 +92,17 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     console.log('🧹 Clearing all filters');
     setFilters({
       department: 'all',
-      seniority: 'all',
-      salaryRange: 'all',
-      teamSize: 'all',
-      investmentStage: 'all',
-      remote: 'all',
-      jobType: 'all',
-      workHours: 'all',
+      seniority_level: 'all',
+      salary_range: 'all',
+      team_size: 'all',
+      investment_stage: 'all',
+      remote_onsite: 'all',
+      type: 'all',
+      work_hours: 'all',
       equity: 'all',
-      hiringUrgency: 'all',
-      revenueModel: 'all',
-      visaSponsorship: false
+      hiring_urgency: 'all',
+      revenue_model: 'all',
+      visa_sponsorship: false
     });
   };
 
@@ -115,7 +115,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     } else {
       setFilters(prev => ({ 
         ...prev, 
-        [type]: type === 'visaSponsorship' ? false : 'all' 
+        [type]: type === 'visa_sponsorship' ? false : 'all' 
       }));
     }
   };
@@ -124,48 +124,26 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(searchQuery ? [{ type: 'search', label: `"${searchQuery}"` }] : []),
     ...(locationQuery ? [{ type: 'location', label: locationQuery }] : []),
     ...(filters.department !== 'all' ? [{ type: 'department', label: filters.department }] : []),
-    ...(filters.seniority !== 'all' ? [{ type: 'seniority', label: filters.seniority }] : []),
-    ...(filters.salaryRange !== 'all' ? [{ type: 'salaryRange', label: filters.salaryRange }] : []),
-    ...(filters.teamSize !== 'all' ? [{ type: 'teamSize', label: filters.teamSize }] : []),
-    ...(filters.investmentStage !== 'all' ? [{ type: 'investmentStage', label: filters.investmentStage }] : []),
-    ...(filters.remote !== 'all' ? [{ type: 'remote', label: filters.remote }] : []),
-    ...(filters.jobType !== 'all' ? [{ type: 'jobType', label: filters.jobType }] : []),
-    ...(filters.workHours !== 'all' ? [{ type: 'workHours', label: filters.workHours }] : []),
+    ...(filters.seniority_level !== 'all' ? [{ type: 'seniority_level', label: filters.seniority_level }] : []),
+    ...(filters.salary_range !== 'all' ? [{ type: 'salary_range', label: filters.salary_range }] : []),
+    ...(filters.team_size !== 'all' ? [{ type: 'team_size', label: filters.team_size }] : []),
+    ...(filters.investment_stage !== 'all' ? [{ type: 'investment_stage', label: filters.investment_stage }] : []),
+    ...(filters.remote_onsite !== 'all' ? [{ type: 'remote_onsite', label: filters.remote_onsite }] : []),
+    ...(filters.type !== 'all' ? [{ type: 'type', label: filters.type }] : []),
+    ...(filters.work_hours !== 'all' ? [{ type: 'work_hours', label: filters.work_hours }] : []),
     ...(filters.equity !== 'all' ? [{ type: 'equity', label: filters.equity }] : []),
-    ...(filters.hiringUrgency !== 'all' ? [{ type: 'hiringUrgency', label: filters.hiringUrgency }] : []),
-    ...(filters.revenueModel !== 'all' ? [{ type: 'revenueModel', label: filters.revenueModel }] : []),
-    ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
+    ...(filters.hiring_urgency !== 'all' ? [{ type: 'hiring_urgency', label: filters.hiring_urgency }] : []),
+    ...(filters.revenue_model !== 'all' ? [{ type: 'revenue_model', label: filters.revenue_model }] : []),
+    ...(filters.visa_sponsorship ? [{ type: 'visa_sponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // CRITICAL CORRECTION: The mapping between UI filter names and database field names
-  const fieldMappings: Record<string, keyof Job> = {
-    department: 'department',
-    seniority: 'seniority_level',  // UI: seniority -> DB: seniority_level
-    salaryRange: 'salary_range',   // UI: salaryRange -> DB: salary_range
-    teamSize: 'team_size',         // UI: teamSize -> DB: team_size
-    investmentStage: 'investment_stage', // UI: investmentStage -> DB: investment_stage
-    remote: 'remote_onsite',       // UI: remote -> DB: remote_onsite
-    jobType: 'type',               // UI: jobType -> DB: type
-    workHours: 'work_hours',       // UI: workHours -> DB: work_hours
-    equity: 'equity', 
-    hiringUrgency: 'hiring_urgency', // UI: hiringUrgency -> DB: hiring_urgency
-    revenueModel: 'revenue_model',   // UI: revenueModel -> DB: revenue_model
-    visaSponsorship: 'visa_sponsorship' // UI: visaSponsorship -> DB: visa_sponsorship
-  };
-
   // Improved job field access with logging
-  const getJobFieldValue = (job: Job, filterType: string): any => {
-    const fieldName = fieldMappings[filterType];
-    if (!fieldName) {
-      console.error(`Missing field mapping for filter type: ${filterType}`);
-      return null;
-    }
-    
-    const value = job[fieldName as keyof Job];
+  const getJobFieldValue = (job: Job, fieldName: keyof Job): any => {
+    const value = job[fieldName];
     
     // Only log for active filters
-    if (filters[filterType as keyof JobFilters] !== 'all' && 
-        filters[filterType as keyof JobFilters] !== false) {
+    const filterKey = fieldName as keyof JobFilters;
+    if (filters[filterKey] !== 'all' && filters[filterKey] !== false) {
       console.log(`🔍 JOB FIELD CHECK: Job "${job.title}" ${String(fieldName)}=${value === undefined ? 'undefined' : `"${value}"`}`);
     }
     
@@ -228,11 +206,11 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       return false;
     }
     
-    // Get active filter types
+    // Get active filter types (excluding search and location which were already checked)
     const activeFilterKeys = Object.entries(filters)
       .filter(([key, value]) => {
-        // For boolean visaSponsorship, only consider active if true
-        if (key === 'visaSponsorship') return value === true;
+        // For boolean visa_sponsorship, only consider active if true
+        if (key === 'visa_sponsorship') return value === true;
         // For all other filters, consider active if not 'all'
         return value !== 'all'; 
       })
@@ -243,9 +221,9 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       console.log(`\n🔎 FILTERING JOB: "${job.title}" (ID: ${job.id})`);
       
       // For each active filter, check if the job matches
-      for (const filterType of activeFilterKeys) {
+      for (const filterKey of activeFilterKeys) {
         // Special handling for boolean filters
-        if (filterType === 'visaSponsorship') {
+        if (filterKey === 'visa_sponsorship') {
           if (job.visa_sponsorship !== true) {
             console.log(`❌ VISA FILTER: Job does not offer visa sponsorship`);
             return false;
@@ -253,13 +231,14 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
           continue;
         }
         
-        const jobValue = getJobFieldValue(job, filterType);
-        const filterValue = filters[filterType as keyof JobFilters];
+        const jobFieldName = filterKey as keyof Job;
+        const jobValue = getJobFieldValue(job, jobFieldName);
+        const filterValue = filters[filterKey as keyof JobFilters];
         
-        console.log(`🔍 CHECKING FILTER: ${filterType}="${filterValue}" against job field value=${jobValue === undefined ? 'undefined' : `"${jobValue}"`}`);
+        console.log(`🔍 CHECKING FILTER: ${filterKey}="${filterValue}" against job field value=${jobValue === undefined ? 'undefined' : `"${jobValue}"`}`);
         
         if (!matchesFilter(jobValue, filterValue as string)) {
-          console.log(`❌ JOB REJECTED: Failed to match ${filterType} filter`);
+          console.log(`❌ JOB REJECTED: Failed to match ${filterKey} filter`);
           return false;
         }
       }

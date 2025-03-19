@@ -20,11 +20,42 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 }) => {
   if (activeFilters.length === 0) return null;
 
+  // Helper function to format filter labels for display
+  const formatFilterLabel = (filter: ActiveFilter): string => {
+    // Convert database field names to more readable form
+    switch (filter.type) {
+      case 'seniority_level':
+        return `Seniority: ${filter.label}`;
+      case 'salary_range':
+        return `Salary: ${filter.label}`;
+      case 'team_size':
+        return `Team: ${filter.label}`;
+      case 'investment_stage':
+        return `Investment: ${filter.label}`;
+      case 'remote_onsite':
+        return `Location: ${filter.label}`;
+      case 'type':
+        return `Type: ${filter.label}`;
+      case 'work_hours':
+        return `Hours: ${filter.label}`;
+      case 'hiring_urgency':
+        return `Urgency: ${filter.label}`;
+      case 'revenue_model':
+        return `Revenue: ${filter.label}`;
+      case 'department':
+        return `Dept: ${filter.label}`;
+      case 'visa_sponsorship':
+        return 'Visa Sponsorship';
+      default:
+        return filter.label;
+    }
+  };
+
   return (
     <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
       {activeFilters.map((filter, index) => (
         <div key={index} className="inline-flex items-center bg-secondary text-sm rounded-full px-3 py-1">
-          <span className="mr-1">{filter.label}</span>
+          <span className="mr-1">{formatFilterLabel(filter)}</span>
           <button 
             onClick={() => removeFilter(filter.type)}
             className="text-muted-foreground hover:text-foreground"
