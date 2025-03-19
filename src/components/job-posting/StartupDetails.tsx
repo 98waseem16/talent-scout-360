@@ -124,6 +124,6 @@ const StartupDetails: React.FC<StartupDetailsProps> = ({ formData, handleSelectC
       </div>
     </>
   );
-};
+}
 
 export default StartupDetails;

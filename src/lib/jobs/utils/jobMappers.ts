@@ -32,7 +32,7 @@ export const mapJobFormDataToDatabaseFields = (
   };
 };
 
-export const mapDatabaseFieldsToJob = (dbFields: any) => {
+export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
   if (!dbFields) {
     console.error('mapDatabaseFieldsToJob received null or undefined dbFields');
     return null;
@@ -53,14 +53,31 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return String(value).trim(); // No lowercase - preserve exact values
   };
   
-  // Create mapped job object with direct value assignments - NO validation or transformation
-  const mappedJob = {
+  // Validate job type against allowed values
+  const validateJobType = (type: string): 'Full-time' | 'Part-time' | 'Contract' | 'Remote' => {
+    const validTypes: ('Full-time' | 'Part-time' | 'Contract' | 'Remote')[] = [
+      'Full-time', 'Part-time', 'Contract', 'Remote'
+    ];
+    
+    const cleanedType = cleanField(type);
+    
+    // Check if the cleaned type is one of the valid types
+    if (validTypes.includes(cleanedType as any)) {
+      return cleanedType as 'Full-time' | 'Part-time' | 'Contract' | 'Remote';
+    }
+    
+    console.warn(`Invalid job type "${type}", defaulting to "Full-time"`);
+    return 'Full-time'; // Default to Full-time if not a valid type
+  };
+  
+  // Create mapped job object with validated type
+  const mappedJob: Job = {
     id: dbFields.id,
     title: cleanField(dbFields.title),
     company: cleanField(dbFields.company),
     location: cleanField(dbFields.location),
     salary: cleanField(dbFields.salary),
-    type: cleanField(dbFields.type) || 'Full-time',
+    type: validateJobType(dbFields.type),
     posted: cleanField(dbFields.posted),
     description: cleanField(dbFields.description),
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
