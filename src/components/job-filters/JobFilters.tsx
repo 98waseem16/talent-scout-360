@@ -10,7 +10,7 @@ interface FilterOption {
   value: string;
 }
 
-// Department options
+// Department options - CRITICAL: These MUST match exact values in database
 const departmentOptions: FilterOption[] = [
   { label: 'Engineering', value: 'Engineering' },
   { label: 'Product', value: 'Product' },
@@ -36,7 +36,7 @@ const seniorityOptions: FilterOption[] = [
   { label: 'C-Level', value: 'C-Level' },
 ];
 
-// Salary range options
+// Salary range options - CRITICAL: These MUST match exact values in database
 const salaryRangeOptions: FilterOption[] = [
   { label: 'Negotiable', value: 'Negotiable' },
   { label: '$40K-$60K', value: '$40K-$60K' },
@@ -45,7 +45,7 @@ const salaryRangeOptions: FilterOption[] = [
   { label: '$120K+', value: '$120K+' },
 ];
 
-// Team size options
+// Team size options - CRITICAL: These MUST match exact values in database
 const teamSizeOptions: FilterOption[] = [
   { label: '1-10', value: '1-10' },
   { label: '11-50', value: '11-50' },
@@ -54,7 +54,7 @@ const teamSizeOptions: FilterOption[] = [
   { label: '501+', value: '501+' },
 ];
 
-// Investment stage options
+// Investment stage options - CRITICAL: These MUST match exact values in database
 const investmentStageOptions: FilterOption[] = [
   { label: 'Pre-seed', value: 'Pre-seed' },
   { label: 'Seed', value: 'Seed' },
@@ -65,14 +65,14 @@ const investmentStageOptions: FilterOption[] = [
   { label: 'Profitable', value: 'Profitable' },
 ];
 
-// Remote/onsite options
+// Remote/onsite options - CRITICAL: These MUST match exact values in database
 const remoteOptions: FilterOption[] = [
   { label: 'Fully Remote', value: 'Fully Remote' },
   { label: 'Hybrid', value: 'Hybrid' },
   { label: 'Onsite', value: 'Onsite' },
 ];
 
-// Job type options
+// Job type options - CRITICAL: These MUST match exact values in database
 const jobTypeOptions: FilterOption[] = [
   { label: 'Full-time', value: 'Full-time' },
   { label: 'Part-time', value: 'Part-time' },
@@ -81,14 +81,14 @@ const jobTypeOptions: FilterOption[] = [
   { label: 'Internship', value: 'Internship' },
 ];
 
-// Work hours options
+// Work hours options - CRITICAL: These MUST match exact values in database
 const workHoursOptions: FilterOption[] = [
   { label: 'Flexible', value: 'Flexible' },
   { label: 'Fixed', value: 'Fixed' },
   { label: 'Async Work', value: 'Async Work' },
 ];
 
-// Equity options
+// Equity options - CRITICAL: These MUST match exact values in database
 const equityOptions: FilterOption[] = [
   { label: 'None', value: 'None' },
   { label: '0.1%-0.5%', value: '0.1%-0.5%' },
@@ -96,14 +96,14 @@ const equityOptions: FilterOption[] = [
   { label: '1%+', value: '1%+' },
 ];
 
-// Hiring urgency options
+// Hiring urgency options - CRITICAL: These MUST match exact values in database
 const hiringUrgencyOptions: FilterOption[] = [
   { label: 'Immediate Hire', value: 'Immediate Hire' },
   { label: 'Within a Month', value: 'Within a Month' },
   { label: 'Open to Future Applicants', value: 'Open to Future Applicants' },
 ];
 
-// Revenue model options
+// Revenue model options - CRITICAL: These MUST match exact values in database
 const revenueModelOptions: FilterOption[] = [
   { label: 'SaaS', value: 'SaaS' },
   { label: 'Marketplace', value: 'Marketplace' },
@@ -133,20 +133,31 @@ interface JobFiltersProps {
 }
 
 const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFilters }) => {
-  // Add useEffect to log the current filter state when component renders
+  // Enhanced logging of filter state and selected values
   useEffect(() => {
-    console.log('🧩 JobFilters component filters state:', filters);
+    console.log('🧩 JobFilters component filters state:', {
+      department: filters.department,
+      seniority: filters.seniority,
+      remote: filters.remote,
+      jobType: filters.jobType
+    });
     
+    // Log details for critical filters
     if (filters.seniority && filters.seniority !== 'all') {
       console.log(`🔍 Current seniority filter value: "${filters.seniority}"`);
+      // Log matching seniority option
+      const matchingOption = seniorityOptions.find(opt => opt.value === filters.seniority);
+      console.log(`🔍 Matching seniority option: ${matchingOption ? JSON.stringify(matchingOption) : 'none'}`);
     }
   }, [filters]);
 
+  // Forward filter changes with detailed logging
   const handleFilterChange = (field: string, value: string) => {
     console.log(`🔄 Filter change in JobFilters: ${field} = "${value}"`);
     setFilters(field, value);
   };
 
+  // Handle switch changes properly
   const handleSwitchChange = (field: string, checked: boolean) => {
     console.log(`🔄 Switch change in JobFilters: ${field} = ${checked}`);
     setFilters(field, checked.toString());

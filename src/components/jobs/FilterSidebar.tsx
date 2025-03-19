@@ -41,7 +41,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Add debugging to trace filter changes
+  // Properly forward filter changes without any transformation
   const handleFilterChange = (field: string, value: string) => {
     console.log(`🔄 FilterSidebar: Changing filter "${field}" to value "${value}"`);
     setFilters(prev => ({ ...prev, [field]: value }));

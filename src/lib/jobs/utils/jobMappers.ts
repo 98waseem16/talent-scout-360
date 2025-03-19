@@ -45,19 +45,20 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   console.log(`  remote_onsite: "${dbFields.remote_onsite}" (${typeof dbFields.remote_onsite})`);
   console.log(`  type: "${dbFields.type}" (${typeof dbFields.type})`);
   
-  // Convert string values of "undefined" or "null" to empty strings
+  // Enhanced field cleaning function to standardize values
   const cleanStringField = (value: any): string => {
     if (value === null || value === undefined || value === "undefined" || value === "null") {
       return '';
     }
-    return String(value);
+    return String(value).trim(); // Don't lowercase - preserve exact casing
   };
   
-  // Validation functions for each filter type
+  // Validation functions for each filter type with preserving exact casing
   const validateJobType = (typeValue: any): 'Full-time' | 'Part-time' | 'Contract' | 'Remote' => {
     const cleanType = cleanStringField(typeValue);
     const validTypes = ['Full-time', 'Part-time', 'Contract', 'Remote'];
     
+    // Exact case-sensitive matching
     if (validTypes.includes(cleanType)) {
       return cleanType as 'Full-time' | 'Part-time' | 'Contract' | 'Remote';
     }
@@ -66,7 +67,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return 'Full-time'; // Default to Full-time if invalid
   };
   
-  // Validate department to ensure it matches one of our allowed values
+  // Validate department to ensure it matches one of our allowed values with exact casing
   const validateDepartment = (value: any): string => {
     const cleanValue = cleanStringField(value);
     const validDepartments = [
@@ -74,7 +75,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
       'Operations', 'HR', 'Customer Support', 'Legal', 'Finance'
     ];
     
-    // For department, we'll allow any value but log a warning if it's not in our list
+    // For department, preserve the exact case from the database
     if (cleanValue && !validDepartments.includes(cleanValue)) {
       console.warn(`Unusual department value: "${cleanValue}"`);
     }
@@ -82,7 +83,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return cleanValue;
   };
   
-  // Validate seniority level to ensure it matches one of our allowed values
+  // Validate seniority level to ensure it matches one of our allowed values with exact casing
   const validateSeniorityLevel = (value: any): string => {
     const cleanValue = cleanStringField(value);
     const validLevels = [
@@ -90,6 +91,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
       'Lead', 'Director', 'VP', 'C-Level'
     ];
     
+    // Preserve exact case from the database
     if (cleanValue && !validLevels.includes(cleanValue)) {
       console.warn(`Unusual seniority level: "${cleanValue}"`);
     }
@@ -97,11 +99,12 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return cleanValue;
   };
   
-  // Validate remote/onsite to ensure it matches one of our allowed values
+  // Validate remote/onsite to ensure it matches one of our allowed values with exact casing
   const validateRemoteOnsite = (value: any): string => {
     const cleanValue = cleanStringField(value);
     const validOptions = ['Fully Remote', 'Hybrid', 'Onsite'];
     
+    // Preserve exact case from the database
     if (cleanValue && !validOptions.includes(cleanValue)) {
       console.warn(`Unusual remote/onsite value: "${cleanValue}"`);
     }
@@ -109,7 +112,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     return cleanValue;
   };
   
-  // Create a standardized job object with proper value conversions
+  // Create a standardized job object with proper value conversions - preserving exact casing
   const mappedJob = {
     id: dbFields.id,
     title: cleanStringField(dbFields.title),
@@ -127,7 +130,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     application_url: cleanStringField(dbFields.application_url),
     user_id: cleanStringField(dbFields.user_id),
     
-    // Critical filter fields - ensure they're clean strings and valid values
+    // Critical filter fields - ensure they're clean strings with preserved casing
     department: validateDepartment(dbFields.department),
     seniority_level: validateSeniorityLevel(dbFields.seniority_level),
     salary_range: cleanStringField(dbFields.salary_range),
