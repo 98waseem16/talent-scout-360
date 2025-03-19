@@ -1,5 +1,5 @@
 
-import { JobDatabaseFields, JobFormData } from '../../types/job.types';
+import { JobDatabaseFields, JobFormData, Job } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
   formData: JobFormData
@@ -53,6 +53,19 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
   console.log(`  Original remote_onsite: "${dbFields.remote_onsite}" (${typeof dbFields.remote_onsite})`);
   console.log(`  Original type: "${dbFields.type}" (${typeof dbFields.type})`);
   
+  // Validate and normalize job type to ensure it's one of the allowed values
+  const validateJobType = (typeValue: any): 'Full-time' | 'Part-time' | 'Contract' | 'Remote' => {
+    const cleanType = cleanStringField(typeValue);
+    const validTypes = ['Full-time', 'Part-time', 'Contract', 'Remote'];
+    
+    if (validTypes.includes(cleanType)) {
+      return cleanType as 'Full-time' | 'Part-time' | 'Contract' | 'Remote';
+    }
+    
+    console.warn(`Invalid job type "${cleanType}" - defaulting to "Full-time"`);
+    return 'Full-time'; // Default to Full-time if invalid
+  };
+  
   // Create a standardized job object with proper value conversions
   const mappedJob = {
     id: dbFields.id,
@@ -60,7 +73,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any) => {
     company: cleanStringField(dbFields.company),
     location: cleanStringField(dbFields.location),
     salary: cleanStringField(dbFields.salary),
-    type: cleanStringField(dbFields.type) || 'Full-time',
+    type: validateJobType(dbFields.type),
     posted: cleanStringField(dbFields.posted),
     description: cleanStringField(dbFields.description),
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
