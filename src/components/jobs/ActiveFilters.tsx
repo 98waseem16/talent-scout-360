@@ -20,6 +20,9 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 }) => {
   if (activeFilters.length === 0) return null;
 
+  // Debug active filters
+  console.log('Active filters:', activeFilters);
+
   // Helper function to format filter labels for display
   const formatFilterLabel = (filter: ActiveFilter): string => {
     // Convert database field names to more readable form

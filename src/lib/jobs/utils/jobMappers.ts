@@ -44,6 +44,13 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
   console.log(`  department: "${dbFields.department || ''}"`);
   console.log(`  remote_onsite: "${dbFields.remote_onsite || ''}"`);
   console.log(`  type: "${dbFields.type || ''}"`);
+  console.log(`  salary_range: "${dbFields.salary_range || ''}"`);
+  console.log(`  team_size: "${dbFields.team_size || ''}"`);
+  console.log(`  work_hours: "${dbFields.work_hours || ''}"`);
+  console.log(`  equity: "${dbFields.equity || ''}"`);
+  console.log(`  hiring_urgency: "${dbFields.hiring_urgency || ''}"`);
+  console.log(`  revenue_model: "${dbFields.revenue_model || ''}"`);
+  console.log(`  visa_sponsorship: ${dbFields.visa_sponsorship ? 'true' : 'false'}`);
   
   // Simple helper to handle null/undefined values - always returns a string
   const cleanField = (value: any): string => {
@@ -108,6 +115,13 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
   console.log(`  department: "${mappedJob.department}"`);
   console.log(`  remote_onsite: "${mappedJob.remote_onsite}"`);
   console.log(`  type: "${mappedJob.type}"`);
+  console.log(`  salary_range: "${mappedJob.salary_range}"`);
+  console.log(`  team_size: "${mappedJob.team_size}"`);
+  console.log(`  work_hours: "${mappedJob.work_hours}"`);
+  console.log(`  equity: "${mappedJob.equity}"`);
+  console.log(`  hiring_urgency: "${mappedJob.hiring_urgency}"`);
+  console.log(`  revenue_model: "${mappedJob.revenue_model}"`);
+  console.log(`  visa_sponsorship: ${mappedJob.visa_sponsorship ? 'true' : 'false'}`);
   
   return mappedJob;
 };

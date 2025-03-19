@@ -12,6 +12,9 @@ interface JobsListProps {
 }
 
 const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJobs }) => {
+  // Debug the filtered jobs
+  console.log(`JobsList: Rendering ${filteredJobs.length} filtered jobs`);
+  
   // Display loading state
   if (isLoading) {
     return (

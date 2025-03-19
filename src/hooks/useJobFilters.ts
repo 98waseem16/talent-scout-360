@@ -74,7 +74,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
 
   // Log filter state for debugging
   useEffect(() => {
-    console.log('Current filters:', filters);
+    console.log('Active filters:', filters);
   }, [filters]);
 
   // Clear all search and filters
@@ -136,8 +136,16 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visa_sponsorship ? [{ type: 'visa_sponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Simple filter function to compare job fields with filter values
+  // Fixed matching function that properly compares job fields with filter values
   const matchesFilter = (job: Job, filterName: keyof JobFilters, filterValue: string | boolean): boolean => {
+    // Debug logs
+    console.log(`Checking filter ${filterName}:`, {
+      filterValue: filterValue,
+      jobValue: job[filterName as keyof Job],
+      jobValueType: typeof job[filterName as keyof Job],
+      match: job[filterName as keyof Job] === filterValue
+    });
+    
     // Special case for visa_sponsorship which is a boolean
     if (filterName === 'visa_sponsorship') {
       // Only filter if visa_sponsorship is true
@@ -147,24 +155,34 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       return true; // If filter is false, show all jobs
     }
     
-    // For string filters
+    // For string filters, 'all' means no filter is applied
     if (filterValue === 'all') {
-      return true; // 'all' means no filter is applied
+      return true;
     }
     
-    const jobValue = job[filterName];
+    // Get the job value for this filter
+    const jobValue = job[filterName as keyof Job];
     
     // If job doesn't have this field or it's empty, it doesn't match
     if (jobValue === undefined || jobValue === null || jobValue === '') {
+      console.log(`Job ${job.id} has no value for ${filterName}`);
       return false;
     }
     
     // For string comparison, do an exact match
     return String(jobValue) === String(filterValue);
-  }
+  };
 
   // Apply all filters to jobs
   const filteredJobs = jobs?.filter(job => {
+    // Debug each job
+    console.log(`Filtering job ${job.id} (${job.title})`, {
+      department: job.department,
+      seniority_level: job.seniority_level,
+      type: job.type,
+      remote_onsite: job.remote_onsite
+    });
+    
     // Search text filtering (case insensitive)
     const matchesSearch = !searchQuery || 
       [job.title, job.company, job.description]
@@ -186,6 +204,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       
       // Check if job passes this specific filter
       if (!matchesFilter(job, filterName as keyof JobFilters, filterValue)) {
+        console.log(`Job ${job.id} failed filter ${filterName}=${filterValue}`);
         return false;
       }
     }

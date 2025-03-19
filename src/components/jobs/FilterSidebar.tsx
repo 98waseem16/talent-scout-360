@@ -43,7 +43,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
 }) => {
   // Handle filter changes from the JobFilters component
   const handleFilterChange = (field: string, value: string | boolean) => {
-    console.log(`FilterSidebar: Changing filter "${field}" to ${typeof value === 'boolean' ? value : `"${value}"`}`);
+    console.log(`FilterSidebar: Setting ${field} to ${value}`);
     setFilters(prev => ({ ...prev, [field]: value }));
   };
 
