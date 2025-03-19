@@ -41,10 +41,21 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Properly forward filter changes without any transformation
-  const handleFilterChange = (field: string, value: string) => {
+  // Properly forward filter changes - important to handle the visaSponsorship boolean separately
+  const handleFilterChange = (field: string, value: string | boolean) => {
     console.log(`🔄 FilterSidebar: Changing filter "${field}" to value "${value}"`);
-    setFilters(prev => ({ ...prev, [field]: value }));
+    
+    // Convert string "true"/"false" to boolean for visaSponsorship
+    if (field === 'visaSponsorship') {
+      if (typeof value === 'string') {
+        setFilters(prev => ({ ...prev, [field]: value === 'true' }));
+      } else {
+        setFilters(prev => ({ ...prev, [field]: value }));
+      }
+    } else {
+      // All other filters are handled as strings
+      setFilters(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   return (
