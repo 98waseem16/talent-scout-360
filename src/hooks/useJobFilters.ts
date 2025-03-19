@@ -166,19 +166,20 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     // Only log for active filters
     if (filters[filterType as keyof JobFilters] !== 'all' && 
         filters[filterType as keyof JobFilters] !== false) {
-      console.log(`🔍 JOB FIELD CHECK: Job "${job.title}" ${String(fieldName)}="${value}"`);
+      console.log(`🔍 JOB FIELD CHECK: Job "${job.title}" ${String(fieldName)}=${value === undefined ? 'undefined' : `"${value}"`}`);
     }
     
     return value;
   };
 
-  // IMPROVED FILTER MATCHING: Now checks for exact match first, then falls back to case-insensitive contains
+  // IMPROVED FILTER MATCHING: Fixed handling of undefined values - critical fix
   const matchesFilter = (jobValue: any, filterValue: string): boolean => {
     // Return true for "all" filter
     if (filterValue === 'all') return true;
     
-    // Check for empty job values
-    if (jobValue === null || jobValue === undefined || jobValue === '') {
+    // CRITICAL FIX: If job value is undefined, it shouldn't match any specific filter
+    if (jobValue === undefined || jobValue === null || jobValue === '') {
+      console.log(`❌ NO MATCH: job value is ${jobValue === undefined ? 'undefined' : 'null/empty'} vs filter "${filterValue}"`);
       return false;
     }
     
@@ -255,7 +256,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
         const jobValue = getJobFieldValue(job, filterType);
         const filterValue = filters[filterType as keyof JobFilters];
         
-        console.log(`🔍 CHECKING FILTER: ${filterType}="${filterValue}" against job field value="${jobValue}"`);
+        console.log(`🔍 CHECKING FILTER: ${filterType}="${filterValue}" against job field value=${jobValue === undefined ? 'undefined' : `"${jobValue}"`}`);
         
         if (!matchesFilter(jobValue, filterValue as string)) {
           console.log(`❌ JOB REJECTED: Failed to match ${filterType} filter`);

@@ -41,19 +41,30 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Properly forward filter changes - important to handle the visaSponsorship boolean separately
+  // Properly forward filter changes with better logging for debugging
   const handleFilterChange = (field: string, value: string | boolean) => {
-    console.log(`🔄 FilterSidebar: Changing filter "${field}" to value "${value}"`);
+    console.log(`🔄 FilterSidebar: Changing filter "${field}" to value="${value}" (type: ${typeof value})`);
     
-    // Convert string "true"/"false" to boolean for visaSponsorship
+    // Special handling for the visaSponsorship boolean value
     if (field === 'visaSponsorship') {
+      // Ensure value is treated as a boolean
+      let boolValue: boolean;
       if (typeof value === 'string') {
-        setFilters(prev => ({ ...prev, [field]: value === 'true' }));
+        boolValue = value === 'true';
       } else {
-        setFilters(prev => ({ ...prev, [field]: value }));
+        boolValue = Boolean(value);
       }
+      
+      console.log(`🔄 Setting visaSponsorship to ${boolValue} (${typeof boolValue})`);
+      setFilters(prev => ({ ...prev, [field]: boolValue }));
     } else {
-      // All other filters are handled as strings
+      // For all other string filters
+      if (typeof value !== 'string') {
+        console.error(`🚨 FilterSidebar received non-string value for field "${field}": ${value}`);
+        return;
+      }
+      
+      console.log(`🔄 Setting filter "${field}" to "${value}"`);
       setFilters(prev => ({ ...prev, [field]: value }));
     }
   };

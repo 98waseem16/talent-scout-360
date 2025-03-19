@@ -40,15 +40,16 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
   
   // CRITICAL: Print raw database values for debugging
   console.log(`📊 RAW DATABASE FIELDS for job "${dbFields.title}" (ID: ${dbFields.id}):`);
-  console.log(`  seniority_level: "${dbFields.seniority_level}"`);
-  console.log(`  department: "${dbFields.department}"`);
-  console.log(`  remote_onsite: "${dbFields.remote_onsite}"`);
-  console.log(`  type: "${dbFields.type}"`);
+  console.log(`  seniority_level: "${dbFields.seniority_level || ''}"`);
+  console.log(`  department: "${dbFields.department || ''}"`);
+  console.log(`  remote_onsite: "${dbFields.remote_onsite || ''}"`);
+  console.log(`  type: "${dbFields.type || ''}"`);
   
-  // Simple field cleaning with minimal transformation - preserves case exactly
-  const cleanField = (value: any): string => {
-    if (value === null || value === undefined) {
-      return '';
+  // Clean field function preserves exact case but handles nulls properly
+  // CRITICAL FIX: Return undefined for empty values instead of empty strings
+  const cleanField = (value: any): string | undefined => {
+    if (value === null || value === undefined || value === '') {
+      return undefined;
     }
     return String(value).trim(); // No lowercase - preserve exact values
   };
@@ -59,7 +60,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
       'Full-time', 'Part-time', 'Contract', 'Remote'
     ];
     
-    const cleanedType = cleanField(type);
+    const cleanedType = cleanField(type) || '';
     
     // Check if the cleaned type is one of the valid types
     if (validTypes.includes(cleanedType as any)) {
@@ -73,22 +74,22 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
   // Create mapped job object with validated type
   const mappedJob: Job = {
     id: dbFields.id,
-    title: cleanField(dbFields.title),
-    company: cleanField(dbFields.company),
-    location: cleanField(dbFields.location),
-    salary: cleanField(dbFields.salary),
+    title: cleanField(dbFields.title) || '',
+    company: cleanField(dbFields.company) || '',
+    location: cleanField(dbFields.location) || '',
+    salary: cleanField(dbFields.salary) || '',
     type: validateJobType(dbFields.type),
-    posted: cleanField(dbFields.posted),
-    description: cleanField(dbFields.description),
+    posted: cleanField(dbFields.posted) || '',
+    description: cleanField(dbFields.description) || '',
     responsibilities: Array.isArray(dbFields.responsibilities) ? dbFields.responsibilities : [],
     requirements: Array.isArray(dbFields.requirements) ? dbFields.requirements : [],
     benefits: Array.isArray(dbFields.benefits) ? dbFields.benefits : [],
     logo: cleanField(dbFields.logo) || '/placeholder.svg',
     featured: Boolean(dbFields.featured),
-    application_url: cleanField(dbFields.application_url),
-    user_id: cleanField(dbFields.user_id),
+    application_url: cleanField(dbFields.application_url) || '',
+    user_id: cleanField(dbFields.user_id) || '',
     
-    // CRITICAL: Preserve exact values from database without validation or transformation
+    // CRITICAL FIX: Preserve database values exactly as is - don't use empty strings
     department: cleanField(dbFields.department),
     seniority_level: cleanField(dbFields.seniority_level),
     salary_range: cleanField(dbFields.salary_range),
@@ -104,9 +105,9 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
   
   // After mapping, log the mapped fields for verification
   console.log(`📊 MAPPED JOB FIELDS for "${mappedJob.title}" (ID: ${mappedJob.id}):`);
-  console.log(`  seniority_level: "${mappedJob.seniority_level}"`);
-  console.log(`  department: "${mappedJob.department}"`);
-  console.log(`  remote_onsite: "${mappedJob.remote_onsite}"`);
+  console.log(`  seniority_level: ${mappedJob.seniority_level === undefined ? 'undefined' : `"${mappedJob.seniority_level}"`}`);
+  console.log(`  department: ${mappedJob.department === undefined ? 'undefined' : `"${mappedJob.department}"`}`);
+  console.log(`  remote_onsite: ${mappedJob.remote_onsite === undefined ? 'undefined' : `"${mappedJob.remote_onsite}"`}`);
   console.log(`  type: "${mappedJob.type}"`);
   
   return mappedJob;
