@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Job } from '@/lib/types/job.types';
@@ -126,12 +125,12 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   // The exact mapping between UI filter names and database field names
   const fieldMappings: Record<string, keyof Job> = {
     department: 'department',
-    seniority: 'seniority_level', // CRITICAL: This maps 'seniority' filter to 'seniority_level' field
+    seniority: 'seniority_level',
     salaryRange: 'salary_range',
     teamSize: 'team_size',
     investmentStage: 'investment_stage',
     remote: 'remote_onsite',
-    jobType: 'job_type',
+    jobType: 'type',
     workHours: 'work_hours',
     equity: 'equity',
     hiringUrgency: 'hiring_urgency',
@@ -155,6 +154,35 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       normalizedFilterValue: normalizeString(filterValue),
       matches: result
     });
+  };
+
+  // Get the correct job field value with proper fallbacks
+  const getJobFieldValue = (job: Job, filterType: string): any => {
+    const fieldName = fieldMappings[filterType];
+    if (!fieldName) return null;
+    
+    // Get the value from the job with field name diagnostic
+    console.log(`Getting job field value for ${filterType} using field name: ${String(fieldName)}`);
+    let value = job[fieldName as keyof Job];
+    
+    // Handle special cases for field variations
+    if (value === null || value === undefined) {
+      switch (filterType) {
+        case 'jobType':
+          value = job.type || job.job_type || '';
+          break;
+        case 'remote':
+          value = job.remote_onsite || job.type || '';
+          break;
+        case 'salaryRange':
+          value = job.salary_range || job.salary || '';
+          break;
+        default:
+          value = '';
+      }
+    }
+    
+    return value;
   };
 
   // Completely revised matching function with better type handling
@@ -193,23 +221,6 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const result = exactMatch || partialMatch;
     debugFilter(jobValue, filterValue, filterType, jobId, result);
     return result;
-  };
-
-  // Get the correct job field value with proper fallbacks
-  const getJobFieldValue = (job: Job, filterType: string): any => {
-    const fieldName = fieldMappings[filterType];
-    if (!fieldName) return null;
-    
-    // Get the value from the job with field name diagnostic
-    console.log(`Getting job field value for ${filterType} using field name: ${String(fieldName)}`);
-    const value = job[fieldName as keyof Job];
-    
-    // Special case handling for job_type/type
-    if (filterType === 'jobType') {
-      return value || job.type || '';
-    }
-    
-    return value;
   };
 
   // Filtering logic with improved debugging and type checking
