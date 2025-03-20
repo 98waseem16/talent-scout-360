@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Job } from '@/lib/types/job.types';
 
-// Define our filters interface to match the database columns
+// Define our filters interface to match UI components
 interface JobFilters {
   department: string;
   seniority_level: string;
@@ -46,7 +46,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   // Initialize all string filters to 'all' (meaning no filter applied)
-  // and boolean filters to false
+  // and boolean filters to false - using names that match the database fields
   const [filters, setFilters] = useState<JobFilters>({
     department: 'all',
     seniority_level: 'all',
@@ -72,7 +72,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     window.history.replaceState({}, '', newUrl);
   }, [searchQuery, locationQuery, location.pathname]);
 
-  // Log filter state for debugging
+  // Log active filters for debugging
   useEffect(() => {
     console.log('Active filters:', filters);
   }, [filters]);
@@ -136,19 +136,54 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visa_sponsorship ? [{ type: 'visa_sponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Fixed matching function that properly compares job fields with filter values
-  const matchesFilter = (job: Job, filterName: keyof JobFilters, filterValue: string | boolean): boolean => {
-    // Debug logs
-    console.log(`Checking filter ${filterName}:`, {
-      filterValue: filterValue,
-      jobValue: job[filterName as keyof Job],
-      jobValueType: typeof job[filterName as keyof Job],
-      match: job[filterName as keyof Job] === filterValue
-    });
+  // Helper to normalize strings for comparison
+  const normalizeString = (str: string | null | undefined): string => {
+    if (str === null || str === undefined) return '';
+    return String(str).trim().toLowerCase();
+  };
+
+  // Enhanced getJobFieldValue function with better fallbacks
+  const getJobFieldValue = (job: Job, filterName: string): any => {
+    console.log(`Getting field value for "${filterName}" on job ${job.id}`);
     
-    // Special case for visa_sponsorship which is a boolean
+    // Special handling for common field name variations
+    switch(filterName) {
+      case 'type':
+        return job.type || null;
+      case 'department':
+        return job.department || null;
+      case 'seniority_level':
+        return job.seniority_level || null;
+      case 'salary_range':
+        return job.salary_range || null;
+      case 'team_size':
+        return job.team_size || null;
+      case 'investment_stage':
+        return job.investment_stage || null;
+      case 'remote_onsite':
+        return job.remote_onsite || null;
+      case 'work_hours':
+        return job.work_hours || null;
+      case 'equity':
+        return job.equity || null;
+      case 'hiring_urgency':
+        return job.hiring_urgency || null;
+      case 'revenue_model':
+        return job.revenue_model || null;
+      case 'visa_sponsorship':
+        return job.visa_sponsorship || null;
+      default:
+        console.warn(`Unknown filter name: ${filterName}`);
+        return null;
+    }
+  };
+
+  // Improved matchesFilter function with better matching logic
+  const matchesFilter = (job: Job, filterName: keyof JobFilters, filterValue: string | boolean): boolean => {
+    // For visa_sponsorship which is a boolean
     if (filterName === 'visa_sponsorship') {
-      // Only filter if visa_sponsorship is true
+      console.log(`Checking visa_sponsorship: job=${job.visa_sponsorship}, filter=${filterValue}`);
+      // Only filter if visa_sponsorship is true in the filter
       if (filterValue === true) {
         return job.visa_sponsorship === true;
       }
@@ -161,16 +196,32 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     }
     
     // Get the job value for this filter
-    const jobValue = job[filterName as keyof Job];
+    const jobValue = getJobFieldValue(job, filterName);
+    
+    console.log(`Filter comparison for ${filterName}:`, {
+      jobValue,
+      filterValue,
+      jobValueType: typeof jobValue
+    });
     
     // If job doesn't have this field or it's empty, it doesn't match
-    if (jobValue === undefined || jobValue === null || jobValue === '') {
+    if (jobValue === null || jobValue === undefined || jobValue === '') {
       console.log(`Job ${job.id} has no value for ${filterName}`);
       return false;
     }
     
-    // For string comparison, do an exact match
-    return String(jobValue) === String(filterValue);
+    // For string comparison, do a case-insensitive contains match
+    const normalizedJobValue = normalizeString(jobValue);
+    const normalizedFilterValue = normalizeString(filterValue as string);
+    
+    const isExactMatch = normalizedJobValue === normalizedFilterValue;
+    const isPartialMatch = normalizedJobValue.includes(normalizedFilterValue) || 
+                          normalizedFilterValue.includes(normalizedJobValue);
+    
+    const matches = isExactMatch || isPartialMatch;
+    console.log(`${filterName} match result: ${matches} (exact: ${isExactMatch}, partial: ${isPartialMatch})`);
+    
+    return matches;
   };
 
   // Apply all filters to jobs
@@ -187,13 +238,13 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const matchesSearch = !searchQuery || 
       [job.title, job.company, job.description]
         .filter(Boolean)
-        .some(field => field.toLowerCase().includes(searchQuery.toLowerCase()));
+        .some(field => normalizeString(field).includes(normalizeString(searchQuery)));
     
     if (!matchesSearch) return false;
     
     // Location filtering (case insensitive)
     const matchesLocation = !locationQuery || 
-      job.location.toLowerCase().includes(locationQuery.toLowerCase());
+      normalizeString(job.location).includes(normalizeString(locationQuery));
     
     if (!matchesLocation) return false;
     

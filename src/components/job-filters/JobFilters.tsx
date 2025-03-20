@@ -177,7 +177,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           placeholder="All departments"
         />
         
-        {/* Seniority Level */}
+        {/* Seniority Level - Note: This uses seniority_level to match DB */}
         <FilterSelect
           label="Seniority Level"
           icon={<Briefcase className="h-4 w-4" />}
@@ -187,7 +187,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           placeholder="All levels"
         />
         
-        {/* Salary Range */}
+        {/* Salary Range - Note: This uses salary_range to match DB */}
         <FilterSelect
           label="Salary Range"
           icon={<DollarSign className="h-4 w-4" />}
@@ -197,7 +197,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           placeholder="All salary ranges"
         />
         
-        {/* Job Type */}
+        {/* Job Type - Note: This uses type to match DB */}
         <FilterSelect
           label="Job Type"
           icon={<Briefcase className="h-4 w-4" />}
@@ -207,7 +207,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           placeholder="All job types"
         />
         
-        {/* Remote / Onsite */}
+        {/* Remote / Onsite - Note: This uses remote_onsite to match DB */}
         <FilterSelect
           label="Remote / Onsite"
           icon={<Globe className="h-4 w-4" />}
@@ -254,7 +254,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           </summary>
           
           <div className="pt-4 space-y-4">
-            {/* Team Size */}
+            {/* Team Size - Note: This uses team_size to match DB */}
             <FilterSelect
               label="Team Size"
               icon={<Users className="h-4 w-4" />}
@@ -264,7 +264,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
               placeholder="All team sizes"
             />
             
-            {/* Investment Stage */}
+            {/* Investment Stage - Note: This uses investment_stage to match DB */}
             <FilterSelect
               label="Investment Stage"
               icon={<BarChart2 className="h-4 w-4" />}
@@ -274,7 +274,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
               placeholder="All investment stages"
             />
             
-            {/* Work Hours */}
+            {/* Work Hours - Note: This uses work_hours to match DB */}
             <FilterSelect
               label="Work Hours"
               icon={<Clock className="h-4 w-4" />}
@@ -294,7 +294,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
               placeholder="All equity options"
             />
             
-            {/* Hiring Urgency */}
+            {/* Hiring Urgency - Note: This uses hiring_urgency to match DB */}
             <FilterSelect
               label="Hiring Urgency"
               icon={<Clock className="h-4 w-4" />}
@@ -304,7 +304,7 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
               placeholder="All hiring urgencies"
             />
             
-            {/* Revenue Model */}
+            {/* Revenue Model - Note: This uses revenue_model to match DB */}
             <FilterSelect
               label="Revenue Model"
               icon={<DollarSign className="h-4 w-4" />}
