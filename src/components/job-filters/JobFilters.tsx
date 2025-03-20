@@ -1,10 +1,9 @@
-
 import React from 'react';
 import { X, Filter, Building, Briefcase, DollarSign, Users, BarChart2, Globe, Clock } from 'lucide-react';
 import FilterSelect from './FilterSelect';
 import { Switch } from '@/components/ui/switch';
 
-// Filter option type
+// Filter option types
 interface FilterOption {
   label: string;
   value: string;
@@ -38,7 +37,6 @@ const seniorityOptions: FilterOption[] = [
 
 // Salary range options
 const salaryRangeOptions: FilterOption[] = [
-  { label: 'Negotiable', value: 'Negotiable' },
   { label: '$40K-$60K', value: '$40K-$60K' },
   { label: '$60K-$80K', value: '$60K-$80K' },
   { label: '$80K-$120K', value: '$80K-$120K' },
@@ -68,7 +66,6 @@ const investmentStageOptions: FilterOption[] = [
 // Remote/onsite options
 const remoteOptions: FilterOption[] = [
   { label: 'Fully Remote', value: 'Fully Remote' },
-  { label: 'Hybrid', value: 'Hybrid' },
   { label: 'Onsite', value: 'Onsite' },
 ];
 
@@ -78,6 +75,8 @@ const jobTypeOptions: FilterOption[] = [
   { label: 'Part-time', value: 'Part-time' },
   { label: 'Contract', value: 'Contract' },
   { label: 'Remote', value: 'Remote' },
+  { label: 'Freelance', value: 'Freelance' },
+  { label: 'Internship', value: 'Internship' },
 ];
 
 // Work hours options
@@ -115,38 +114,33 @@ const revenueModelOptions: FilterOption[] = [
 interface JobFiltersProps {
   filters: {
     department: string;
-    seniority_level: string;
-    salary_range: string;
-    team_size: string;
-    investment_stage: string;
-    remote_onsite: string;
-    type: string;
-    work_hours: string;
+    seniority: string;
+    salaryRange: string;
+    teamSize: string;
+    investmentStage: string;
+    remote: string;
+    jobType: string;
+    workHours: string;
     equity: string;
-    hiring_urgency: string;
-    revenue_model: string;
-    visa_sponsorship: boolean;
+    hiringUrgency: string;
+    revenueModel: string;
+    visaSponsorship: boolean;
   };
-  setFilters: (field: string, value: string | boolean) => void;
+  setFilters: React.Dispatch<React.SetStateAction<any>>;
   clearAllFilters: () => void;
 }
 
 const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFilters }) => {
-  // Handle changes from select components
   const handleFilterChange = (field: string, value: string) => {
-    console.log(`JobFilters: Change ${field} to "${value}"`);
-    setFilters(field, value);
+    setFilters(prev => ({ ...prev, [field]: value }));
   };
 
-  // Handle visa sponsorship switch
-  const handleSwitchChange = (checked: boolean) => {
-    console.log(`JobFilters: Change visa_sponsorship to ${checked}`);
-    setFilters('visa_sponsorship', checked);
+  const handleSwitchChange = (field: string, checked: boolean) => {
+    setFilters(prev => ({ ...prev, [field]: checked }));
   };
 
-  // Check if any filter is active
   const hasActiveFilters = Object.values(filters).some(value => 
-    typeof value === 'boolean' ? value : value !== 'all'
+    typeof value === 'boolean' ? value : value !== ''
   );
 
   return (
@@ -167,7 +161,6 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
       </div>
       
       <div className="space-y-4">
-        {/* Department */}
         <FilterSelect
           label="Department"
           icon={<Building className="h-4 w-4" />}
@@ -177,52 +170,47 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           placeholder="All departments"
         />
         
-        {/* Seniority Level - Note: This uses seniority_level to match DB */}
         <FilterSelect
           label="Seniority Level"
           icon={<Briefcase className="h-4 w-4" />}
           options={seniorityOptions}
-          value={filters.seniority_level}
-          onChange={(value) => handleFilterChange('seniority_level', value)}
+          value={filters.seniority}
+          onChange={(value) => handleFilterChange('seniority', value)}
           placeholder="All levels"
         />
         
-        {/* Salary Range - Note: This uses salary_range to match DB */}
         <FilterSelect
           label="Salary Range"
           icon={<DollarSign className="h-4 w-4" />}
           options={salaryRangeOptions}
-          value={filters.salary_range}
-          onChange={(value) => handleFilterChange('salary_range', value)}
+          value={filters.salaryRange}
+          onChange={(value) => handleFilterChange('salaryRange', value)}
           placeholder="All salary ranges"
         />
         
-        {/* Job Type - Note: This uses type to match DB */}
         <FilterSelect
           label="Job Type"
           icon={<Briefcase className="h-4 w-4" />}
           options={jobTypeOptions}
-          value={filters.type}
-          onChange={(value) => handleFilterChange('type', value)}
+          value={filters.jobType}
+          onChange={(value) => handleFilterChange('jobType', value)}
           placeholder="All job types"
         />
         
-        {/* Remote / Onsite - Note: This uses remote_onsite to match DB */}
         <FilterSelect
           label="Remote / Onsite"
           icon={<Globe className="h-4 w-4" />}
           options={remoteOptions}
-          value={filters.remote_onsite}
-          onChange={(value) => handleFilterChange('remote_onsite', value)}
+          value={filters.remote}
+          onChange={(value) => handleFilterChange('remote', value)}
           placeholder="All locations"
         />
         
-        {/* Visa Sponsorship Switch */}
         <div className="flex items-center space-x-2 pt-2">
           <Switch
             id="visa-sponsorship"
-            checked={filters.visa_sponsorship}
-            onCheckedChange={handleSwitchChange}
+            checked={filters.visaSponsorship}
+            onCheckedChange={(checked) => handleSwitchChange('visaSponsorship', checked)}
           />
           <label htmlFor="visa-sponsorship" className="text-sm cursor-pointer">
             Visa Sponsorship Available
@@ -231,7 +219,6 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
         
         <hr className="my-4" />
         
-        {/* Advanced Filters Dropdown */}
         <details className="group">
           <summary className="flex cursor-pointer items-center justify-between font-medium text-sm text-muted-foreground">
             <span>Advanced Filters</span>
@@ -254,37 +241,33 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
           </summary>
           
           <div className="pt-4 space-y-4">
-            {/* Team Size - Note: This uses team_size to match DB */}
             <FilterSelect
               label="Team Size"
               icon={<Users className="h-4 w-4" />}
               options={teamSizeOptions}
-              value={filters.team_size}
-              onChange={(value) => handleFilterChange('team_size', value)}
+              value={filters.teamSize}
+              onChange={(value) => handleFilterChange('teamSize', value)}
               placeholder="All team sizes"
             />
             
-            {/* Investment Stage - Note: This uses investment_stage to match DB */}
             <FilterSelect
               label="Investment Stage"
               icon={<BarChart2 className="h-4 w-4" />}
               options={investmentStageOptions}
-              value={filters.investment_stage}
-              onChange={(value) => handleFilterChange('investment_stage', value)}
+              value={filters.investmentStage}
+              onChange={(value) => handleFilterChange('investmentStage', value)}
               placeholder="All investment stages"
             />
             
-            {/* Work Hours - Note: This uses work_hours to match DB */}
             <FilterSelect
               label="Work Hours"
               icon={<Clock className="h-4 w-4" />}
               options={workHoursOptions}
-              value={filters.work_hours}
-              onChange={(value) => handleFilterChange('work_hours', value)}
+              value={filters.workHours}
+              onChange={(value) => handleFilterChange('workHours', value)}
               placeholder="All work hours"
             />
             
-            {/* Equity */}
             <FilterSelect
               label="Equity"
               icon={<BarChart2 className="h-4 w-4" />}
@@ -294,23 +277,21 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
               placeholder="All equity options"
             />
             
-            {/* Hiring Urgency - Note: This uses hiring_urgency to match DB */}
             <FilterSelect
               label="Hiring Urgency"
               icon={<Clock className="h-4 w-4" />}
               options={hiringUrgencyOptions}
-              value={filters.hiring_urgency}
-              onChange={(value) => handleFilterChange('hiring_urgency', value)}
+              value={filters.hiringUrgency}
+              onChange={(value) => handleFilterChange('hiringUrgency', value)}
               placeholder="All hiring urgencies"
             />
             
-            {/* Revenue Model - Note: This uses revenue_model to match DB */}
             <FilterSelect
               label="Revenue Model"
               icon={<DollarSign className="h-4 w-4" />}
               options={revenueModelOptions}
-              value={filters.revenue_model}
-              onChange={(value) => handleFilterChange('revenue_model', value)}
+              value={filters.revenueModel}
+              onChange={(value) => handleFilterChange('revenueModel', value)}
               placeholder="All revenue models"
             />
           </div>

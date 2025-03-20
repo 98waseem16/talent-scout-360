@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+mport { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Job } from '@/lib/types/job.types';
 
@@ -126,10 +126,10 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   const fieldMappings: Record<string, keyof Job> = {
     department: 'department',
     seniority: 'seniority_level',
-    salaryRange: 'salary_range',
+    salaryRange: 'salary',
     teamSize: 'team_size',
     investmentStage: 'investment_stage',
-    remote: 'remote_onsite',
+    remote: 'type',
     jobType: 'type',
     workHours: 'work_hours',
     equity: 'equity',
@@ -168,14 +168,19 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     // Handle special cases for field variations
     if (value === null || value === undefined) {
       switch (filterType) {
-        case 'jobType':
-          value = job.type || job.job_type || '';
-          break;
         case 'remote':
-          value = job.remote_onsite || job.type || '';
+          // Check if the job type is Remote
+          value = job.type === 'Remote' ? 'Fully Remote' : '';
           break;
         case 'salaryRange':
-          value = job.salary_range || job.salary || '';
+          // Map salary to salary range
+          if (job.salary) {
+            const salary = parseInt(job.salary.replace(/[^0-9]/g, ''));
+            if (salary < 60000) value = '$40K-$60K';
+            else if (salary < 80000) value = '$60K-$80K';
+            else if (salary < 120000) value = '$80K-$120K';
+            else value = '$120K+';
+          }
           break;
         default:
           value = '';

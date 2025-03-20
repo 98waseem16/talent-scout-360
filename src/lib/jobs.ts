@@ -7,7 +7,8 @@ export interface Job {
   company: string;
   location: string;
   salary: string;
-  type: 'Full-time' | 'Part-time' | 'Contract' | 'Remote';
+  salary_range?: string;
+  type: 'Full-time' | 'Part-time' | 'Contract' | 'Remote' | 'Freelance' | 'Internship';
   posted: string;
   description: string;
   responsibilities: string[];
@@ -16,6 +17,16 @@ export interface Job {
   logo: string;
   featured?: boolean;
   application_url: string;
+  department?: string;
+  seniority_level?: string;
+  team_size?: string;
+  investment_stage?: string;
+  remote_onsite?: string;
+  work_hours?: string;
+  equity?: string;
+  hiring_urgency?: string;
+  revenue_model?: string;
+  visa_sponsorship?: boolean;
 }
 
 export const staticJobs: Job[] = [
