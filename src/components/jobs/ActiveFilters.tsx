@@ -27,32 +27,36 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
   const formatFilterLabel = (filter: ActiveFilter): string => {
     // Convert database field names to more readable form
     switch (filter.type) {
-      case 'seniority_level':
+      case 'seniority':
         return `Seniority: ${filter.label}`;
-      case 'salary_range':
+      case 'salaryRange':
         return `Salary: ${filter.label}`;
-      case 'team_size':
+      case 'teamSize':
         return `Team: ${filter.label}`;
-      case 'investment_stage':
+      case 'investmentStage':
         return `Investment: ${filter.label}`;
-      case 'remote_onsite':
-        return `Location: ${filter.label}`;
-      case 'type':
-        return `Type: ${filter.label}`;
-      case 'work_hours':
+      case 'remote':
+        return `Work Location: ${filter.label}`;
+      case 'jobType':
+        return `Job Type: ${filter.label}`;
+      case 'workHours':
         return `Hours: ${filter.label}`;
-      case 'hiring_urgency':
+      case 'hiringUrgency':
         return `Urgency: ${filter.label}`;
-      case 'revenue_model':
+      case 'revenueModel':
         return `Revenue: ${filter.label}`;
       case 'department':
         return `Dept: ${filter.label}`;
       case 'visa_sponsorship':
         return 'Visa Sponsorship';
+      case 'visaSponsorship':
+        return 'Visa Sponsorship';
       case 'search':
         return `Search: ${filter.label}`;
       case 'location':
         return `Location: ${filter.label}`;
+      case 'equity':
+        return `Equity: ${filter.label}`;
       default:
         return filter.label;
     }

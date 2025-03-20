@@ -55,20 +55,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     >
       <div className="bg-white rounded-xl border border-border shadow-sm p-5 mb-6">
         <JobFilters 
-          filters={{
-            department: filters.department,
-            seniority: filters.seniority,
-            salaryRange: filters.salaryRange,
-            teamSize: filters.teamSize, 
-            investmentStage: filters.investmentStage,
-            remote: filters.remote,
-            jobType: filters.jobType,
-            workHours: filters.workHours,
-            equity: filters.equity,
-            hiringUrgency: filters.hiringUrgency,
-            revenueModel: filters.revenueModel,
-            visaSponsorship: filters.visaSponsorship
-          }}
+          filters={filters}
           setFilters={handleFilterChange}
           clearAllFilters={clearAllFilters} 
         />

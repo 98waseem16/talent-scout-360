@@ -64,9 +64,10 @@ const investmentStageOptions: FilterOption[] = [
   { label: 'Profitable', value: 'Profitable' },
 ];
 
-// Remote/onsite options
+// Remote/onsite options - Updated to match the database values
 const remoteOptions: FilterOption[] = [
   { label: 'Fully Remote', value: 'Fully Remote' },
+  { label: 'Hybrid', value: 'Hybrid' },
   { label: 'Onsite', value: 'Onsite' },
 ];
 

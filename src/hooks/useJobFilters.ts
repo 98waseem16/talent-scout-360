@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Job } from '@/lib/types/job.types';
@@ -126,10 +127,10 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   const fieldMappings: Record<string, keyof Job> = {
     department: 'department',
     seniority: 'seniority_level',
-    salaryRange: 'salary',
+    salaryRange: 'salary_range', // Changed from 'salary' to 'salary_range'
     teamSize: 'team_size',
     investmentStage: 'investment_stage',
-    remote: 'type',
+    remote: 'remote_onsite', // Changed from 'type' to 'remote_onsite'
     jobType: 'type',
     workHours: 'work_hours',
     equity: 'equity',
@@ -169,11 +170,11 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     if (value === null || value === undefined) {
       switch (filterType) {
         case 'remote':
-          // Check if the job type is Remote
+          // Check if remote_onsite is not set but type is Remote
           value = job.type === 'Remote' ? 'Fully Remote' : '';
           break;
         case 'salaryRange':
-          // Map salary to salary range
+          // If salary_range is not set, try to derive it from salary
           if (job.salary) {
             const salary = parseInt(job.salary.replace(/[^0-9]/g, ''));
             if (salary < 60000) value = '$40K-$60K';
