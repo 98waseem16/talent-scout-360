@@ -1,11 +1,10 @@
-
 export interface Job {
   id: string;
   title: string;
   company: string;
   location: string;
   salary: string;
-  type: 'Full-time' | 'Part-time' | 'Contract' | 'Remote';
+  type: 'Full-time' | 'Part-time' | 'Contract' | 'Remote' | 'Freelance' | 'Internship';
   posted: string;
   description: string;
   responsibilities: string[];
@@ -26,6 +25,7 @@ export interface Job {
   work_hours?: string;
   visa_sponsorship?: boolean;
   hiring_urgency?: string;
+  job_type?: string;  // Added this for backward compatibility
 }
 
 export interface JobFormData {

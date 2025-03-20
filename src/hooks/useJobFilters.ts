@@ -235,7 +235,6 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       console.log(`Filtering job: ${job.id} - ${job.title}`, {
         department: job.department,
         seniority_level: job.seniority_level,
-        job_type: job.job_type,
         type: job.type,
         remote_onsite: job.remote_onsite,
         activeFilters: activeFilters.map(f => `${f.type}:${f.label}`).join(', ')

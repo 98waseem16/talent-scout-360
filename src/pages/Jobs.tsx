@@ -11,12 +11,16 @@ import FilterToggle from '@/components/jobs/FilterToggle';
 import FilterSidebar from '@/components/jobs/FilterSidebar';
 import JobsList from '@/components/jobs/JobsList';
 import JobsCount from '@/components/jobs/JobsCount';
+import { Job } from '@/lib/types/job.types';
 
 const Jobs: React.FC = () => {
-  const { data: jobs, isLoading, error } = useQuery({
+  const { data: rawJobs, isLoading, error } = useQuery({
     queryKey: ['jobs'],
     queryFn: getJobs,
   });
+  
+  // Convert the raw jobs to the expected Job type
+  const jobs: Job[] | undefined = rawJobs as unknown as Job[] | undefined;
 
   const {
     searchQuery,
@@ -83,7 +87,7 @@ const Jobs: React.FC = () => {
                 jobs={jobs}
                 isLoading={isLoading}
                 error={error}
-                filteredJobs={filteredJobs}
+                filteredJobs={filteredJobs as Job[]} 
               />
             </div>
           </div>

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { X, Filter, Building, Briefcase, DollarSign, Users, BarChart2, Globe, Clock } from 'lucide-react';
 import FilterSelect from './FilterSelect';
@@ -126,17 +127,17 @@ interface JobFiltersProps {
     revenueModel: string;
     visaSponsorship: boolean;
   };
-  setFilters: React.Dispatch<React.SetStateAction<any>>;
+  setFilters: (field: string, value: string | boolean) => void;
   clearAllFilters: () => void;
 }
 
 const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFilters }) => {
   const handleFilterChange = (field: string, value: string) => {
-    setFilters(prev => ({ ...prev, [field]: value }));
+    setFilters(field, value);
   };
 
   const handleSwitchChange = (field: string, checked: boolean) => {
-    setFilters(prev => ({ ...prev, [field]: checked }));
+    setFilters(field, checked);
   };
 
   const hasActiveFilters = Object.values(filters).some(value => 

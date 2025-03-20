@@ -6,31 +6,31 @@ interface FilterSidebarProps {
   isFilterOpen: boolean;
   filters: {
     department: string;
-    seniority_level: string;
-    salary_range: string;
-    team_size: string;
-    investment_stage: string;
-    remote_onsite: string;
-    type: string;
-    work_hours: string;
+    seniority: string;
+    salaryRange: string;
+    teamSize: string;
+    investmentStage: string;
+    remote: string;
+    jobType: string;
+    workHours: string;
     equity: string;
-    hiring_urgency: string;
-    revenue_model: string;
-    visa_sponsorship: boolean;
+    hiringUrgency: string;
+    revenueModel: string;
+    visaSponsorship: boolean;
   };
   setFilters: React.Dispatch<React.SetStateAction<{
     department: string;
-    seniority_level: string;
-    salary_range: string;
-    team_size: string;
-    investment_stage: string;
-    remote_onsite: string;
-    type: string;
-    work_hours: string;
+    seniority: string;
+    salaryRange: string;
+    teamSize: string;
+    investmentStage: string;
+    remote: string;
+    jobType: string;
+    workHours: string;
     equity: string;
-    hiring_urgency: string;
-    revenue_model: string;
-    visa_sponsorship: boolean;
+    hiringUrgency: string;
+    revenueModel: string;
+    visaSponsorship: boolean;
   }>>;
   clearAllFilters: () => void;
 }
@@ -55,8 +55,21 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     >
       <div className="bg-white rounded-xl border border-border shadow-sm p-5 mb-6">
         <JobFilters 
-          filters={filters} 
-          setFilters={handleFilterChange} 
+          filters={{
+            department: filters.department,
+            seniority: filters.seniority,
+            salaryRange: filters.salaryRange,
+            teamSize: filters.teamSize, 
+            investmentStage: filters.investmentStage,
+            remote: filters.remote,
+            jobType: filters.jobType,
+            workHours: filters.workHours,
+            equity: filters.equity,
+            hiringUrgency: filters.hiringUrgency,
+            revenueModel: filters.revenueModel,
+            visaSponsorship: filters.visaSponsorship
+          }}
+          setFilters={handleFilterChange}
           clearAllFilters={clearAllFilters} 
         />
       </div>
