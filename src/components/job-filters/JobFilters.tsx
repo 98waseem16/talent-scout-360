@@ -64,7 +64,7 @@ const investmentStageOptions: FilterOption[] = [
   { label: 'Profitable', value: 'Profitable' },
 ];
 
-// Remote/onsite options - Updated to match the database values
+// Remote/onsite options
 const remoteOptions: FilterOption[] = [
   { label: 'Fully Remote', value: 'Fully Remote' },
   { label: 'Hybrid', value: 'Hybrid' },
@@ -134,10 +134,12 @@ interface JobFiltersProps {
 
 const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFilters }) => {
   const handleFilterChange = (field: string, value: string) => {
+    console.log(`JobFilters: Setting ${field} filter to "${value}"`);
     setFilters(field, value);
   };
 
   const handleSwitchChange = (field: string, checked: boolean) => {
+    console.log(`JobFilters: Setting ${field} switch to ${checked}`);
     setFilters(field, checked);
   };
 

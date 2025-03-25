@@ -60,17 +60,17 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     return String(value).trim(); // Return trimmed string for all other values
   };
   
-  // Validate job type against allowed values
-  const validateJobType = (type: string): 'Full-time' | 'Part-time' | 'Contract' | 'Remote' => {
-    const validTypes: ('Full-time' | 'Part-time' | 'Contract' | 'Remote')[] = [
-      'Full-time', 'Part-time', 'Contract', 'Remote'
+  // Validate job type against allowed values, with fallback
+  const validateJobType = (type: string): 'Full-time' | 'Part-time' | 'Contract' | 'Remote' | 'Freelance' | 'Internship' => {
+    const validTypes: ('Full-time' | 'Part-time' | 'Contract' | 'Remote' | 'Freelance' | 'Internship')[] = [
+      'Full-time', 'Part-time', 'Contract', 'Remote', 'Freelance', 'Internship'
     ];
     
     const cleanedType = cleanField(type);
     
     // Check if the cleaned type is one of the valid types
     if (validTypes.includes(cleanedType as any)) {
-      return cleanedType as 'Full-time' | 'Part-time' | 'Contract' | 'Remote';
+      return cleanedType as 'Full-time' | 'Part-time' | 'Contract' | 'Remote' | 'Freelance' | 'Internship';
     }
     
     console.warn(`Invalid job type "${type}", defaulting to "Full-time"`);
@@ -106,7 +106,8 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     equity: cleanField(dbFields.equity),
     hiring_urgency: cleanField(dbFields.hiring_urgency),
     revenue_model: cleanField(dbFields.revenue_model),
-    visa_sponsorship: Boolean(dbFields.visa_sponsorship)
+    visa_sponsorship: Boolean(dbFields.visa_sponsorship),
+    job_type: cleanField(dbFields.type) // For backward compatibility
   };
   
   // Log mapped job data for debugging

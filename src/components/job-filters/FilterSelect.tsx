@@ -31,7 +31,8 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   icon
 }) => {
   const handleValueChange = (newValue: string) => {
-    onChange(newValue);
+    // If the value is "all", convert it to an empty string for consistency
+    onChange(newValue === "all" ? "" : newValue);
   };
 
   return (
@@ -42,12 +43,12 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
           {label}
         </label>
       )}
-      <Select value={value} onValueChange={handleValueChange}>
+      <Select value={value || "all"} onValueChange={handleValueChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All</SelectItem>
+          <SelectItem value="all">{placeholder}</SelectItem>
           {options.map((option) => (
             <SelectItem key={option.value} value={option.value}>
               {option.label}

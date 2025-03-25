@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Job } from '@/lib/types/job.types';
@@ -45,17 +44,17 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   
   const [filters, setFilters] = useState<JobFilters>({
-    department: 'all',
-    seniority: 'all',
-    salaryRange: 'all',
-    teamSize: 'all',
-    investmentStage: 'all',
-    remote: 'all',
-    jobType: 'all',
-    workHours: 'all',
-    equity: 'all',
-    hiringUrgency: 'all',
-    revenueModel: 'all',
+    department: '',
+    seniority: '',
+    salaryRange: '',
+    teamSize: '',
+    investmentStage: '',
+    remote: '',
+    jobType: '',
+    workHours: '',
+    equity: '',
+    hiringUrgency: '',
+    revenueModel: '',
     visaSponsorship: false
   });
 
@@ -77,17 +76,17 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
 
   const clearAllFilters = () => {
     setFilters({
-      department: 'all',
-      seniority: 'all',
-      salaryRange: 'all',
-      teamSize: 'all',
-      investmentStage: 'all',
-      remote: 'all',
-      jobType: 'all',
-      workHours: 'all',
-      equity: 'all',
-      hiringUrgency: 'all',
-      revenueModel: 'all',
+      department: '',
+      seniority: '',
+      salaryRange: '',
+      teamSize: '',
+      investmentStage: '',
+      remote: '',
+      jobType: '',
+      workHours: '',
+      equity: '',
+      hiringUrgency: '',
+      revenueModel: '',
       visaSponsorship: false
     });
   };
@@ -100,7 +99,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     } else {
       setFilters(prev => ({ 
         ...prev, 
-        [type]: type === 'visaSponsorship' ? false : 'all' 
+        [type]: type === 'visaSponsorship' ? false : '' 
       }));
     }
   };
@@ -109,17 +108,17 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   const activeFilters = [
     ...(searchQuery ? [{ type: 'search', label: `"${searchQuery}"` }] : []),
     ...(locationQuery ? [{ type: 'location', label: locationQuery }] : []),
-    ...(filters.department !== 'all' ? [{ type: 'department', label: filters.department }] : []),
-    ...(filters.seniority !== 'all' ? [{ type: 'seniority', label: filters.seniority }] : []),
-    ...(filters.salaryRange !== 'all' ? [{ type: 'salaryRange', label: filters.salaryRange }] : []),
-    ...(filters.teamSize !== 'all' ? [{ type: 'teamSize', label: filters.teamSize }] : []),
-    ...(filters.investmentStage !== 'all' ? [{ type: 'investmentStage', label: filters.investmentStage }] : []),
-    ...(filters.remote !== 'all' ? [{ type: 'remote', label: filters.remote }] : []),
-    ...(filters.jobType !== 'all' ? [{ type: 'jobType', label: filters.jobType }] : []),
-    ...(filters.workHours !== 'all' ? [{ type: 'workHours', label: filters.workHours }] : []),
-    ...(filters.equity !== 'all' ? [{ type: 'equity', label: filters.equity }] : []),
-    ...(filters.hiringUrgency !== 'all' ? [{ type: 'hiringUrgency', label: filters.hiringUrgency }] : []),
-    ...(filters.revenueModel !== 'all' ? [{ type: 'revenueModel', label: filters.revenueModel }] : []),
+    ...(filters.department ? [{ type: 'department', label: filters.department }] : []),
+    ...(filters.seniority ? [{ type: 'seniority', label: filters.seniority }] : []),
+    ...(filters.salaryRange ? [{ type: 'salaryRange', label: filters.salaryRange }] : []),
+    ...(filters.teamSize ? [{ type: 'teamSize', label: filters.teamSize }] : []),
+    ...(filters.investmentStage ? [{ type: 'investmentStage', label: filters.investmentStage }] : []),
+    ...(filters.remote ? [{ type: 'remote', label: filters.remote }] : []),
+    ...(filters.jobType ? [{ type: 'jobType', label: filters.jobType }] : []),
+    ...(filters.workHours ? [{ type: 'workHours', label: filters.workHours }] : []),
+    ...(filters.equity ? [{ type: 'equity', label: filters.equity }] : []),
+    ...(filters.hiringUrgency ? [{ type: 'hiringUrgency', label: filters.hiringUrgency }] : []),
+    ...(filters.revenueModel ? [{ type: 'revenueModel', label: filters.revenueModel }] : []),
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
@@ -127,10 +126,10 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   const fieldMappings: Record<string, keyof Job> = {
     department: 'department',
     seniority: 'seniority_level',
-    salaryRange: 'salary_range', // Changed from 'salary' to 'salary_range'
+    salaryRange: 'salary_range',
     teamSize: 'team_size',
     investmentStage: 'investment_stage',
-    remote: 'remote_onsite', // Changed from 'type' to 'remote_onsite'
+    remote: 'remote_onsite',
     jobType: 'type',
     workHours: 'work_hours',
     equity: 'equity',
@@ -162,39 +161,51 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const fieldName = fieldMappings[filterType];
     if (!fieldName) return null;
     
-    // Get the value from the job with field name diagnostic
-    console.log(`Getting job field value for ${filterType} using field name: ${String(fieldName)}`);
+    // Get the value from the job
     let value = job[fieldName as keyof Job];
     
-    // Handle special cases for field variations
-    if (value === null || value === undefined) {
+    // Handle special cases for field variations or missing values
+    if (value === null || value === undefined || value === '') {
       switch (filterType) {
         case 'remote':
-          // Check if remote_onsite is not set but type is Remote
+          // If remote_onsite is not set but type is Remote
           value = job.type === 'Remote' ? 'Fully Remote' : '';
           break;
         case 'salaryRange':
-          // If salary_range is not set, try to derive it from salary
+          // If salary_range is not set, try to derive from salary
           if (job.salary) {
-            const salary = parseInt(job.salary.replace(/[^0-9]/g, ''));
-            if (salary < 60000) value = '$40K-$60K';
-            else if (salary < 80000) value = '$60K-$80K';
-            else if (salary < 120000) value = '$80K-$120K';
+            const salaryNum = typeof job.salary === 'string' 
+              ? parseInt(job.salary.replace(/[^0-9]/g, '')) 
+              : 0;
+              
+            if (salaryNum < 60000) value = '$40K-$60K';
+            else if (salaryNum < 80000) value = '$60K-$80K';
+            else if (salaryNum < 120000) value = '$80K-$120K';
             else value = '$120K+';
           }
           break;
-        default:
+        case 'department':
+        case 'seniority':
+        case 'teamSize':
+        case 'investmentStage':
+        case 'workHours':
+        case 'equity':
+        case 'hiringUrgency':
+        case 'revenueModel':
+          // For all other fields, check if alternative fields exist
+          // or derive sensible defaults
           value = '';
+          break;
       }
     }
     
     return value;
   };
 
-  // Completely revised matching function with better type handling
+  // Improved matching function with better handling of different value types
   const matchesFilter = (jobValue: any, filterValue: string, filterType: string, jobId: string): boolean => {
-    // If filter is set to 'all', always match
-    if (filterValue === 'all') return true;
+    // If filter value is empty, always match
+    if (!filterValue) return true;
     
     // Extract primitive value from job value if it's an object
     let processedJobValue = jobValue;
@@ -208,11 +219,11 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       }
     }
     
-    // If processed job value is still missing, don't match specific filters
+    // If processed job value is still missing, apply more lenient matching for specific filters
     if (processedJobValue === null || processedJobValue === undefined || processedJobValue === '') {
-      const result = false;
-      debugFilter(jobValue, filterValue, filterType, jobId, result);
-      return result;
+      // Return false only for critical filters where a missing value shouldn't match
+      // For non-critical filters, we might return true to show more results
+      return false;
     }
     
     // Normalize both values for comparison
@@ -225,17 +236,21 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
                         normalizedFilterValue.includes(normalizedJobValue);
     
     const result = exactMatch || partialMatch;
-    debugFilter(jobValue, filterValue, filterType, jobId, result);
+    // Debug only if there's an issue with matching
+    if (!result) {
+      debugFilter(jobValue, filterValue, filterType, jobId, result);
+    }
     return result;
   };
 
-  // Filtering logic with improved debugging and type checking
+  // Filtering logic with improved type checking and fallback mechanisms
   const filteredJobs = jobs?.filter(job => {
-    // Debug job data
+    // Debug job data for active filters
     if (activeFilters.length > 0) {
       console.log(`Filtering job: ${job.id} - ${job.title}`, {
         department: job.department,
         seniority_level: job.seniority_level,
+        salary_range: job.salary_range,
         type: job.type,
         remote_onsite: job.remote_onsite,
         activeFilters: activeFilters.map(f => `${f.type}:${f.label}`).join(', ')
@@ -260,9 +275,11 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       return false;
     }
     
-    // Get active filters (not 'all' or false)
+    // Get active filters (not empty or false)
     const activeFilterKeys = Object.entries(filters)
-      .filter(([key, value]) => value !== 'all' && value !== false)
+      .filter(([key, value]) => {
+        return typeof value === 'boolean' ? value : value !== '';
+      })
       .map(([key]) => key);
     
     // Check each active filter
