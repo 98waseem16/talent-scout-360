@@ -77,7 +77,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     return 'Full-time'; // Default to Full-time if not a valid type
   };
   
-  // Create mapped job object
+  // Create mapped job object with exact field naming
   const mappedJob: Job = {
     id: dbFields.id,
     title: cleanField(dbFields.title),
@@ -95,7 +95,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     application_url: cleanField(dbFields.application_url),
     user_id: cleanField(dbFields.user_id),
     
-    // Filter fields - always return strings, never undefined
+    // Filter fields - ensure exact field names match
     department: cleanField(dbFields.department),
     seniority_level: cleanField(dbFields.seniority_level),
     salary_range: cleanField(dbFields.salary_range),

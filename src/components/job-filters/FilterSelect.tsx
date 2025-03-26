@@ -35,6 +35,9 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
     onChange(newValue === "all" ? "" : newValue);
   };
 
+  // Ensure selected value is valid or defaults to "all"
+  const selectedValue = value && options.some(opt => opt.value === value) ? value : "all";
+
   return (
     <div className="space-y-1">
       {label && (
@@ -43,7 +46,7 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
           {label}
         </label>
       )}
-      <Select value={value || "all"} onValueChange={handleValueChange}>
+      <Select value={selectedValue} onValueChange={handleValueChange}>
         <SelectTrigger className="w-full">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>

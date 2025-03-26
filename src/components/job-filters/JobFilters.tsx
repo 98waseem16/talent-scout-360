@@ -71,7 +71,7 @@ const remoteOptions: FilterOption[] = [
   { label: 'Onsite', value: 'Onsite' },
 ];
 
-// Job type options
+// Job type options - match exactly with type field in Job type
 const jobTypeOptions: FilterOption[] = [
   { label: 'Full-time', value: 'Full-time' },
   { label: 'Part-time', value: 'Part-time' },
