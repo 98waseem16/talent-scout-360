@@ -42,9 +42,11 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
 
   // Ensure selected value is valid or defaults to "all"
   // This handles cases where the value might not exactly match any option
-  const selectedValue = value && options.some(opt => 
-    opt.value.toLowerCase() === value.toLowerCase()
-  ) ? value : "all";
+  const selectedValue = value ? (
+    options.some(opt => opt.value.toLowerCase() === value.toLowerCase()) 
+      ? value.toLowerCase() 
+      : "all"
+  ) : "all";
 
   // Log all available options for this filter (helps with debugging)
   console.log(`FilterSelect (${label}): Available options:`, 

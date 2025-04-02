@@ -44,7 +44,9 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   // Handle filter changes from the JobFilters component
   const handleFilterChange = (field: string, value: string | boolean) => {
     console.log(`FilterSidebar: Setting ${field} to ${value}`);
-    setFilters(prev => ({ ...prev, [field]: value }));
+    // Ensure value is lowercase for string values to maintain consistency with database
+    const normalizedValue = typeof value === 'string' ? value.toLowerCase() : value;
+    setFilters(prev => ({ ...prev, [field]: normalizedValue }));
   };
 
   // Log current filters for debugging

@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Job } from '@/lib/types/job.types';
@@ -120,19 +121,20 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  const fieldMappings: Record<string, keyof Job> = {
-    department: 'department',
-    seniority: 'seniority_level',
-    salaryRange: 'salary_range',
-    teamSize: 'team_size',
-    investmentStage: 'investment_stage',
-    remote: 'remote_onsite',
-    jobType: 'type',
-    workHours: 'work_hours',
-    equity: 'equity',
-    hiringUrgency: 'hiring_urgency',
-    revenueModel: 'revenue_model',
-    visaSponsorship: 'visa_sponsorship'
+  // Improved field mappings with fallbacks
+  const fieldMappings: Record<string, (keyof Job)[]> = {
+    department: ['department'],
+    seniority: ['seniority_level'],
+    salaryRange: ['salary_range'],
+    teamSize: ['team_size'],
+    investmentStage: ['investment_stage'],
+    remote: ['remote_onsite'],
+    jobType: ['type', 'job_type'],
+    workHours: ['work_hours'],
+    equity: ['equity'],
+    hiringUrgency: ['hiring_urgency'],
+    revenueModel: ['revenue_model'],
+    visaSponsorship: ['visa_sponsorship']
   };
 
   const normalizeString = (str: string | null | undefined): string => {
@@ -146,18 +148,23 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       return null;
     }
     
-    const fieldName = fieldMappings[filterType];
-    if (!fieldName) {
+    const possibleFieldNames = fieldMappings[filterType];
+    if (!possibleFieldNames || possibleFieldNames.length === 0) {
       console.error(`No field mapping found for filter type: ${filterType}`);
       return null;
     }
     
-    const value = job[fieldName as keyof Job];
+    // Try each possible field name until we find one with a value
+    for (const fieldName of possibleFieldNames) {
+      const value = job[fieldName];
+      if (value !== undefined && value !== null) {
+        console.log(`Filter "${filterType}" matched with DB field "${String(fieldName)}": "${String(value)}"`);
+        return value;
+      }
+    }
     
-    console.log(`Filter "${filterType}" maps to DB field "${String(fieldName)}"`);
-    console.log(`Job (ID: ${job.id}) has value: "${String(value)}"`);
-    
-    return value;
+    console.log(`No value found in job for filter type ${filterType} after trying fields: ${possibleFieldNames.join(', ')}`);
+    return null;
   };
 
   const matchesFilter = (jobValue: any, filterValue: string, filterType: string, jobId: string): boolean => {
@@ -171,13 +178,26 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     const normalizedJobValue = normalizeString(jobValue);
     const normalizedFilterValue = normalizeString(filterValue);
     
+    console.log(`Comparing filter "${filterType}": DB value "${normalizedJobValue}" with filter "${normalizedFilterValue}"`);
+    
+    // Try various types of matching
     const exactMatch = normalizedJobValue === normalizedFilterValue;
     const containsMatch = normalizedJobValue.includes(normalizedFilterValue) || 
                           normalizedFilterValue.includes(normalizedJobValue);
     
-    const isMatch = exactMatch || containsMatch;
+    // For multi-word values, check if any word matches
+    const jobWords = normalizedJobValue.split(/\s+/);
+    const filterWords = normalizedFilterValue.split(/\s+/);
+    const anyWordMatch = jobWords.some(jw => filterWords.some(fw => jw === fw));
     
-    console.log(`Matching filter "${filterType}": DB value "${normalizedJobValue}" with filter "${normalizedFilterValue}" = ${isMatch}`);
+    // Check for partial matches at word boundaries
+    const partialWordMatch = jobWords.some(jw => filterWords.some(fw => 
+      jw.startsWith(fw) || fw.startsWith(jw)
+    ));
+    
+    const isMatch = exactMatch || containsMatch || anyWordMatch || partialWordMatch;
+    
+    console.log(`Match result for "${filterType}": ${isMatch} (exact: ${exactMatch}, contains: ${containsMatch}, word match: ${anyWordMatch}, partial: ${partialWordMatch})`);
     
     return isMatch;
   };
@@ -205,7 +225,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       })
       .map(([key]) => key);
     
-    console.log(`Job ${job.id}: Checking against ${activeFilterKeys.length} active filters`);
+    console.log(`Job ${job.id}: Checking against ${activeFilterKeys.length} active filters: ${activeFilterKeys.join(', ')}`);
     
     for (const filterType of activeFilterKeys) {
       const filterValue = filters[filterType as keyof JobFilters];
@@ -224,6 +244,8 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       if (!matchesFilter(jobValue, filterValue as string, filterType, job.id)) {
         console.log(`Job ${job.id}: Filtered OUT by "${filterType}" filter`);
         return false;
+      } else {
+        console.log(`Job ${job.id}: PASSED "${filterType}" filter`);
       }
     }
     
