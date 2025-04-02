@@ -40,17 +40,40 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
     onChange(valueToSet);
   };
 
-  // Ensure selected value is valid or defaults to "all"
-  // This handles cases where the value might not exactly match any option
-  const selectedValue = value ? (
-    options.some(opt => opt.value.toLowerCase() === value.toLowerCase()) 
-      ? value.toLowerCase() 
-      : "all"
-  ) : "all";
+  // Function to find the actual option value by case-insensitive matching
+  const findMatchingOptionValue = (currentValue: string): string => {
+    if (!currentValue) return "all";
+    
+    // Try to find an exact match first
+    const exactMatch = options.find(opt => opt.value === currentValue);
+    if (exactMatch) return exactMatch.value;
+    
+    // Try case-insensitive match
+    const caseInsensitiveMatch = options.find(
+      opt => opt.value.toLowerCase() === currentValue.toLowerCase()
+    );
+    if (caseInsensitiveMatch) return caseInsensitiveMatch.value;
+    
+    // For partial matches (e.g., "senior" might match with "Senior Level")
+    const partialMatch = options.find(
+      opt => opt.value.toLowerCase().includes(currentValue.toLowerCase()) || 
+             currentValue.toLowerCase().includes(opt.value.toLowerCase())
+    );
+    if (partialMatch) return partialMatch.value;
+    
+    // If no match found
+    console.log(`FilterSelect (${label}): No match found for "${currentValue}" among options`);
+    return "all";
+  };
+
+  // Get the value to display in the select
+  const selectedValue = findMatchingOptionValue(value);
 
   // Log all available options for this filter (helps with debugging)
   console.log(`FilterSelect (${label}): Available options:`, 
     options.map(opt => `${opt.label} (${opt.value})`).join(', '));
+  
+  console.log(`FilterSelect (${label}): Selected option value: "${selectedValue}"`);
 
   return (
     <div className="space-y-1">

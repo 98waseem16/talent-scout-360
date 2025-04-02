@@ -23,16 +23,16 @@ const departmentOptions: FilterOption[] = [
   { label: 'Finance', value: 'finance' },
 ];
 
-// Seniority options
+// Seniority options - Updated to match database values
 const seniorityOptions: FilterOption[] = [
-  { label: 'Internship', value: 'internship' },
-  { label: 'Entry-Level', value: 'entry-level' },
-  { label: 'Mid-Level', value: 'mid-level' },
-  { label: 'Senior', value: 'senior' },
-  { label: 'Lead', value: 'lead' },
-  { label: 'Director', value: 'director' },
-  { label: 'VP', value: 'vp' },
-  { label: 'C-Level', value: 'c-level' },
+  { label: 'Internship', value: 'Internship' },
+  { label: 'Entry-Level', value: 'Entry-Level' },
+  { label: 'Mid-Level', value: 'Mid-Level' },
+  { label: 'Senior', value: 'Senior' },
+  { label: 'Lead', value: 'Lead' },
+  { label: 'Director', value: 'Director' },
+  { label: 'VP', value: 'VP' },
+  { label: 'C-Level', value: 'C-Level' },
 ];
 
 // Salary range options
@@ -54,42 +54,42 @@ const teamSizeOptions: FilterOption[] = [
 
 // Investment stage options
 const investmentStageOptions: FilterOption[] = [
-  { label: 'Pre-seed', value: 'pre-seed' },
-  { label: 'Seed', value: 'seed' },
-  { label: 'Series A', value: 'series a' },
-  { label: 'Series B', value: 'series b' },
-  { label: 'Series C+', value: 'series c+' },
-  { label: 'Public', value: 'public' },
-  { label: 'Profitable', value: 'profitable' },
+  { label: 'Pre-seed', value: 'Pre-seed' },
+  { label: 'Seed', value: 'Seed' },
+  { label: 'Series A', value: 'Series A' },
+  { label: 'Series B', value: 'Series B' },
+  { label: 'Series C+', value: 'Series C+' },
+  { label: 'Public', value: 'Public' },
+  { label: 'Profitable', value: 'Profitable' },
 ];
 
 // Remote/onsite options
 const remoteOptions: FilterOption[] = [
-  { label: 'Fully Remote', value: 'fully remote' },
-  { label: 'Hybrid', value: 'hybrid' },
-  { label: 'Onsite', value: 'onsite' },
+  { label: 'Fully Remote', value: 'Fully Remote' },
+  { label: 'Hybrid', value: 'Hybrid' },
+  { label: 'Onsite', value: 'Onsite' },
 ];
 
 // Job type options - match exactly with type field in Job type
 const jobTypeOptions: FilterOption[] = [
-  { label: 'Full-time', value: 'full-time' },
-  { label: 'Part-time', value: 'part-time' },
-  { label: 'Contract', value: 'contract' },
-  { label: 'Remote', value: 'remote' },
-  { label: 'Freelance', value: 'freelance' },
-  { label: 'Internship', value: 'internship' },
+  { label: 'Full-time', value: 'Full-time' },
+  { label: 'Part-time', value: 'Part-time' },
+  { label: 'Contract', value: 'Contract' },
+  { label: 'Remote', value: 'Remote' },
+  { label: 'Freelance', value: 'Freelance' },
+  { label: 'Internship', value: 'Internship' },
 ];
 
 // Work hours options
 const workHoursOptions: FilterOption[] = [
-  { label: 'Flexible', value: 'flexible' },
-  { label: 'Fixed', value: 'fixed' },
-  { label: 'Async Work', value: 'async work' },
+  { label: 'Flexible', value: 'Flexible' },
+  { label: 'Fixed', value: 'Fixed' },
+  { label: 'Async Work', value: 'Async Work' },
 ];
 
 // Equity options
 const equityOptions: FilterOption[] = [
-  { label: 'None', value: 'none' },
+  { label: 'None', value: 'None' },
   { label: '0.1%-0.5%', value: '0.1%-0.5%' },
   { label: '0.5%-1%', value: '0.5%-1%' },
   { label: '1%+', value: '1%+' },
@@ -97,19 +97,19 @@ const equityOptions: FilterOption[] = [
 
 // Hiring urgency options
 const hiringUrgencyOptions: FilterOption[] = [
-  { label: 'Immediate Hire', value: 'immediate hire' },
-  { label: 'Within a Month', value: 'within a month' },
-  { label: 'Open to Future Applicants', value: 'open to future applicants' },
+  { label: 'Immediate Hire', value: 'Immediate Hire' },
+  { label: 'Within a Month', value: 'Within a Month' },
+  { label: 'Open to Future Applicants', value: 'Open to Future Applicants' },
 ];
 
 // Revenue model options
 const revenueModelOptions: FilterOption[] = [
-  { label: 'SaaS', value: 'saas' },
-  { label: 'Marketplace', value: 'marketplace' },
-  { label: 'E-commerce', value: 'e-commerce' },
-  { label: 'Subscription', value: 'subscription' },
-  { label: 'Advertising', value: 'advertising' },
-  { label: 'Services', value: 'services' },
+  { label: 'SaaS', value: 'SaaS' },
+  { label: 'Marketplace', value: 'Marketplace' },
+  { label: 'E-commerce', value: 'E-commerce' },
+  { label: 'Subscription', value: 'Subscription' },
+  { label: 'Advertising', value: 'Advertising' },
+  { label: 'Services', value: 'Services' },
 ];
 
 interface JobFiltersProps {
