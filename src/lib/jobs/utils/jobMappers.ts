@@ -52,7 +52,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
   console.log(`  revenue_model: "${dbFields.revenue_model || ''}"`);
   console.log(`  visa_sponsorship: ${dbFields.visa_sponsorship ? 'true' : 'false'}`);
   
-  // Simple helper to handle null/undefined values - always returns a string
+  // Enhanced helper to handle null/undefined values with standardization
   const cleanField = (value: any): string => {
     if (value === null || value === undefined) {
       return ''; // Return empty string for null/undefined
@@ -68,16 +68,51 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     
     const cleanedType = cleanField(type);
     
-    // Check if the cleaned type is one of the valid types
-    if (validTypes.includes(cleanedType as any)) {
-      return cleanedType as 'Full-time' | 'Part-time' | 'Contract' | 'Remote' | 'Freelance' | 'Internship';
+    // Check if the cleaned type is one of the valid types (case-insensitive)
+    const matchedType = validTypes.find(validType => 
+      validType.toLowerCase() === cleanedType.toLowerCase()
+    );
+    
+    if (matchedType) {
+      return matchedType;
     }
     
     console.warn(`Invalid job type "${type}", defaulting to "Full-time"`);
     return 'Full-time'; // Default to Full-time if not a valid type
   };
   
-  // Create mapped job object with exact field naming
+  // Standardize specific field values to ensure they match UI filter options exactly
+  const standardizeFieldValue = (field: string, value: string): string => {
+    // Don't process empty values
+    if (!value) return '';
+    
+    // Standardization rules for specific fields
+    switch (field) {
+      case 'remote_onsite':
+        // Ensure remote/onsite values match filter options exactly
+        if (value.toLowerCase().includes('remote')) return 'Fully Remote';
+        if (value.toLowerCase().includes('hybrid')) return 'Hybrid';
+        if (value.toLowerCase().includes('onsite')) return 'Onsite';
+        return value;
+        
+      case 'seniority_level':
+        // Standardize seniority level values
+        if (value.toLowerCase().includes('entry')) return 'Entry-Level';
+        if (value.toLowerCase().includes('mid')) return 'Mid-Level';
+        if (value.toLowerCase().includes('senior')) return 'Senior';
+        if (value.toLowerCase().includes('lead')) return 'Lead';
+        if (value.toLowerCase().includes('direct')) return 'Director';
+        if (value.toLowerCase().includes('vp')) return 'VP';
+        if (value.toLowerCase().includes('c-level')) return 'C-Level';
+        if (value.toLowerCase().includes('intern')) return 'Internship';
+        return value;
+        
+      default:
+        return value;
+    }
+  };
+  
+  // Create mapped job object with exact field naming and standardized values
   const mappedJob: Job = {
     id: dbFields.id,
     title: cleanField(dbFields.title),
@@ -95,17 +130,17 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     application_url: cleanField(dbFields.application_url),
     user_id: cleanField(dbFields.user_id),
     
-    // Filter fields - ensure exact field names match
-    department: cleanField(dbFields.department),
-    seniority_level: cleanField(dbFields.seniority_level),
-    salary_range: cleanField(dbFields.salary_range),
-    team_size: cleanField(dbFields.team_size),
-    investment_stage: cleanField(dbFields.investment_stage),
-    remote_onsite: cleanField(dbFields.remote_onsite),
-    work_hours: cleanField(dbFields.work_hours),
-    equity: cleanField(dbFields.equity),
-    hiring_urgency: cleanField(dbFields.hiring_urgency),
-    revenue_model: cleanField(dbFields.revenue_model),
+    // Filter fields - ensure exact field names match with standardized values
+    department: standardizeFieldValue('department', cleanField(dbFields.department)),
+    seniority_level: standardizeFieldValue('seniority_level', cleanField(dbFields.seniority_level)),
+    salary_range: standardizeFieldValue('salary_range', cleanField(dbFields.salary_range)),
+    team_size: standardizeFieldValue('team_size', cleanField(dbFields.team_size)),
+    investment_stage: standardizeFieldValue('investment_stage', cleanField(dbFields.investment_stage)),
+    remote_onsite: standardizeFieldValue('remote_onsite', cleanField(dbFields.remote_onsite)),
+    work_hours: standardizeFieldValue('work_hours', cleanField(dbFields.work_hours)),
+    equity: standardizeFieldValue('equity', cleanField(dbFields.equity)),
+    hiring_urgency: standardizeFieldValue('hiring_urgency', cleanField(dbFields.hiring_urgency)),
+    revenue_model: standardizeFieldValue('revenue_model', cleanField(dbFields.revenue_model)),
     visa_sponsorship: Boolean(dbFields.visa_sponsorship),
     job_type: cleanField(dbFields.type) // For backward compatibility
   };

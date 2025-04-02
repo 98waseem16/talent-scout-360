@@ -147,6 +147,12 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
     typeof value === 'boolean' ? value : value !== ''
   );
 
+  // Log active filters for debugging
+  console.log('JobFilters: Current active filters:', Object.entries(filters)
+    .filter(([_, value]) => typeof value === 'boolean' ? value : value !== '')
+    .map(([key, value]) => `${key}: ${value}`)
+    .join(', '));
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">

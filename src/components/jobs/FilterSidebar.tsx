@@ -47,6 +47,13 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
     setFilters(prev => ({ ...prev, [field]: value }));
   };
 
+  // Log current filters for debugging
+  console.log('FilterSidebar: Current filters state:', 
+    Object.entries(filters)
+      .filter(([_, val]) => typeof val === 'boolean' ? val : val !== '')
+      .map(([key, val]) => `${key}: ${val}`)
+      .join(', ') || 'No active filters');
+
   return (
     <aside 
       className={`w-full md:w-64 md:sticky top-24 transition-all duration-300 ${
