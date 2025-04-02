@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { X, Filter, Building, Briefcase, DollarSign, Users, BarChart2, Globe, Clock } from 'lucide-react';
 import FilterSelect from './FilterSelect';
@@ -9,21 +10,21 @@ interface FilterOption {
   value: string;
 }
 
-// Department options
+// Department options - Using case-consistent values matching the database
 const departmentOptions: FilterOption[] = [
-  { label: 'Engineering', value: 'engineering' },
-  { label: 'Product', value: 'product' },
-  { label: 'Design', value: 'design' },
-  { label: 'Marketing', value: 'marketing' },
-  { label: 'Sales', value: 'sales' },
-  { label: 'Operations', value: 'operations' },
-  { label: 'HR', value: 'hr' },
-  { label: 'Customer Support', value: 'customer support' },
-  { label: 'Legal', value: 'legal' },
-  { label: 'Finance', value: 'finance' },
+  { label: 'Engineering', value: 'Engineering' },
+  { label: 'Product', value: 'Product' },
+  { label: 'Design', value: 'Design' },
+  { label: 'Marketing', value: 'Marketing' },
+  { label: 'Sales', value: 'Sales' },
+  { label: 'Operations', value: 'Operations' },
+  { label: 'HR', value: 'HR' },
+  { label: 'Customer Support', value: 'Customer Support' },
+  { label: 'Legal', value: 'Legal' },
+  { label: 'Finance', value: 'Finance' },
 ];
 
-// Seniority options - Updated to match database values
+// Seniority options - Matching exactly with database values
 const seniorityOptions: FilterOption[] = [
   { label: 'Internship', value: 'Internship' },
   { label: 'Entry-Level', value: 'Entry-Level' },
@@ -35,7 +36,7 @@ const seniorityOptions: FilterOption[] = [
   { label: 'C-Level', value: 'C-Level' },
 ];
 
-// Salary range options
+// Salary range options - Matching database formats
 const salaryRangeOptions: FilterOption[] = [
   { label: '$40K-$60K', value: '$40k-$60k' },
   { label: '$60K-$80K', value: '$60k-$80k' },
@@ -132,6 +133,7 @@ interface JobFiltersProps {
 }
 
 const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFilters }) => {
+  // Pass filter values directly without modification
   const handleFilterChange = (field: string, value: string) => {
     console.log(`JobFilters: Setting ${field} filter to "${value}"`);
     setFilters(field, value);

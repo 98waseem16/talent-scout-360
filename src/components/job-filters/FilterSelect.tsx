@@ -30,50 +30,38 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   label,
   icon
 }) => {
-  // Log the current value for debugging
-  console.log(`FilterSelect (${label}): Current value = "${value}", Has ${options.length} options`);
+  // Log current value for debugging
+  console.log(`FilterSelect (${label}): Current value = "${value}"`);
 
   const handleValueChange = (newValue: string) => {
-    // If the value is "all", convert it to an empty string for consistency
+    // If "all" is selected, use empty string to clear the filter
     const valueToSet = newValue === "all" ? "" : newValue;
     console.log(`FilterSelect (${label}): Value changed from "${value}" to "${valueToSet}"`);
     onChange(valueToSet);
   };
 
-  // Function to find the actual option value by case-insensitive matching
-  const findMatchingOptionValue = (currentValue: string): string => {
+  // Simple function to find selected value's option or default to "all"
+  const getSelectValue = (currentValue: string): string => {
     if (!currentValue) return "all";
     
-    // Try to find an exact match first
-    const exactMatch = options.find(opt => opt.value === currentValue);
-    if (exactMatch) return exactMatch.value;
-    
-    // Try case-insensitive match
-    const caseInsensitiveMatch = options.find(
-      opt => opt.value.toLowerCase() === currentValue.toLowerCase()
+    // Check if the value exists in options
+    const matchingOption = options.find(opt => 
+      opt.value === currentValue
     );
-    if (caseInsensitiveMatch) return caseInsensitiveMatch.value;
     
-    // For partial matches (e.g., "senior" might match with "Senior Level")
-    const partialMatch = options.find(
-      opt => opt.value.toLowerCase().includes(currentValue.toLowerCase()) || 
-             currentValue.toLowerCase().includes(opt.value.toLowerCase())
-    );
-    if (partialMatch) return partialMatch.value;
-    
-    // If no match found
-    console.log(`FilterSelect (${label}): No match found for "${currentValue}" among options`);
-    return "all";
+    if (matchingOption) {
+      console.log(`FilterSelect (${label}): Found exact match for "${currentValue}"`);
+      return matchingOption.value;
+    } else {
+      console.log(`FilterSelect (${label}): No match found for "${currentValue}" among options`);
+      return "all";
+    }
   };
 
-  // Get the value to display in the select
-  const selectedValue = findMatchingOptionValue(value);
-
-  // Log all available options for this filter (helps with debugging)
-  console.log(`FilterSelect (${label}): Available options:`, 
-    options.map(opt => `${opt.label} (${opt.value})`).join(', '));
+  // Get the display value for the select
+  const selectedValue = getSelectValue(value);
   
-  console.log(`FilterSelect (${label}): Selected option value: "${selectedValue}"`);
+  console.log(`FilterSelect (${label}): Using select value: "${selectedValue}"`);
 
   return (
     <div className="space-y-1">

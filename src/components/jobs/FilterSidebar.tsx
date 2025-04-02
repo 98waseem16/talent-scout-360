@@ -41,26 +41,21 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Handle filter changes from the JobFilters component
+  // Handle filter changes from the JobFilters component - pass values directly to state
   const handleFilterChange = (field: string, value: string | boolean) => {
     console.log(`FilterSidebar: Setting ${field} to ${value}`);
     
-    // For string values, maintain their original case/format since we've updated the UI options
-    if (typeof value === 'string') {
-      console.log(`FilterSidebar: Setting ${field} with original case: "${value}"`);
-      setFilters(prev => ({ ...prev, [field]: value }));
-    } else {
-      // For boolean values (like visa_sponsorship)
-      setFilters(prev => ({ ...prev, [field]: value }));
-    }
+    // Update filters without any transformations
+    setFilters(prev => ({ ...prev, [field]: value }));
   };
 
-  // Log current filters for debugging
-  console.log('FilterSidebar: Current filters state:', 
-    Object.entries(filters)
-      .filter(([_, val]) => typeof val === 'boolean' ? val : val !== '')
-      .map(([key, val]) => `${key}: ${val}`)
-      .join(', ') || 'No active filters');
+  // Log current active filters for debugging
+  const activeFilters = Object.entries(filters)
+    .filter(([_, val]) => typeof val === 'boolean' ? val : val !== '')
+    .map(([key, val]) => `${key}: ${val}`)
+    .join(', ');
+    
+  console.log('FilterSidebar: Current active filters:', activeFilters || 'None');
 
   return (
     <aside 

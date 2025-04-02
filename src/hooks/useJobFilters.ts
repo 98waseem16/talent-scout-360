@@ -121,20 +121,20 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Improved field mappings with fallbacks
-  const fieldMappings: Record<string, (keyof Job)[]> = {
-    department: ['department'],
-    seniority: ['seniority_level'],
-    salaryRange: ['salary_range'],
-    teamSize: ['team_size'],
-    investmentStage: ['investment_stage'],
-    remote: ['remote_onsite'],
-    jobType: ['type', 'job_type'],
-    workHours: ['work_hours'],
-    equity: ['equity'],
-    hiringUrgency: ['hiring_urgency'],
-    revenueModel: ['revenue_model'],
-    visaSponsorship: ['visa_sponsorship']
+  // Simple field mappings between filter properties and job properties
+  const fieldMappings: Record<string, string> = {
+    department: 'department',
+    seniority: 'seniority_level',
+    salaryRange: 'salary_range',
+    teamSize: 'team_size',
+    investmentStage: 'investment_stage',
+    remote: 'remote_onsite',
+    jobType: 'type',
+    workHours: 'work_hours',
+    equity: 'equity',
+    hiringUrgency: 'hiring_urgency',
+    revenueModel: 'revenue_model',
+    visaSponsorship: 'visa_sponsorship'
   };
 
   const normalizeString = (str: string | null | undefined): string => {
@@ -142,110 +142,71 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     return str.toString().trim().toLowerCase();
   };
 
-  const getJobFieldValue = (job: Job, filterType: string): any => {
-    if (!job) {
-      console.error('getJobFieldValue received null job object');
-      return null;
-    }
-    
-    const possibleFieldNames = fieldMappings[filterType];
-    if (!possibleFieldNames || possibleFieldNames.length === 0) {
-      console.error(`No field mapping found for filter type: ${filterType}`);
-      return null;
-    }
-    
-    // Try each possible field name until we find one with a value
-    for (const fieldName of possibleFieldNames) {
-      const value = job[fieldName];
-      if (value !== undefined && value !== null) {
-        console.log(`Filter "${filterType}" matched with DB field "${String(fieldName)}": "${String(value)}"`);
-        return value;
-      }
-    }
-    
-    console.log(`No value found in job for filter type ${filterType} after trying fields: ${possibleFieldNames.join(', ')}`);
-    return null;
-  };
-
-  const matchesFilter = (jobValue: any, filterValue: string, filterType: string, jobId: string): boolean => {
-    if (!filterValue) return true;
-    
-    if (jobValue === null || jobValue === undefined || jobValue === '') {
-      console.log(`Job ${jobId}: Field "${filterType}" has no value, so it doesn't match filter "${filterValue}"`);
-      return false;
-    }
-    
-    const normalizedJobValue = normalizeString(jobValue);
-    const normalizedFilterValue = normalizeString(filterValue);
-    
-    console.log(`Comparing filter "${filterType}": DB value "${normalizedJobValue}" with filter "${normalizedFilterValue}"`);
-    
-    // Try various types of matching
-    const exactMatch = normalizedJobValue === normalizedFilterValue;
-    const containsMatch = normalizedJobValue.includes(normalizedFilterValue) || 
-                          normalizedFilterValue.includes(normalizedJobValue);
-    
-    // For multi-word values, check if any word matches
-    const jobWords = normalizedJobValue.split(/\s+/);
-    const filterWords = normalizedFilterValue.split(/\s+/);
-    const anyWordMatch = jobWords.some(jw => filterWords.some(fw => jw === fw));
-    
-    // Check for partial matches at word boundaries
-    const partialWordMatch = jobWords.some(jw => filterWords.some(fw => 
-      jw.startsWith(fw) || fw.startsWith(jw)
-    ));
-    
-    const isMatch = exactMatch || containsMatch || anyWordMatch || partialWordMatch;
-    
-    console.log(`Match result for "${filterType}": ${isMatch} (exact: ${exactMatch}, contains: ${containsMatch}, word match: ${anyWordMatch}, partial: ${partialWordMatch})`);
-    
-    return isMatch;
-  };
-
   const filteredJobs = jobs?.filter(job => {
-    const searchFields = [
-      job.title || '', 
-      job.company || '', 
-      job.description || ''
-    ].map(field => normalizeString(field));
+    // Log the job we're filtering for debugging
+    console.log(`Filtering job ID ${job.id}: "${job.title}" at "${job.company}"`);
     
+    // Check search and location queries first
     const matchesSearch = searchQuery === '' || 
-      searchFields.some(field => field.includes(normalizeString(searchQuery)));
+      normalizeString(job.title).includes(normalizeString(searchQuery)) ||
+      normalizeString(job.company).includes(normalizeString(searchQuery)) ||
+      normalizeString(job.description).includes(normalizeString(searchQuery));
       
     const matchesLocation = locationQuery === '' ||
       normalizeString(job.location).includes(normalizeString(locationQuery));
     
     if (!matchesSearch || !matchesLocation) {
+      console.log(`Job ${job.id}: Filtered out by search/location`);
       return false;
     }
     
+    // Get active filters (only those with values)
     const activeFilterKeys = Object.entries(filters)
-      .filter(([key, value]) => {
-        return typeof value === 'boolean' ? value : value !== '';
-      })
+      .filter(([_, value]) => typeof value === 'boolean' ? value : value !== '')
       .map(([key]) => key);
+    
+    // No filters active - include this job
+    if (activeFilterKeys.length === 0) {
+      console.log(`Job ${job.id}: No filters active, including job`);
+      return true;
+    }
     
     console.log(`Job ${job.id}: Checking against ${activeFilterKeys.length} active filters: ${activeFilterKeys.join(', ')}`);
     
-    for (const filterType of activeFilterKeys) {
-      const filterValue = filters[filterType as keyof JobFilters];
+    // Check each active filter
+    for (const filterKey of activeFilterKeys) {
+      const jobField = fieldMappings[filterKey];
+      const filterValue = filters[filterKey as keyof JobFilters];
       
-      if (filterType === 'visaSponsorship') {
-        const jobHasVisaSponsorship = job.visa_sponsorship === true;
-        console.log(`Job ${job.id}: Visa sponsorship = ${jobHasVisaSponsorship}, filter requires: true`);
-        if (!jobHasVisaSponsorship) {
+      // Handle visa sponsorship separately (boolean)
+      if (filterKey === 'visaSponsorship') {
+        console.log(`Job ${job.id}: Checking visa_sponsorship: job=${job.visa_sponsorship}, filter=${filterValue}`);
+        if (filterValue === true && job.visa_sponsorship !== true) {
+          console.log(`Job ${job.id}: Filtered OUT by visa_sponsorship`);
           return false;
         }
         continue;
       }
       
-      const jobValue = getJobFieldValue(job, filterType);
+      // Get the job's value for this field
+      const jobValue = job[jobField as keyof Job];
+      console.log(`Job ${job.id}: Checking "${filterKey}" (field="${jobField}"): job value="${jobValue}", filter value="${filterValue}"`);
       
-      if (!matchesFilter(jobValue, filterValue as string, filterType, job.id)) {
-        console.log(`Job ${job.id}: Filtered OUT by "${filterType}" filter`);
+      // If job doesn't have this field or it's empty
+      if (jobValue === undefined || jobValue === null || jobValue === '') {
+        console.log(`Job ${job.id}: Missing or empty value for "${jobField}", filtering out`);
         return false;
-      } else {
-        console.log(`Job ${job.id}: PASSED "${filterType}" filter`);
+      }
+      
+      // Case-insensitive exact match for strings
+      if (typeof jobValue === 'string' && typeof filterValue === 'string') {
+        // Simple case-insensitive comparison
+        if (normalizeString(jobValue) !== normalizeString(filterValue)) {
+          console.log(`Job ${job.id}: "${jobField}" value "${jobValue}" doesn't match filter "${filterValue}"`);
+          return false;
+        } else {
+          console.log(`Job ${job.id}: "${jobField}" value "${jobValue}" matches filter "${filterValue}"`);
+        }
       }
     }
     
