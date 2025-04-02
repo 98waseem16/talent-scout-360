@@ -121,7 +121,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Simple field mappings between filter properties and job properties
+  // Updated field mappings using snake_case keys matching the database
   const fieldMappings: Record<string, string> = {
     department: 'department',
     seniority: 'seniority_level',

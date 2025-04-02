@@ -25,7 +25,7 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 
   // Helper function to format filter labels for display
   const formatFilterLabel = (filter: ActiveFilter): string => {
-    // Convert database field names to more readable form
+    // Convert camelCase filter types to readable labels while preserving the filter value
     switch (filter.type) {
       case 'seniority':
         return `Seniority: ${filter.label}`;
@@ -47,8 +47,6 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
         return `Revenue: ${filter.label}`;
       case 'department':
         return `Dept: ${filter.label}`;
-      case 'visa_sponsorship':
-        return 'Visa Sponsorship';
       case 'visaSponsorship':
         return 'Visa Sponsorship';
       case 'search':
