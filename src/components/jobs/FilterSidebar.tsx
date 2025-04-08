@@ -41,12 +41,15 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Handle filter changes from the JobFilters component - pass values directly to state
+  // Handle filter changes from the JobFilters component
   const handleFilterChange = (field: string, value: string | boolean) => {
-    console.log(`FilterSidebar: Setting ${field} to ${value}`);
+    console.log(`FilterSidebar: Setting ${field} to "${value}"`);
     
-    // Update filters without any transformations
-    setFilters(prev => ({ ...prev, [field]: value }));
+    // Update filters with proper values
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
   };
 
   // Log current active filters for debugging
