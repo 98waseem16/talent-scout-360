@@ -30,13 +30,9 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   label,
   icon
 }) => {
-  // Log current value for debugging
-  console.log(`FilterSelect (${label}): Current value = "${value}"`);
-
   const handleValueChange = (newValue: string) => {
     // If "all" is selected, use empty string to clear the filter
     const valueToSet = newValue === "all" ? "" : newValue;
-    console.log(`FilterSelect (${label}): Value changed from "${value}" to "${valueToSet}"`);
     onChange(valueToSet);
   };
 
@@ -46,22 +42,18 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
     
     // Check if the value exists in options
     const matchingOption = options.find(opt => 
-      opt.value === currentValue
+      opt.value.toLowerCase() === currentValue.toLowerCase()
     );
     
     if (matchingOption) {
-      console.log(`FilterSelect (${label}): Found exact match for "${currentValue}"`);
       return matchingOption.value;
     } else {
-      console.log(`FilterSelect (${label}): No match found for "${currentValue}" among options`);
       return "all";
     }
   };
 
   // Get the display value for the select
   const selectedValue = getSelectValue(value);
-  
-  console.log(`FilterSelect (${label}): Using select value: "${selectedValue}"`);
 
   return (
     <div className="space-y-1">

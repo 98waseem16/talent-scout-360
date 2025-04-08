@@ -121,7 +121,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Updated field mappings using snake_case keys matching the database
+  // Mapping UI filter names (camelCase) to database field names (snake_case)
   const fieldMappings: Record<string, string> = {
     department: 'department',
     seniority: 'seniority_level',
@@ -143,74 +143,61 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   };
 
   const filteredJobs = jobs?.filter(job => {
-    // Log the job we're filtering for debugging
-    console.log(`Filtering job ID ${job.id}: "${job.title}" at "${job.company}"`);
-    
     // Check search and location queries first
-    const matchesSearch = searchQuery === '' || 
+    const matchesSearch = !searchQuery || 
       normalizeString(job.title).includes(normalizeString(searchQuery)) ||
       normalizeString(job.company).includes(normalizeString(searchQuery)) ||
       normalizeString(job.description).includes(normalizeString(searchQuery));
       
-    const matchesLocation = locationQuery === '' ||
+    const matchesLocation = !locationQuery ||
       normalizeString(job.location).includes(normalizeString(locationQuery));
     
     if (!matchesSearch || !matchesLocation) {
-      console.log(`Job ${job.id}: Filtered out by search/location`);
       return false;
     }
     
     // Get active filters (only those with values)
     const activeFilterKeys = Object.entries(filters)
-      .filter(([_, value]) => typeof value === 'boolean' ? value : value !== '')
+      .filter(([key, value]) => typeof value === 'boolean' ? value : value !== '')
       .map(([key]) => key);
     
     // No filters active - include this job
     if (activeFilterKeys.length === 0) {
-      console.log(`Job ${job.id}: No filters active, including job`);
       return true;
     }
     
-    console.log(`Job ${job.id}: Checking against ${activeFilterKeys.length} active filters: ${activeFilterKeys.join(', ')}`);
-    
-    // Check each active filter
+    // Check each active filter against job fields
     for (const filterKey of activeFilterKeys) {
-      const jobField = fieldMappings[filterKey];
+      const dbFieldName = fieldMappings[filterKey];
+      if (!dbFieldName) continue;
+      
       const filterValue = filters[filterKey as keyof JobFilters];
       
-      // Handle visa sponsorship separately (boolean)
+      // Handle boolean visa_sponsorship separately
       if (filterKey === 'visaSponsorship') {
-        console.log(`Job ${job.id}: Checking visa_sponsorship: job=${job.visa_sponsorship}, filter=${filterValue}`);
         if (filterValue === true && job.visa_sponsorship !== true) {
-          console.log(`Job ${job.id}: Filtered OUT by visa_sponsorship`);
           return false;
         }
         continue;
       }
       
-      // Get the job's value for this field
-      const jobValue = job[jobField as keyof Job];
-      console.log(`Job ${job.id}: Checking "${filterKey}" (field="${jobField}"): job value="${jobValue}", filter value="${filterValue}"`);
+      // Get the job's value for this field using the snake_case DB field name
+      const jobValue = job[dbFieldName as keyof Job];
       
       // If job doesn't have this field or it's empty
       if (jobValue === undefined || jobValue === null || jobValue === '') {
-        console.log(`Job ${job.id}: Missing or empty value for "${jobField}", filtering out`);
         return false;
       }
       
-      // Case-insensitive exact match for strings
+      // Case-insensitive comparison for strings
       if (typeof jobValue === 'string' && typeof filterValue === 'string') {
-        // Simple case-insensitive comparison
         if (normalizeString(jobValue) !== normalizeString(filterValue)) {
-          console.log(`Job ${job.id}: "${jobField}" value "${jobValue}" doesn't match filter "${filterValue}"`);
           return false;
-        } else {
-          console.log(`Job ${job.id}: "${jobField}" value "${jobValue}" matches filter "${filterValue}"`);
         }
       }
     }
     
-    console.log(`Job ${job.id}: PASSED all filters`);
+    // Job passed all filter checks
     return true;
   }) || [];
 

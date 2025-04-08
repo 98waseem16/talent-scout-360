@@ -20,12 +20,9 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 }) => {
   if (activeFilters.length === 0) return null;
 
-  // Debug active filters
-  console.log('Active filters:', activeFilters);
-
   // Helper function to format filter labels for display
   const formatFilterLabel = (filter: ActiveFilter): string => {
-    // Convert camelCase filter types to readable labels while preserving the filter value
+    // Convert filter types to readable labels while preserving the filter value
     switch (filter.type) {
       case 'seniority':
         return `Seniority: ${filter.label}`;
