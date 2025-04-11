@@ -1,10 +1,11 @@
 
 import React from 'react';
 import JobFilters from '@/components/job-filters/JobFilters';
+import { JobFilters as JobFiltersType } from '@/hooks/useJobFilters';
 
 interface FilterSidebarProps {
   isFilterOpen: boolean;
-  filters: Record<string, string | boolean>;
+  filters: JobFiltersType;
   setFilters: (field: string, value: string | boolean) => void;
   clearAllFilters: () => void;
 }

@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Job } from '@/lib/types/job.types';
 
-interface JobFilters {
+export interface JobFilters {
   department: string;
   seniority: string;
   salaryRange: string;
@@ -16,6 +15,7 @@ interface JobFilters {
   hiringUrgency: string;
   revenueModel: string;
   visaSponsorship: boolean;
+  [key: string]: string | boolean; // Add index signature to allow Record-like access
 }
 
 interface UseJobFiltersReturn {

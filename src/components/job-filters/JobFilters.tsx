@@ -1,8 +1,8 @@
-
 import React from 'react';
 import { X, Filter, Building, Briefcase, DollarSign, Users, BarChart2, Globe, Clock } from 'lucide-react';
 import FilterSelect from './FilterSelect';
 import { Switch } from '@/components/ui/switch';
+import { JobFilters as JobFiltersType } from '@/hooks/useJobFilters';
 
 // Filter option types
 interface FilterOption {
@@ -114,26 +114,12 @@ const revenueModelOptions: FilterOption[] = [
 ];
 
 interface JobFiltersProps {
-  filters: {
-    department: string;
-    seniority: string;
-    salaryRange: string;
-    teamSize: string;
-    investmentStage: string;
-    remote: string;
-    jobType: string;
-    workHours: string;
-    equity: string;
-    hiringUrgency: string;
-    revenueModel: string;
-    visaSponsorship: boolean;
-  };
+  filters: JobFiltersType;
   setFilters: (field: string, value: string | boolean) => void;
   clearAllFilters: () => void;
 }
 
 const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFilters }) => {
-  // Pass filter values directly without modification
   const handleFilterChange = (field: string, value: string) => {
     console.log(`JobFilters: Setting ${field} filter to "${value}"`);
     setFilters(field, value);
@@ -148,7 +134,6 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
     typeof value === 'boolean' ? value : value !== ''
   );
 
-  // Log active filters for debugging
   console.log('JobFilters: Current active filters:', Object.entries(filters)
     .filter(([_, value]) => typeof value === 'boolean' ? value : value !== '')
     .map(([key, value]) => `${key}: ${value}`)
