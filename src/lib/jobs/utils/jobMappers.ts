@@ -86,29 +86,40 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     // Don't process empty values
     if (!value) return '';
     
+    // Get the clean value first
+    const cleanValue = value.trim();
+    
     // Standardization rules for specific fields
     switch (field) {
       case 'remote_onsite':
         // Ensure remote/onsite values match filter options exactly
-        if (value.toLowerCase().includes('remote')) return 'Fully Remote';
-        if (value.toLowerCase().includes('hybrid')) return 'Hybrid';
-        if (value.toLowerCase().includes('onsite')) return 'Onsite';
-        return value;
+        if (cleanValue.toLowerCase().includes('remote')) return 'Fully Remote';
+        if (cleanValue.toLowerCase().includes('hybrid')) return 'Hybrid';
+        if (cleanValue.toLowerCase().includes('onsite')) return 'Onsite';
+        return cleanValue;
         
       case 'seniority_level':
-        // Standardize seniority level values
-        if (value.toLowerCase().includes('entry')) return 'Entry-Level';
-        if (value.toLowerCase().includes('mid')) return 'Mid-Level';
-        if (value.toLowerCase().includes('senior')) return 'Senior';
-        if (value.toLowerCase().includes('lead')) return 'Lead';
-        if (value.toLowerCase().includes('direct')) return 'Director';
-        if (value.toLowerCase().includes('vp')) return 'VP';
-        if (value.toLowerCase().includes('c-level')) return 'C-Level';
-        if (value.toLowerCase().includes('intern')) return 'Internship';
-        return value;
+        // More precise standardization for seniority level values
+        const lowerValue = cleanValue.toLowerCase();
+        
+        // Log the original value before standardization for debugging
+        console.log(`  Standardizing seniority_level: "${cleanValue}" (lowercase: "${lowerValue}")`);
+        
+        if (lowerValue.includes('senior')) return 'Senior';
+        if (lowerValue === 'mid-level' || lowerValue === 'mid level' || lowerValue.includes('mid')) return 'Mid-Level';
+        if (lowerValue === 'entry-level' || lowerValue === 'entry level' || lowerValue.includes('entry') || lowerValue.includes('junior')) return 'Entry-Level';
+        if (lowerValue.includes('lead')) return 'Lead';
+        if (lowerValue.includes('direct')) return 'Director';
+        if (lowerValue.includes('vp')) return 'VP';
+        if (lowerValue.includes('c-level')) return 'C-Level';
+        if (lowerValue.includes('intern')) return 'Internship';
+        
+        // If we can't match to a standard value, return as is
+        console.log(`  Could not standardize seniority_level: "${cleanValue}", keeping original value`);
+        return cleanValue;
         
       default:
-        return value;
+        return cleanValue;
     }
   };
   

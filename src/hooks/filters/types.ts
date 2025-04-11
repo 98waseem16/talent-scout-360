@@ -36,7 +36,7 @@ export interface UseJobFiltersReturn {
 // Field mappings from UI filters to database fields
 export const FIELD_MAPPINGS: Record<string, string> = {
   department: 'department',
-  seniority: 'seniority_level',
+  seniority: 'seniority_level',  // UI 'seniority' filter maps to DB 'seniority_level' field
   salaryRange: 'salary_range',
   teamSize: 'team_size',
   investmentStage: 'investment_stage',

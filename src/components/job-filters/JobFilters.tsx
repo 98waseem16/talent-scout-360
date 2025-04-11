@@ -25,6 +25,17 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
     .map(([key, value]) => `${key}: ${value}`)
     .join(', '));
 
+  // Additional debug logging
+  React.useEffect(() => {
+    console.log('JobFilters: Active filter values:', {
+      department: filters.department ? `"${filters.department}"` : 'none',
+      seniority: filters.seniority ? `"${filters.seniority}"` : 'none',
+      remote: filters.remote ? `"${filters.remote}"` : 'none',
+      jobType: filters.jobType ? `"${filters.jobType}"` : 'none',
+      salaryRange: filters.salaryRange ? `"${filters.salaryRange}"` : 'none'
+    });
+  }, [filters]);
+
   return (
     <>
       <div className="flex items-center justify-between mb-4">
