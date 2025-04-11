@@ -4,34 +4,8 @@ import JobFilters from '@/components/job-filters/JobFilters';
 
 interface FilterSidebarProps {
   isFilterOpen: boolean;
-  filters: {
-    department: string;
-    seniority: string;
-    salaryRange: string;
-    teamSize: string;
-    investmentStage: string;
-    remote: string;
-    jobType: string;
-    workHours: string;
-    equity: string;
-    hiringUrgency: string;
-    revenueModel: string;
-    visaSponsorship: boolean;
-  };
-  setFilters: React.Dispatch<React.SetStateAction<{
-    department: string;
-    seniority: string;
-    salaryRange: string;
-    teamSize: string;
-    investmentStage: string;
-    remote: string;
-    jobType: string;
-    workHours: string;
-    equity: string;
-    hiringUrgency: string;
-    revenueModel: string;
-    visaSponsorship: boolean;
-  }>>;
+  filters: Record<string, string | boolean>;
+  setFilters: (field: string, value: string | boolean) => void;
   clearAllFilters: () => void;
 }
 
@@ -41,25 +15,6 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   setFilters,
   clearAllFilters
 }) => {
-  // Handle filter changes from the JobFilters component
-  const handleFilterChange = (field: string, value: string | boolean) => {
-    console.log(`FilterSidebar: Setting ${field} to "${value}"`);
-    
-    // Update filters with proper values
-    setFilters(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
-
-  // Log current active filters for debugging
-  const activeFilters = Object.entries(filters)
-    .filter(([_, val]) => typeof val === 'boolean' ? val : val !== '')
-    .map(([key, val]) => `${key}: ${val}`)
-    .join(', ');
-    
-  console.log('FilterSidebar: Current active filters:', activeFilters || 'None');
-
   return (
     <aside 
       className={`w-full md:w-64 md:sticky top-24 transition-all duration-300 ${
@@ -69,7 +24,7 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
       <div className="bg-white rounded-xl border border-border shadow-sm p-5 mb-6">
         <JobFilters 
           filters={filters}
-          setFilters={handleFilterChange}
+          setFilters={setFilters}
           clearAllFilters={clearAllFilters} 
         />
       </div>

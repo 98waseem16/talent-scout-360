@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Skeleton } from '@/components/ui/skeleton';
 import JobCard from '@/components/JobCard';
 import { Job } from '@/lib/types/job.types';
@@ -12,32 +12,6 @@ interface JobsListProps {
 }
 
 const JobsList: React.FC<JobsListProps> = ({ jobs, isLoading, error, filteredJobs }) => {
-  // Log job filtering results for debugging
-  useEffect(() => {
-    if (jobs && filteredJobs) {
-      console.log(`JobsList: ${filteredJobs.length} filtered jobs out of ${jobs.length} total jobs`);
-      
-      // Log field values from the first few jobs for reference
-      if (jobs.length > 0) {
-        const sampleJob = jobs[0];
-        console.log('Sample Job Fields: ', {
-          department: sampleJob.department,
-          seniority_level: sampleJob.seniority_level,
-          salary_range: sampleJob.salary_range,
-          team_size: sampleJob.team_size,
-          investment_stage: sampleJob.investment_stage,
-          remote_onsite: sampleJob.remote_onsite,
-          type: sampleJob.type,
-          work_hours: sampleJob.work_hours,
-          equity: sampleJob.equity,
-          hiring_urgency: sampleJob.hiring_urgency,
-          revenue_model: sampleJob.revenue_model,
-          visa_sponsorship: sampleJob.visa_sponsorship,
-        });
-      }
-    }
-  }, [jobs, filteredJobs]);
-
   // Display loading state
   if (isLoading) {
     return (

@@ -27,14 +27,14 @@ interface UseJobFiltersReturn {
   filteredJobs: Job[];
   setSearchQuery: (query: string) => void;
   setLocationQuery: (location: string) => void;
-  setFilters: React.Dispatch<React.SetStateAction<JobFilters>>;
+  setFilters: (field: string, value: string | boolean) => void;
   setIsFilterOpen: (isOpen: boolean) => void;
   clearFilters: () => void;
   clearAllFilters: () => void;
   removeFilter: (type: string) => void;
 }
 
-// Define exact field mappings from UI filters to database fields
+// Field mappings from UI filters to database fields
 const FIELD_MAPPINGS: Record<string, string> = {
   department: 'department',
   seniority: 'seniority_level',
@@ -75,6 +75,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     visaSponsorship: false
   });
 
+  // Update URL when search or location changes
   useEffect(() => {
     const params = new URLSearchParams();
     if (searchQuery) params.set('query', searchQuery);
@@ -84,12 +85,22 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     window.history.replaceState({}, '', newUrl);
   }, [searchQuery, locationQuery, location.pathname]);
 
+  // Set a specific filter value
+  const handleSetFilters = (field: string, value: string | boolean) => {
+    setFilters(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  // Clear all filters and search queries
   const clearFilters = () => {
     setSearchQuery('');
     setLocationQuery('');
     clearAllFilters();
   };
 
+  // Clear just the filter values
   const clearAllFilters = () => {
     setFilters({
       department: '',
@@ -107,6 +118,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     });
   };
 
+  // Remove a specific filter
   const removeFilter = (type: string) => {
     if (type === 'search') {
       setSearchQuery('');
@@ -120,8 +132,9 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     }
   };
 
+  // Generate array of active filters for display
   const activeFilters = [
-    ...(searchQuery ? [{ type: 'search', label: `"${searchQuery}"` }] : []),
+    ...(searchQuery ? [{ type: 'search', label: searchQuery }] : []),
     ...(locationQuery ? [{ type: 'location', label: locationQuery }] : []),
     ...(filters.department ? [{ type: 'department', label: filters.department }] : []),
     ...(filters.seniority ? [{ type: 'seniority', label: filters.seniority }] : []),
@@ -137,24 +150,14 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     ...(filters.visaSponsorship ? [{ type: 'visaSponsorship', label: 'Visa Sponsorship' }] : [])
   ];
 
-  // Helper function to normalize string values for case-insensitive comparison
+  // Helper function for string comparison
   const normalizeString = (str: string | null | undefined): string => {
     if (str === null || str === undefined) return '';
     return str.toString().trim().toLowerCase();
   };
 
-  // Debug function to log job and filter values during comparison
-  const logFilterDebug = (job: Job, filterKey: string, filterValue: any, jobValue: any, matched: boolean) => {
-    console.log(`Filter Debug - Job ${job.id} - ${job.title}:`);
-    console.log(`  Filter: ${filterKey} = "${filterValue}"`);
-    console.log(`  Job value: ${FIELD_MAPPINGS[filterKey]} = "${jobValue}"`);
-    console.log(`  Match result: ${matched ? 'MATCHED ✓' : 'FAILED ✗'}`);
-  };
-
+  // Filter jobs based on all criteria
   const filteredJobs = jobs?.filter(job => {
-    // Debug for this specific job
-    console.log(`\nFiltering job: ${job.title} (${job.id})`);
-    
     // Check search and location queries first
     const matchesSearch = !searchQuery || 
       normalizeString(job.title).includes(normalizeString(searchQuery)) ||
@@ -168,7 +171,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       return false;
     }
     
-    // Get active filters (only those with values)
+    // Get active filters
     const activeFilterKeys = Object.entries(filters)
       .filter(([key, value]) => typeof value === 'boolean' ? value : value !== '')
       .map(([key]) => key);
@@ -178,14 +181,11 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       return true;
     }
     
-    console.log(`  Active filters: ${activeFilterKeys.join(', ')}`);
-    
-    // Check each active filter against job fields
+    // Check each active filter
     for (const filterKey of activeFilterKeys) {
       const dbFieldName = FIELD_MAPPINGS[filterKey];
       
       if (!dbFieldName) {
-        console.warn(`Missing field mapping for filter: ${filterKey}`);
         continue;
       }
       
@@ -194,18 +194,16 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       // Handle boolean visa_sponsorship separately
       if (filterKey === 'visaSponsorship') {
         if (filterValue === true && job[dbFieldName as keyof Job] !== true) {
-          logFilterDebug(job, filterKey, filterValue, job[dbFieldName as keyof Job], false);
           return false;
         }
         continue;
       }
       
-      // Get the job's value for this field using the snake_case DB field name
+      // Get the job's value for this field
       const jobValue = job[dbFieldName as keyof Job];
       
       // If job doesn't have this field or it's empty
       if (jobValue === undefined || jobValue === null || jobValue === '') {
-        logFilterDebug(job, filterKey, filterValue, jobValue, false);
         return false;
       }
       
@@ -215,17 +213,12 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
         const normalized2 = normalizeString(filterValue);
         
         if (normalized1 !== normalized2) {
-          logFilterDebug(job, filterKey, filterValue, jobValue, false);
           return false;
         }
-        
-        // Debug successful match
-        logFilterDebug(job, filterKey, filterValue, jobValue, true);
       }
     }
     
     // Job passed all filter checks
-    console.log(`  ✓ Job passed all filter checks: ${job.title}`);
     return true;
   }) || [];
 
@@ -238,7 +231,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     filteredJobs,
     setSearchQuery,
     setLocationQuery,
-    setFilters,
+    setFilters: handleSetFilters,
     setIsFilterOpen,
     clearFilters,
     clearAllFilters,

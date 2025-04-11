@@ -22,10 +22,7 @@ const ActiveFilters: React.FC<ActiveFiltersProps> = ({
 
   // Helper function to format filter labels for display
   const formatFilterLabel = (filter: ActiveFilter): string => {
-    // Log for debugging
-    console.log(`Formatting filter: ${filter.type} = "${filter.label}"`);
-    
-    // Convert filter types to readable labels while preserving the filter value
+    // Convert filter types to readable labels
     switch (filter.type) {
       case 'seniority':
         return `Seniority: ${filter.label}`;

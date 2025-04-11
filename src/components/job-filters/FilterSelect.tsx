@@ -30,39 +30,14 @@ const FilterSelect: React.FC<FilterSelectProps> = ({
   label,
   icon
 }) => {
-  // Handle value change ensuring consistency
+  // Handle value change with "all" option standardization
   const handleValueChange = (newValue: string) => {
-    console.log(`FilterSelect change: from "${value}" to "${newValue}"`);
-    
-    // If "all" is selected, use empty string to clear the filter
     const valueToSet = newValue === "all" ? "" : newValue;
     onChange(valueToSet);
   };
 
-  // Gets the display value for the select component
-  const getSelectValue = (currentValue: string): string => {
-    // Default to "all" for empty values
-    if (!currentValue) return "all";
-    
-    // Log for debugging
-    console.log(`FilterSelect options for "${label}":`, options.map(o => o.value).join(', '));
-    
-    // Check all options with case-insensitive matching
-    const matchingOption = options.find(opt => 
-      opt.value.toLowerCase() === currentValue.toLowerCase()
-    );
-    
-    if (matchingOption) {
-      console.log(`FilterSelect found matching option: "${matchingOption.value}" for "${currentValue}"`);
-      return matchingOption.value;
-    } else {
-      console.log(`FilterSelect no matching option found for "${currentValue}", using "all"`);
-      return "all";
-    }
-  };
-
-  // Get the display value for the select
-  const selectedValue = getSelectValue(value);
+  // Get display value for the select component
+  const selectedValue = value || "all";
 
   return (
     <div className="space-y-1">
