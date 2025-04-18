@@ -7,41 +7,45 @@ export const normalizeString = (str: string | null | undefined): string => {
   return str.toString().trim().toLowerCase();
 };
 
-// Improved comparison function with better debugging
+// Enhanced comparison function with better debugging
 const compareValues = (jobValue: any, filterValue: any, fieldName: string): boolean => {
-  // Handle boolean separately
   if (typeof filterValue === 'boolean') {
-    console.log(`🔍 Comparing boolean: field=${fieldName}, jobValue=${jobValue}, filterValue=${filterValue}`);
+    console.log(`🔍 Boolean comparison: field=${fieldName}, jobValue=${jobValue}, filterValue=${filterValue}`);
     return jobValue === filterValue;
   }
   
-  // Convert both values to normalized strings for comparison
   const normalizedJobValue = normalizeString(jobValue);
   const normalizedFilterValue = normalizeString(filterValue);
   
-  // Special handling for seniority level comparison with detailed logging
+  // Special handling for seniority level comparison
   if (fieldName === 'seniority_level') {
+    console.log(`
+🎯 Comparing seniority level:
+- Job value: "${jobValue}" (normalized: "${normalizedJobValue}")
+- Filter value: "${filterValue}" (normalized: "${normalizedFilterValue}")
+    `);
+    
+    // Check for exact match first
+    if (normalizedJobValue === normalizedFilterValue) {
+      console.log('✅ Exact seniority match!');
+      return true;
+    }
+    
+    // Check for partial match
     const isMatch = normalizedJobValue.includes(normalizedFilterValue) || 
                    normalizedFilterValue.includes(normalizedJobValue);
-    
-    console.log(`🔎 Seniority Level Comparison:
-      Job Value: "${jobValue}" (normalized: "${normalizedJobValue}")
-      Filter Value: "${filterValue}" (normalized: "${normalizedFilterValue}")
-      Match Type: Partial match (includes)
-      Result: ${isMatch ? '✅ MATCH' : '❌ NO MATCH'}`
-    );
-    
+                   
+    console.log(isMatch ? '✅ Partial seniority match!' : '❌ No seniority match');
     return isMatch;
   }
   
-  // For all other fields, use exact match with debug logging
+  // For other fields, use exact match
   const isMatch = normalizedJobValue === normalizedFilterValue;
-  console.log(`🔍 Standard Comparison (${fieldName}):
-    Job Value: "${jobValue}" (normalized: "${normalizedJobValue}")
-    Filter Value: "${filterValue}" (normalized: "${normalizedFilterValue}")
-    Match Type: Exact match
-    Result: ${isMatch ? '✅ MATCH' : '❌ NO MATCH'}`
-  );
+  console.log(`🔍 Standard comparison (${fieldName}):
+    Job: "${jobValue}" -> "${normalizedJobValue}"
+    Filter: "${filterValue}" -> "${normalizedFilterValue}"
+    Result: ${isMatch ? '✅' : '❌'}
+  `);
   
   return isMatch;
 };

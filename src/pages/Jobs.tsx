@@ -2,7 +2,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getJobs } from '@/lib/jobs/operations/fetchJobs';  // Update import path
-import { useJobFilters } from '@/hooks/useJobFilters';
+import { useJobFilters } from '@/hooks/filters';  // Update import path
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
@@ -35,17 +35,22 @@ const Jobs: React.FC = () => {
     removeFilter
   } = useJobFilters(jobs as Job[] | undefined);
 
-  // Add debug logging for jobs and filters
+  // Add detailed debug logging for jobs and filters
   React.useEffect(() => {
     if (jobs) {
-      console.log(`📊 Total jobs loaded: ${jobs.length}`);
-      console.log(`📊 Jobs after filtering: ${filteredJobs.length}`);
-      
+      console.log('🔍 Jobs loaded:', {
+        total: jobs.length,
+        filtered: filteredJobs.length,
+        activeFilters: Object.entries(filters)
+          .filter(([_, value]) => value !== '' && value !== false)
+          .map(([key, value]) => `${key}: ${value}`)
+      });
+
+      // Log jobs with seniority level for debugging
       if (filters.seniority) {
-        const seniorJobs = jobs.filter(job => job.seniority_level?.toLowerCase() === filters.seniority.toLowerCase());
-        console.log(`🔍 Jobs with seniority "${filters.seniority}": ${seniorJobs.length}`);
-        seniorJobs.forEach(job => {
-          console.log(`  - ${job.title} (seniority: "${job.seniority_level}")`);
+        console.log(`🎯 Looking for jobs with seniority "${filters.seniority}"`);
+        jobs.forEach(job => {
+          console.log(`Job "${job.title}": seniority_level = "${job.seniority_level}"`);
         });
       }
     }
