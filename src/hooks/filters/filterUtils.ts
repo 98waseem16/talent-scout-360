@@ -1,4 +1,3 @@
-
 import { Job } from '@/lib/types/job.types';
 import { FIELD_MAPPINGS } from './types';
 
@@ -21,10 +20,9 @@ const compareValues = (jobValue: any, filterValue: any, fieldName: string): bool
   const normalizedFilterValue = normalizeString(filterValue);
   
   console.log(`🔍 Comparing values for field "${fieldName}":
-    - UI filter value: "${filterValue}" (normalized: "${normalizedFilterValue}")
     - Job value: "${jobValue}" (normalized: "${normalizedJobValue}")
-    - Match: ${normalizedJobValue === normalizedFilterValue}`
-  );
+    - Filter value: "${filterValue}" (normalized: "${normalizedFilterValue}")
+    - Match: ${normalizedJobValue === normalizedFilterValue}`);
   
   return normalizedJobValue === normalizedFilterValue;
 };
@@ -46,19 +44,16 @@ export const jobMatchesFilters = (job: Job, filters: Record<string, string | boo
   
   // Get active filters
   const activeFilterEntries = Object.entries(filters)
-    .filter(([key, value]) => typeof value === 'boolean' ? value : value !== '');
-    
-  const activeFilterKeys = activeFilterEntries.map(([key]) => key);
+    .filter(([_, value]) => typeof value === 'boolean' ? value : value !== '');
   
   // No filters active - include this job
-  if (activeFilterKeys.length === 0) {
+  if (activeFilterEntries.length === 0) {
     return true;
   }
 
-  // Log active filters for debugging
-  console.log(`📊 Checking job "${job.title}" (${job.id}) against active filters:`, 
-    activeFilterEntries.map(([key, value]) => `${key}: ${value}`).join(', ')
-  );
+  // Log active filters and job details for debugging
+  console.log(`\n📊 Checking job "${job.title}" against filters:`, 
+    activeFilterEntries.map(([key, value]) => `${key}: ${value}`).join(', '));
   
   // Check each active filter
   for (const [filterKey, filterValue] of activeFilterEntries) {
@@ -89,7 +84,7 @@ export const jobMatchesFilters = (job: Job, filters: Record<string, string | boo
     
     // Use our improved comparison function
     if (!compareValues(jobValue, filterValue, dbFieldName)) {
-      console.log(`❌ Job rejected: field "${dbFieldName}" value mismatch`);
+      console.log(`❌ Job rejected: "${dbFieldName}" mismatch - Job: "${jobValue}", Filter: "${filterValue}"`);
       return false;
     }
   }

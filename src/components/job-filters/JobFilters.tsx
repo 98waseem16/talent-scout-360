@@ -16,25 +16,20 @@ const JobFilters: React.FC<JobFiltersProps> = ({ filters, setFilters, clearAllFi
     setFilters(field, checked);
   };
 
+  // Log active filters for debugging
+  React.useEffect(() => {
+    const activeFilters = Object.entries(filters)
+      .filter(([_, value]) => typeof value === 'boolean' ? value : value !== '')
+      .map(([key, value]) => `${key}: ${value}`);
+      
+    if (activeFilters.length > 0) {
+      console.log('JobFilters: Current active filters:', activeFilters.join(', '));
+    }
+  }, [filters]);
+
   const hasActiveFilters = Object.values(filters).some(value => 
     typeof value === 'boolean' ? value : value !== ''
   );
-
-  console.log('JobFilters: Current active filters:', Object.entries(filters)
-    .filter(([_, value]) => typeof value === 'boolean' ? value : value !== '')
-    .map(([key, value]) => `${key}: ${value}`)
-    .join(', '));
-
-  // Additional debug logging
-  React.useEffect(() => {
-    console.log('JobFilters: Active filter values:', {
-      department: filters.department ? `"${filters.department}"` : 'none',
-      seniority: filters.seniority ? `"${filters.seniority}"` : 'none',
-      remote: filters.remote ? `"${filters.remote}"` : 'none',
-      jobType: filters.jobType ? `"${filters.jobType}"` : 'none',
-      salaryRange: filters.salaryRange ? `"${filters.salaryRange}"` : 'none'
-    });
-  }, [filters]);
 
   return (
     <>

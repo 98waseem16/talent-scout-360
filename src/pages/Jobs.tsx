@@ -35,6 +35,22 @@ const Jobs: React.FC = () => {
     removeFilter
   } = useJobFilters(jobs as Job[] | undefined);
 
+  // Add debug logging for jobs and filters
+  React.useEffect(() => {
+    if (jobs) {
+      console.log(`📊 Total jobs loaded: ${jobs.length}`);
+      console.log(`📊 Jobs after filtering: ${filteredJobs.length}`);
+      
+      if (filters.seniority) {
+        const seniorJobs = jobs.filter(job => job.seniority_level?.toLowerCase() === filters.seniority.toLowerCase());
+        console.log(`🔍 Jobs with seniority "${filters.seniority}": ${seniorJobs.length}`);
+        seniorJobs.forEach(job => {
+          console.log(`  - ${job.title} (seniority: "${job.seniority_level}")`);
+        });
+      }
+    }
+  }, [jobs, filters, filteredJobs]);
+
   return (
     <>
       <Header />
