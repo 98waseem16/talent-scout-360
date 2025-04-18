@@ -1,3 +1,4 @@
+
 import { Job } from '@/lib/types/job.types';
 import { FIELD_MAPPINGS } from './types';
 
@@ -19,6 +20,18 @@ const compareValues = (jobValue: any, filterValue: any, fieldName: string): bool
   const normalizedJobValue = normalizeString(jobValue);
   const normalizedFilterValue = normalizeString(filterValue);
   
+  // Special handling for seniority level comparison
+  if (fieldName === 'seniority_level') {
+    console.log(`🔍 Comparing seniority_level:
+      - Job value: "${jobValue}" (normalized: "${normalizedJobValue}")
+      - Filter value: "${filterValue}" (normalized: "${normalizedFilterValue}")
+      - Contains match: ${normalizedJobValue.includes(normalizedFilterValue)}`);
+    
+    return normalizedJobValue.includes(normalizedFilterValue) || 
+           normalizedFilterValue.includes(normalizedJobValue);
+  }
+  
+  // For all other fields, use exact match but with debug logging
   console.log(`🔍 Comparing values for field "${fieldName}":
     - Job value: "${jobValue}" (normalized: "${normalizedJobValue}")
     - Filter value: "${filterValue}" (normalized: "${normalizedFilterValue}")
