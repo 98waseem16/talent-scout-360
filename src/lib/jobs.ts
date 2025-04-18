@@ -272,6 +272,17 @@ export const getJobs = async (): Promise<Job[]> => {
       logo: job.logo,
       featured: job.featured,
       application_url: job.application_url || '',
+      // Add other fields that might be present
+      department: job.department || '',
+      seniority_level: job.seniority_level || '',
+      team_size: job.team_size || '',
+      investment_stage: job.investment_stage || '',
+      remote_onsite: job.remote_onsite || '',
+      work_hours: job.work_hours || '',
+      equity: job.equity || '',
+      hiring_urgency: job.hiring_urgency || '',
+      revenue_model: job.revenue_model || '',
+      visa_sponsorship: job.visa_sponsorship || false,
       // Handle existing or missing expires_at
       expires_at: job.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     }));
@@ -312,6 +323,17 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
       logo: job.logo,
       featured: job.featured,
       application_url: job.application_url || '',
+      // Add other fields that might be present
+      department: job.department || '',
+      seniority_level: job.seniority_level || '',
+      team_size: job.team_size || '',
+      investment_stage: job.investment_stage || '',
+      remote_onsite: job.remote_onsite || '',
+      work_hours: job.work_hours || '',
+      equity: job.equity || '',
+      hiring_urgency: job.hiring_urgency || '',
+      revenue_model: job.revenue_model || '',
+      visa_sponsorship: job.visa_sponsorship || false,
       // Handle existing or missing expires_at
       expires_at: job.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     }));
@@ -351,6 +373,17 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       logo: data.logo,
       featured: data.featured,
       application_url: data.application_url || '',
+      // Add other fields that might be present
+      department: data.department || '',
+      seniority_level: data.seniority_level || '',
+      team_size: data.team_size || '',
+      investment_stage: data.investment_stage || '',
+      remote_onsite: data.remote_onsite || '',
+      work_hours: data.work_hours || '',
+      equity: data.equity || '',
+      hiring_urgency: data.hiring_urgency || '',
+      revenue_model: data.revenue_model || '',
+      visa_sponsorship: data.visa_sponsorship || false,
       // Handle existing or missing expires_at
       expires_at: data.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
