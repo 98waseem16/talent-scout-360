@@ -28,7 +28,7 @@ const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({ formData, h
         </p>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <div className="space-y-2">
           <label htmlFor="salary_range" className="flex items-center space-x-2 text-sm font-medium">
             <DollarSign className="h-5 w-5 text-muted-foreground" />
@@ -38,7 +38,7 @@ const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({ formData, h
             value={formData.salary_range} 
             onValueChange={(value) => handleSelectChange('salary_range', value)}
           >
-            <SelectTrigger id="salary_range">
+            <SelectTrigger id="salary_range" className="w-full">
               <SelectValue placeholder="Select salary range" />
             </SelectTrigger>
             <SelectContent>
@@ -60,7 +60,7 @@ const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({ formData, h
             value={formData.equity} 
             onValueChange={(value) => handleSelectChange('equity', value)}
           >
-            <SelectTrigger id="equity">
+            <SelectTrigger id="equity" className="w-full">
               <SelectValue placeholder="Select equity range" />
             </SelectTrigger>
             <SelectContent>

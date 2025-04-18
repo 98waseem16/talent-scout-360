@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -53,8 +54,38 @@
   * {
     @apply border-border;
   }
+  
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Improve mobile form elements */
+  input,
+  select,
+  textarea,
+  button {
+    @apply text-base;
+  }
+  
+  /* Minimum touch target size */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+}
+
+@layer components {
+  /* Mobile optimized card */
+  .mobile-card {
+    @apply p-4 sm:p-6 rounded-xl;
+  }
+  
+  /* Bottom safe area spacing for fixed elements */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
   }
 }
 
@@ -91,5 +122,15 @@
 
   .smooth-transition {
     transition: all 0.3s ease;
+  }
+  
+  /* Hide scrollbar but keep functionality */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
   }
 }

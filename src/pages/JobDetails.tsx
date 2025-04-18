@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { getJobById } from '@/lib/jobs';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from "@/hooks/use-mobile";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 
@@ -21,21 +22,13 @@ const JobDetails: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   const { data: job, isLoading, error } = useQuery({
     queryKey: ['job', id],
     queryFn: () => getJobById(id || ''),
     enabled: !!id
   });
-
-  // Enhanced logging to verify job data
-  useEffect(() => {
-    if (job) {
-      console.log('JobDetails page - job data loaded:', job);
-    } else {
-      console.log('JobDetails page - no job data available yet');
-    }
-  }, [job]);
 
   const handleApply = () => {
     if (!user) {
@@ -64,8 +57,8 @@ const JobDetails: React.FC = () => {
     return (
       <>
         <Header />
-        <main className="min-h-screen pt-32 pb-16 px-6 flex justify-center">
-          <div className="max-w-4xl w-full">
+        <main className="min-h-screen pt-24 sm:pt-32 pb-16 px-4 sm:px-6 flex justify-center">
+          <div className="w-full max-w-4xl">
             <LoadingState />
           </div>
         </main>
@@ -76,11 +69,10 @@ const JobDetails: React.FC = () => {
   
   // Error state - improved error handling
   if (error || !job) {
-    console.error('Error or no job data:', error);
     return (
       <>
         <Header />
-        <main className="min-h-screen pt-32 pb-16 px-6">
+        <main className="min-h-screen pt-24 sm:pt-32 pb-16 px-4 sm:px-6">
           <div className="max-w-3xl mx-auto">
             <ErrorState />
           </div>
@@ -99,28 +91,46 @@ const JobDetails: React.FC = () => {
   return (
     <>
       <Header />
-      <main className="min-h-screen pt-24 pb-16 px-6">
+      <main className="min-h-screen pt-20 sm:pt-24 pb-16 px-4 sm:px-6">
         <div className="max-w-4xl mx-auto">
           {/* Job Header with title, company, location, etc. */}
           <JobHeader job={jobWithUrl} handleApply={handleApply} />
           
-          {/* Main Content Area */}
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="md:col-span-2 space-y-8">
+          {/* Main Content Area - Stacked on mobile, side-by-side on desktop */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {/* Job description takes full width on mobile, 2/3 on desktop */}
+            <div className="md:col-span-2 space-y-6">
               {/* Job Description with responsibilities, requirements, and benefits */}
               <JobDescription job={jobWithUrl} />
               
               {/* Application Form */}
-              <section className="bg-white rounded-xl border border-border shadow-sm p-6 md:p-8">
+              <section className="bg-white rounded-xl border border-border shadow-sm p-5 sm:p-6 md:p-8">
                 <h2 className="text-xl font-medium mb-4">Quick Apply</h2>
                 <QuickApplyForm user={user} handleApply={handleApply} job={jobWithUrl} />
               </section>
             </div>
             
-            {/* Sidebar with company info and job insights */}
-            <div className="space-y-6">
-              <CompanyInfo job={jobWithUrl} />
-              <JobInsights job={jobWithUrl} />
+            {/* Sidebar - Layout adjustments for mobile */}
+            <div className="space-y-6 order-first md:order-last">
+              {/* On mobile, display as horizontal cards initially */}
+              {isMobile && (
+                <div className="flex flex-col sm:flex-row gap-6 mb-6 sm:mb-0">
+                  <div className="w-full sm:w-1/2">
+                    <CompanyInfo job={jobWithUrl} />
+                  </div>
+                  <div className="w-full sm:w-1/2">
+                    <JobInsights job={jobWithUrl} />
+                  </div>
+                </div>
+              )}
+              
+              {/* On desktop, display vertically */}
+              {!isMobile && (
+                <>
+                  <CompanyInfo job={jobWithUrl} />
+                  <JobInsights job={jobWithUrl} />
+                </>
+              )}
             </div>
           </div>
         </div>

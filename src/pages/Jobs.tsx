@@ -3,6 +3,7 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getJobs } from '@/lib/jobs/operations/fetchJobs';  // Update import path
 import { useJobFilters } from '@/hooks/filters';  // Update import path
+import { useIsMobile } from "@/hooks/use-mobile";
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
@@ -14,6 +15,7 @@ import JobsCount from '@/components/jobs/JobsCount';
 import { Job } from '@/lib/types/job.types';
 
 const Jobs: React.FC = () => {
+  const isMobile = useIsMobile();
   const { data: jobs, isLoading, error } = useQuery({
     queryKey: ['jobs'],
     queryFn: getJobs,
@@ -35,49 +37,26 @@ const Jobs: React.FC = () => {
     removeFilter
   } = useJobFilters(jobs as Job[] | undefined);
 
-  // Add detailed debug logging for jobs and filters
-  React.useEffect(() => {
-    if (jobs) {
-      console.log('🔍 Jobs loaded:', {
-        total: jobs.length,
-        filtered: filteredJobs.length,
-        activeFilters: Object.entries(filters)
-          .filter(([_, value]) => value !== '' && value !== false)
-          .map(([key, value]) => `${key}: ${value}`)
-      });
-
-      // Log jobs with seniority level for debugging
-      if (filters.seniority) {
-        console.log(`🎯 Looking for jobs with seniority "${filters.seniority}"`);
-        jobs.forEach(job => {
-          console.log(`Job "${job.title}": seniority_level = "${job.seniority_level}"`);
-        });
-      }
-    }
-  }, [jobs, filters, filteredJobs]);
+  // Conditional padding-bottom for mobile to account for filter toggle button
+  const contentPaddingClass = isMobile ? 'pb-24' : 'pb-16';
 
   return (
     <>
       <Header />
-      <main className="min-h-screen pt-24 pb-16 px-6">
+      <main className={`min-h-screen pt-20 sm:pt-24 px-4 sm:px-6 ${contentPaddingClass}`}>
         <div className="max-w-7xl mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-start gap-8">
-            {/* Filters - Mobile Toggle */}
-            <FilterToggle 
-              isFilterOpen={isFilterOpen} 
-              setIsFilterOpen={setIsFilterOpen} 
-            />
-            
             {/* Filters Sidebar */}
             <FilterSidebar 
               isFilterOpen={isFilterOpen}
+              setIsFilterOpen={setIsFilterOpen}
               filters={filters}
               setFilters={setFilters}
               clearAllFilters={clearAllFilters}
             />
             
             {/* Main Content */}
-            <div className="flex-1">
+            <div className="flex-1 w-full">
               {/* Search Bar */}
               <JobSearchBar 
                 searchQuery={searchQuery}
@@ -111,6 +90,13 @@ const Jobs: React.FC = () => {
           </div>
         </div>
       </main>
+      
+      {/* Mobile Filter Toggle Button */}
+      <FilterToggle 
+        isFilterOpen={isFilterOpen} 
+        setIsFilterOpen={setIsFilterOpen} 
+      />
+      
       <Footer />
     </>
   );

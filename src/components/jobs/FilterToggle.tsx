@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Filter } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface FilterToggleProps {
   isFilterOpen: boolean;
@@ -10,7 +11,11 @@ interface FilterToggleProps {
 const FilterToggle: React.FC<FilterToggleProps> = ({ isFilterOpen, setIsFilterOpen }) => {
   return (
     <button
-      className="md:hidden flex items-center text-foreground bg-white border border-border rounded-lg px-4 py-2 shadow-sm"
+      className={cn(
+        "md:hidden flex items-center justify-center text-foreground bg-white border border-border rounded-lg px-4 py-3 shadow-sm w-full mb-4",
+        "fixed bottom-4 left-4 right-4 z-30 max-w-[calc(100%-2rem)]",
+        isFilterOpen ? "bg-secondary" : "bg-white"
+      )}
       onClick={() => setIsFilterOpen(!isFilterOpen)}
     >
       <Filter className="h-5 w-5 mr-2" />

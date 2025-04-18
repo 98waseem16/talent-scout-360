@@ -3,11 +3,13 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, MapPin } from 'lucide-react';
 import { Button as MovingBorderButton } from '@/components/ui/moving-border';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const Hero: React.FC = () => {
   const [query, setQuery] = useState('');
   const [location, setLocation] = useState('');
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,23 +17,23 @@ const Hero: React.FC = () => {
   };
 
   return (
-    <section className="relative min-h-[90vh] flex items-center pt-20 px-6">
+    <section className="relative min-h-[90vh] flex items-center pt-16 sm:pt-20 px-4 sm:px-6">
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-blue-50 to-transparent" />
       
       <div className="max-w-3xl mx-auto w-full text-center">
-        <h1 className="text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-balance">
+        <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-medium tracking-tight text-balance">
           Find your next role at a fast-growing startup
         </h1>
-        <p className="text-xl text-muted-foreground mx-auto mt-6">
+        <p className="text-lg md:text-xl text-muted-foreground mx-auto mt-4 md:mt-6 max-w-2xl">
           Discover thousands of startup job opportunities with companies disrupting industries and changing the world.
         </p>
         
         <form 
           onSubmit={handleSearch}
-          className="bg-white shadow-lg rounded-2xl p-4 md:p-6 border border-border mt-8"
+          className="bg-white shadow-lg rounded-2xl p-4 sm:p-6 border border-border mt-6 md:mt-8"
         >
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1 relative">
+          <div className="flex flex-col gap-4">
+            <div className="relative">
               <div className="absolute left-3 top-3.5 text-muted-foreground">
                 <Search className="h-5 w-5" />
               </div>
@@ -44,7 +46,7 @@ const Hero: React.FC = () => {
               />
             </div>
             
-            <div className="flex-1 relative">
+            <div className="relative">
               <div className="absolute left-3 top-3.5 text-muted-foreground">
                 <MapPin className="h-5 w-5" />
               </div>
