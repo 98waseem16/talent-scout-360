@@ -8,6 +8,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { salaryRangeOptions, equityOptions } from '@/components/job-filters/constants/filterOptions';
 
 interface CompensationBenefitsProps {
   formData: {
@@ -41,11 +42,11 @@ const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({ formData, h
               <SelectValue placeholder="Select salary range" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Negotiable">Negotiable</SelectItem>
-              <SelectItem value="$40K-$60K">$40K-$60K</SelectItem>
-              <SelectItem value="$60K-$80K">$60K-$80K</SelectItem>
-              <SelectItem value="$80K-$120K">$80K-$120K</SelectItem>
-              <SelectItem value="$120K+">$120K+</SelectItem>
+              {salaryRangeOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -63,10 +64,11 @@ const CompensationBenefits: React.FC<CompensationBenefitsProps> = ({ formData, h
               <SelectValue placeholder="Select equity range" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="None">None</SelectItem>
-              <SelectItem value="0.1%-0.5%">0.1%-0.5%</SelectItem>
-              <SelectItem value="0.5%-1%">0.5%-1%</SelectItem>
-              <SelectItem value="1%+">1%+</SelectItem>
+              {equityOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

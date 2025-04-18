@@ -8,6 +8,12 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { 
+  investmentStageOptions, 
+  teamSizeOptions, 
+  revenueModelOptions,
+  jobTypeOptions 
+} from '@/components/job-filters/constants/filterOptions';
 
 interface StartupDetailsProps {
   formData: {
@@ -43,13 +49,11 @@ const StartupDetails: React.FC<StartupDetailsProps> = ({ formData, handleSelectC
               <SelectValue placeholder="Select investment stage" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Bootstrapped">Bootstrapped</SelectItem>
-              <SelectItem value="Pre-Seed">Pre-Seed</SelectItem>
-              <SelectItem value="Seed">Seed</SelectItem>
-              <SelectItem value="Series A">Series A</SelectItem>
-              <SelectItem value="Series B">Series B</SelectItem>
-              <SelectItem value="Series C+">Series C+</SelectItem>
-              <SelectItem value="Public">Public</SelectItem>
+              {investmentStageOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -67,11 +71,11 @@ const StartupDetails: React.FC<StartupDetailsProps> = ({ formData, handleSelectC
               <SelectValue placeholder="Select team size" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="1-10">1-10</SelectItem>
-              <SelectItem value="11-50">11-50</SelectItem>
-              <SelectItem value="51-200">51-200</SelectItem>
-              <SelectItem value="201-500">201-500</SelectItem>
-              <SelectItem value="500+">500+</SelectItem>
+              {teamSizeOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -89,13 +93,11 @@ const StartupDetails: React.FC<StartupDetailsProps> = ({ formData, handleSelectC
               <SelectValue placeholder="Select revenue model" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Subscription">Subscription</SelectItem>
-              <SelectItem value="Marketplace">Marketplace</SelectItem>
-              <SelectItem value="SaaS">SaaS</SelectItem>
-              <SelectItem value="Enterprise">Enterprise</SelectItem>
-              <SelectItem value="Ads">Ads</SelectItem>
-              <SelectItem value="E-commerce">E-commerce</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
+              {revenueModelOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -114,16 +116,17 @@ const StartupDetails: React.FC<StartupDetailsProps> = ({ formData, handleSelectC
               <SelectValue placeholder="Select job type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Full-time">Full-time</SelectItem>
-              <SelectItem value="Part-time">Part-time</SelectItem>
-              <SelectItem value="Contract">Contract</SelectItem>
-              <SelectItem value="Remote">Remote</SelectItem>
+              {jobTypeOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
       </div>
     </>
   );
-}
+};
 
 export default StartupDetails;

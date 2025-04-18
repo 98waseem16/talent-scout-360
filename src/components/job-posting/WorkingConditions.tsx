@@ -9,6 +9,11 @@ import {
   SelectValue 
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { 
+  remoteOptions, 
+  workHoursOptions, 
+  hiringUrgencyOptions 
+} from '@/components/job-filters/constants/filterOptions';
 
 interface WorkingConditionsProps {
   formData: {
@@ -49,9 +54,11 @@ const WorkingConditions: React.FC<WorkingConditionsProps> = ({
               <SelectValue placeholder="Select work location type" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Fully Remote">Fully Remote</SelectItem>
-              <SelectItem value="Hybrid">Hybrid</SelectItem>
-              <SelectItem value="Onsite">Onsite</SelectItem>
+              {remoteOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -69,9 +76,11 @@ const WorkingConditions: React.FC<WorkingConditionsProps> = ({
               <SelectValue placeholder="Select work hour structure" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Flexible">Flexible</SelectItem>
-              <SelectItem value="Fixed">Fixed</SelectItem>
-              <SelectItem value="Async Work">Async Work</SelectItem>
+              {workHoursOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -106,9 +115,11 @@ const WorkingConditions: React.FC<WorkingConditionsProps> = ({
               <SelectValue placeholder="Select hiring timeline" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Immediate Hire">Immediate Hire</SelectItem>
-              <SelectItem value="Within a Month">Within a Month</SelectItem>
-              <SelectItem value="Open to Future Applicants">Open to Future Applicants</SelectItem>
+              {hiringUrgencyOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>

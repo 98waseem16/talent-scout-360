@@ -8,6 +8,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from '@/components/ui/select';
+import { departmentOptions, seniorityOptions } from '@/components/job-filters/constants/filterOptions';
 
 interface JobRoleFunctionProps {
   formData: {
@@ -41,17 +42,11 @@ const JobRoleFunction: React.FC<JobRoleFunctionProps> = ({ formData, handleSelec
               <SelectValue placeholder="Select department" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Engineering">Engineering</SelectItem>
-              <SelectItem value="Product">Product</SelectItem>
-              <SelectItem value="Design">Design</SelectItem>
-              <SelectItem value="Marketing">Marketing</SelectItem>
-              <SelectItem value="Sales">Sales</SelectItem>
-              <SelectItem value="Operations">Operations</SelectItem>
-              <SelectItem value="HR">HR</SelectItem>
-              <SelectItem value="Customer Support">Customer Support</SelectItem>
-              <SelectItem value="Legal">Legal</SelectItem>
-              <SelectItem value="Finance">Finance</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
+              {departmentOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -69,15 +64,11 @@ const JobRoleFunction: React.FC<JobRoleFunctionProps> = ({ formData, handleSelec
               <SelectValue placeholder="Select seniority level" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Internship">Internship</SelectItem>
-              <SelectItem value="Entry-Level">Entry-Level</SelectItem>
-              <SelectItem value="Mid-Level">Mid-Level</SelectItem>
-              <SelectItem value="Senior">Senior</SelectItem>
-              <SelectItem value="Lead">Lead</SelectItem>
-              <SelectItem value="Director">Director</SelectItem>
-              <SelectItem value="VP">VP</SelectItem>
-              <SelectItem value="C-Level">C-Level</SelectItem>
-              <SelectItem value="Who Cares">Who Cares</SelectItem>
+              {seniorityOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
