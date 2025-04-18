@@ -1,3 +1,4 @@
+
 import { Job } from '../types/job.types';
 
 export const staticJobs: Job[] = [
@@ -30,7 +31,8 @@ export const staticJobs: Job[] = [
     ],
     logo: '/placeholder.svg',
     featured: true,
-    application_url: 'https://techvision.com/careers/senior-frontend-developer'
+    application_url: 'https://techvision.com/careers/senior-frontend-developer',
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: '2',
@@ -61,7 +63,8 @@ export const staticJobs: Job[] = [
     ],
     logo: '/placeholder.svg',
     featured: true,
-    application_url: 'https://designpulse.com/careers/product-designer'
+    application_url: 'https://designpulse.com/careers/product-designer',
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: '3',
@@ -91,7 +94,8 @@ export const staticJobs: Job[] = [
       'Home office stipend and coworking allowance'
     ],
     logo: '/placeholder.svg',
-    application_url: 'https://growthlabs.com/careers/full-stack-engineer'
+    application_url: 'https://growthlabs.com/careers/full-stack-engineer',
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: '4',
@@ -121,7 +125,8 @@ export const staticJobs: Job[] = [
       'Hybrid work model (3 days in office, 2 days remote)'
     ],
     logo: '/placeholder.svg',
-    application_url: 'https://brandelevate.com/careers/marketing-manager'
+    application_url: 'https://brandelevate.com/careers/marketing-manager',
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: '5',
@@ -152,7 +157,8 @@ export const staticJobs: Job[] = [
     ],
     logo: '/placeholder.svg',
     featured: true,
-    application_url: 'https://cloudnative.com/careers/devops-engineer'
+    application_url: 'https://cloudnative.com/careers/devops-engineer',
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   },
   {
     id: '6',
@@ -183,6 +189,7 @@ export const staticJobs: Job[] = [
     ],
     logo: '/placeholder.svg',
     featured: true,
-    application_url: 'https://analyticaai.com/careers/data-scientist'
+    application_url: 'https://analyticaai.com/careers/data-scientist',
+    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
   }
 ];
