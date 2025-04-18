@@ -2,11 +2,12 @@
 import React from 'react';
 import JobFilters from '@/components/job-filters/JobFilters';
 import { JobFilters as JobFiltersType } from '@/hooks/useJobFilters';
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FilterSidebarProps {
   isFilterOpen: boolean;
+  setIsFilterOpen: (isOpen: boolean) => void;
   filters: JobFiltersType;
   setFilters: (field: string, value: string | boolean) => void;
   clearAllFilters: () => void;
@@ -14,6 +15,7 @@ interface FilterSidebarProps {
 
 const FilterSidebar: React.FC<FilterSidebarProps> = ({
   isFilterOpen,
+  setIsFilterOpen,
   filters,
   setFilters,
   clearAllFilters

@@ -20,8 +20,8 @@ const queryClient = new QueryClient();
 const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <div className="flex flex-col min-h-screen">
             <Routes>
               <Route path="/" element={<Index />} />
@@ -35,8 +35,8 @@ const App: React.FC = () => {
             </Routes>
           </div>
           <Toaster />
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 };
