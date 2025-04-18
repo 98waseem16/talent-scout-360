@@ -22,3 +22,21 @@ export const formatPostedDate = (postedDate: string): string => {
     return months === 1 ? '1 month ago' : `${months} months ago`;
   }
 };
+
+/**
+ * Calculates and formats the days remaining until expiration
+ */
+export const formatDaysRemaining = (expiresAt: string): string => {
+  const now = new Date();
+  const expirationDate = new Date(expiresAt);
+  const diffTime = expirationDate.getTime() - now.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays <= 0) {
+    return 'Expired';
+  } else if (diffDays === 1) {
+    return '1 day left';
+  } else {
+    return `${diffDays} days left`;
+  }
+};
