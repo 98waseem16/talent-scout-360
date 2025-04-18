@@ -1,4 +1,3 @@
-
 import { Job } from '@/lib/types/job.types';
 import { FIELD_MAPPINGS } from './types';
 
@@ -20,24 +19,31 @@ const compareValues = (jobValue: any, filterValue: any, fieldName: string): bool
   const normalizedJobValue = normalizeString(jobValue);
   const normalizedFilterValue = normalizeString(filterValue);
   
-  // Special handling for seniority level comparison
+  // Special handling for seniority level comparison with detailed logging
   if (fieldName === 'seniority_level') {
-    console.log(`🔍 Comparing seniority_level:
-      - Job value: "${jobValue}" (normalized: "${normalizedJobValue}")
-      - Filter value: "${filterValue}" (normalized: "${normalizedFilterValue}")
-      - Contains match: ${normalizedJobValue.includes(normalizedFilterValue)}`);
+    const isMatch = normalizedJobValue.includes(normalizedFilterValue) || 
+                   normalizedFilterValue.includes(normalizedJobValue);
     
-    return normalizedJobValue.includes(normalizedFilterValue) || 
-           normalizedFilterValue.includes(normalizedJobValue);
+    console.log(`🔎 Seniority Level Comparison:
+      Job Value: "${jobValue}" (normalized: "${normalizedJobValue}")
+      Filter Value: "${filterValue}" (normalized: "${normalizedFilterValue}")
+      Match Type: Partial match (includes)
+      Result: ${isMatch ? '✅ MATCH' : '❌ NO MATCH'}`
+    );
+    
+    return isMatch;
   }
   
-  // For all other fields, use exact match but with debug logging
-  console.log(`🔍 Comparing values for field "${fieldName}":
-    - Job value: "${jobValue}" (normalized: "${normalizedJobValue}")
-    - Filter value: "${filterValue}" (normalized: "${normalizedFilterValue}")
-    - Match: ${normalizedJobValue === normalizedFilterValue}`);
+  // For all other fields, use exact match with debug logging
+  const isMatch = normalizedJobValue === normalizedFilterValue;
+  console.log(`🔍 Standard Comparison (${fieldName}):
+    Job Value: "${jobValue}" (normalized: "${normalizedJobValue}")
+    Filter Value: "${filterValue}" (normalized: "${normalizedFilterValue}")
+    Match Type: Exact match
+    Result: ${isMatch ? '✅ MATCH' : '❌ NO MATCH'}`
+  );
   
-  return normalizedJobValue === normalizedFilterValue;
+  return isMatch;
 };
 
 // Function to check if a job matches all filters

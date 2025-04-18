@@ -1,4 +1,3 @@
-
 import { JobDatabaseFields, JobFormData, Job } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
@@ -123,6 +122,24 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     }
   };
   
+  const standardizeSeniorityLevel = (value: string): string => {
+    if (!value) return '';
+    
+    const normalized = value.toLowerCase().trim();
+    console.log(`🎯 Standardizing seniority level: "${value}" -> "${normalized}"`);
+    
+    if (normalized.includes('senior')) return 'Senior';
+    if (normalized === 'mid-level' || normalized === 'mid level' || normalized.includes('mid')) return 'Mid-Level';
+    if (normalized === 'entry-level' || normalized === 'entry level' || normalized.includes('junior')) return 'Entry-Level';
+    if (normalized.includes('lead')) return 'Lead';
+    if (normalized.includes('direct')) return 'Director';
+    if (normalized.includes('vp')) return 'VP';
+    if (normalized.includes('c-level')) return 'C-Level';
+    if (normalized.includes('intern')) return 'Internship';
+    
+    return value.trim();
+  };
+  
   // Create mapped job object with exact field naming and standardized values
   const mappedJob: Job = {
     id: dbFields.id,
@@ -143,7 +160,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     
     // Filter fields - ensure exact field names match with standardized values
     department: standardizeFieldValue('department', cleanField(dbFields.department)),
-    seniority_level: standardizeFieldValue('seniority_level', cleanField(dbFields.seniority_level)),
+    seniority_level: standardizeSeniorityLevel(dbFields.seniority_level),
     salary_range: standardizeFieldValue('salary_range', cleanField(dbFields.salary_range)),
     team_size: standardizeFieldValue('team_size', cleanField(dbFields.team_size)),
     investment_stage: standardizeFieldValue('investment_stage', cleanField(dbFields.investment_stage)),
@@ -155,6 +172,9 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     visa_sponsorship: Boolean(dbFields.visa_sponsorship),
     job_type: cleanField(dbFields.type) // For backward compatibility
   };
+  
+  // Log the final mapped job for debugging
+  console.log(`📊 Final mapped job seniority level: "${mappedJob.seniority_level}"`);
   
   // Log mapped job data for debugging
   console.log(`📊 MAPPED JOB FIELDS for "${mappedJob.title}" (ID: ${mappedJob.id}):`);

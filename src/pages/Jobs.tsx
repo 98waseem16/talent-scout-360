@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getJobs } from '@/lib/jobs';
+import { getJobs } from '@/lib/jobs/operations/fetchJobs';  // Update import path
 import { useJobFilters } from '@/hooks/useJobFilters';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
