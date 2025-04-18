@@ -27,6 +27,7 @@ export interface Job {
   hiring_urgency?: string;
   revenue_model?: string;
   visa_sponsorship?: boolean;
+  expires_at: string;
 }
 
 export const staticJobs: Job[] = [
@@ -263,7 +264,8 @@ export const getJobs = async (): Promise<Job[]> => {
       benefits: job.benefits,
       logo: job.logo,
       featured: job.featured,
-      application_url: job.application_url || ''
+      application_url: job.application_url || '',
+      expires_at: job.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     }));
 
     return jobs;
@@ -301,7 +303,8 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
       benefits: job.benefits,
       logo: job.logo,
       featured: job.featured,
-      application_url: job.application_url || ''
+      application_url: job.application_url || '',
+      expires_at: job.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     }));
 
     return jobs;
@@ -338,7 +341,8 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       benefits: data.benefits,
       logo: data.logo,
       featured: data.featured,
-      application_url: data.application_url || ''
+      application_url: data.application_url || '',
+      expires_at: data.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
     };
   } catch (error) {
     console.error('Error fetching job by ID:', error);
@@ -447,7 +451,8 @@ export const seedJobs = async () => {
         benefits: job.benefits,
         logo: job.logo,
         featured: job.featured,
-        application_url: job.application_url
+        application_url: job.application_url,
+        expires_at: job.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
       }))
     );
 
