@@ -1,10 +1,13 @@
-import React, { useEffect } from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -26,17 +29,36 @@ const AuthCallback: React.FC = () => {
         navigate(redirectPath, { replace: true });
       } catch (error) {
         console.error('Error during authentication callback:', error);
-        navigate('/auth');
+        setError('Authentication failed. Please try again.');
       }
     };
 
     handleAuthCallback();
   }, [navigate]);
 
+  const handleGoBack = () => {
+    navigate('/auth');
+  };
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="bg-white p-6 rounded-lg shadow-md max-w-md w-full text-center">
+          <AlertCircle className="h-12 w-12 mx-auto text-red-500 mb-4" />
+          <h2 className="text-xl font-bold mb-2">Authentication Error</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Button onClick={handleGoBack}>Go Back to Sign In</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      <span className="ml-2 text-lg">Completing sign in...</span>
+      <div className="flex flex-col items-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2 text-lg mt-4">Completing sign in...</span>
+      </div>
     </div>
   );
 };
