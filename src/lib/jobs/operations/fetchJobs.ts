@@ -10,9 +10,14 @@ import { mapDatabaseFieldsToJob } from '../utils/jobMappers';
 export const getJobs = async (): Promise<Job[]> => {
   try {
     console.log('Fetching jobs from database...');
+    
+    // Get current date for filtering expired jobs
+    const now = new Date().toISOString();
+    
     const { data, error } = await supabase
       .from('job_postings')
       .select('*')
+      .gt('expires_at', now) // Only get non-expired jobs
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -37,7 +42,8 @@ export const getJobs = async (): Promise<Job[]> => {
         seniority_level: data[0].seniority_level,
         seniority_level_type: typeof data[0].seniority_level,
         remote_onsite: data[0].remote_onsite,
-        remote_onsite_type: typeof data[0].remote_onsite
+        remote_onsite_type: typeof data[0].remote_onsite,
+        expires_at: data[0].expires_at
       });
     }
     
@@ -60,7 +66,8 @@ export const getJobs = async (): Promise<Job[]> => {
         type: `"${jobs[0].type}"`,
         type_type: typeof jobs[0].type,
         remote_onsite: `"${jobs[0].remote_onsite}"`,
-        remote_onsite_type: typeof jobs[0].remote_onsite
+        remote_onsite_type: typeof jobs[0].remote_onsite,
+        expires_at: jobs[0].expires_at
       });
     }
     
@@ -76,10 +83,14 @@ export const getJobs = async (): Promise<Job[]> => {
  */
 export const getTrendingJobs = async (): Promise<Job[]> => {
   try {
+    // Get current date for filtering expired jobs
+    const now = new Date().toISOString();
+    
     const { data, error } = await supabase
       .from('job_postings')
       .select('*')
       .eq('featured', true)
+      .gt('expires_at', now) // Only get non-expired jobs
       .order('created_at', { ascending: false })
       .limit(3);
 
@@ -146,7 +157,8 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       equity: mappedJob?.equity ? `"${mappedJob.equity}"` : '""',
       hiring_urgency: mappedJob?.hiring_urgency ? `"${mappedJob.hiring_urgency}"` : '""',
       revenue_model: mappedJob?.revenue_model ? `"${mappedJob.revenue_model}"` : '""',
-      visa_sponsorship: mappedJob?.visa_sponsorship
+      visa_sponsorship: mappedJob?.visa_sponsorship,
+      expires_at: mappedJob?.expires_at
     });
     
     return mappedJob;
