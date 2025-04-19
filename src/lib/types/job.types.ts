@@ -1,4 +1,3 @@
-
 export interface Job {
   id: string;
   title: string;
@@ -26,8 +25,7 @@ export interface Job {
   work_hours?: string;
   visa_sponsorship?: boolean;
   hiring_urgency?: string;
-  job_type?: string;
-  expires_at: string;
+  job_type?: string;  // Added this for backward compatibility
 }
 
 export interface JobFormData {
@@ -56,7 +54,6 @@ export interface JobFormData {
   work_hours?: string;
   visa_sponsorship?: boolean;
   hiring_urgency?: string;
-  expires_at?: string;
 }
 
 export interface JobDatabaseFields {
@@ -88,5 +85,4 @@ export interface JobDatabaseFields {
   work_hours?: string;
   visa_sponsorship?: boolean;
   hiring_urgency?: string;
-  expires_at: string;
 }

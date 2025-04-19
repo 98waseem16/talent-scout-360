@@ -2,10 +2,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Briefcase, MapPin, DollarSign, Clock, AlertCircle } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Clock } from 'lucide-react';
 import type { Job } from '@/lib/jobs';
 import { GlowEffect } from '@/components/ui/glow-effect';
-import { formatDaysRemaining } from '@/lib/utils/dateUtils';
 
 interface JobCardProps {
   job: Job;
@@ -14,10 +13,9 @@ interface JobCardProps {
 }
 
 const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) => {
+  // Calculate animation delay based on index
   const animationDelay = `${index * 0.1}s`;
   const isFeatured = featured || job.featured;
-  const daysRemaining = formatDaysRemaining(job.expires_at);
-  const isExpiring = daysRemaining !== 'Expired' && parseInt(daysRemaining) <= 5;
 
   return (
     <Link 
@@ -28,7 +26,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
         "hover-scale"
       )}
     >
-      {/* Glow effect container */}
+      {/* Glow effect container that's slightly larger than the card */}
       {isFeatured && (
         <div className="absolute -inset-1 rounded-xl overflow-hidden">
           <GlowEffect
@@ -41,7 +39,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
         </div>
       )}
       
-      {/* Card content */}
+      {/* Actual card content with background */}
       <div className={cn(
         "relative z-10 p-6 rounded-xl overflow-hidden",
         isFeatured ? "bg-white/90 backdrop-blur-sm border border-transparent" : "bg-white shadow-sm border border-border"
@@ -59,19 +57,11 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
               <h3 className="text-lg font-medium truncate text-foreground">
                 {job.title}
               </h3>
-              <div className="flex items-center gap-2">
-                {isExpiring && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                    <AlertCircle className="w-3 h-3 mr-1" />
-                    {daysRemaining}
-                  </span>
-                )}
-                {isFeatured && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-destructive text-white shadow-sm">
-                    Featured
-                  </span>
-                )}
-              </div>
+              {isFeatured && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-destructive text-white shadow-sm">
+                  Featured
+                </span>
+              )}
             </div>
             <p className="text-muted-foreground">
               {job.company}

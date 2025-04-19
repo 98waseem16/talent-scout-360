@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from './file-upload';
 
@@ -28,7 +27,6 @@ export interface Job {
   hiring_urgency?: string;
   revenue_model?: string;
   visa_sponsorship?: boolean;
-  expires_at: string;
 }
 
 export const staticJobs: Job[] = [
@@ -61,8 +59,7 @@ export const staticJobs: Job[] = [
     ],
     logo: '/placeholder.svg',
     featured: true,
-    application_url: 'https://techvision.com/careers/senior-frontend-developer',
-    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    application_url: 'https://techvision.com/careers/senior-frontend-developer'
   },
   {
     id: '2',
@@ -93,8 +90,7 @@ export const staticJobs: Job[] = [
     ],
     logo: '/placeholder.svg',
     featured: true,
-    application_url: 'https://designpulse.com/careers/product-designer',
-    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    application_url: 'https://designpulse.com/careers/product-designer'
   },
   {
     id: '3',
@@ -124,8 +120,7 @@ export const staticJobs: Job[] = [
       'Home office stipend and coworking allowance'
     ],
     logo: '/placeholder.svg',
-    application_url: 'https://growthlabs.com/careers/full-stack-engineer',
-    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    application_url: 'https://growthlabs.com/careers/full-stack-engineer'
   },
   {
     id: '4',
@@ -155,8 +150,7 @@ export const staticJobs: Job[] = [
       'Hybrid work model (3 days in office, 2 days remote)'
     ],
     logo: '/placeholder.svg',
-    application_url: 'https://brandelevate.com/careers/marketing-manager',
-    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    application_url: 'https://brandelevate.com/careers/marketing-manager'
   },
   {
     id: '5',
@@ -187,8 +181,7 @@ export const staticJobs: Job[] = [
     ],
     logo: '/placeholder.svg',
     featured: true,
-    application_url: 'https://cloudnative.com/careers/devops-engineer',
-    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    application_url: 'https://cloudnative.com/careers/devops-engineer'
   },
   {
     id: '6',
@@ -219,8 +212,7 @@ export const staticJobs: Job[] = [
     ],
     logo: '/placeholder.svg',
     featured: true,
-    application_url: 'https://analyticaai.com/careers/data-scientist',
-    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    application_url: 'https://analyticaai.com/careers/data-scientist'
   }
 ];
 
@@ -271,20 +263,7 @@ export const getJobs = async (): Promise<Job[]> => {
       benefits: job.benefits,
       logo: job.logo,
       featured: job.featured,
-      application_url: job.application_url || '',
-      // Add other fields that might be present
-      department: job.department || '',
-      seniority_level: job.seniority_level || '',
-      team_size: job.team_size || '',
-      investment_stage: job.investment_stage || '',
-      remote_onsite: job.remote_onsite || '',
-      work_hours: job.work_hours || '',
-      equity: job.equity || '',
-      hiring_urgency: job.hiring_urgency || '',
-      revenue_model: job.revenue_model || '',
-      visa_sponsorship: job.visa_sponsorship || false,
-      // Handle existing or missing expires_at
-      expires_at: job.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      application_url: job.application_url || ''
     }));
 
     return jobs;
@@ -322,20 +301,7 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
       benefits: job.benefits,
       logo: job.logo,
       featured: job.featured,
-      application_url: job.application_url || '',
-      // Add other fields that might be present
-      department: job.department || '',
-      seniority_level: job.seniority_level || '',
-      team_size: job.team_size || '',
-      investment_stage: job.investment_stage || '',
-      remote_onsite: job.remote_onsite || '',
-      work_hours: job.work_hours || '',
-      equity: job.equity || '',
-      hiring_urgency: job.hiring_urgency || '',
-      revenue_model: job.revenue_model || '',
-      visa_sponsorship: job.visa_sponsorship || false,
-      // Handle existing or missing expires_at
-      expires_at: job.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      application_url: job.application_url || ''
     }));
 
     return jobs;
@@ -372,20 +338,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       benefits: data.benefits,
       logo: data.logo,
       featured: data.featured,
-      application_url: data.application_url || '',
-      // Add other fields that might be present
-      department: data.department || '',
-      seniority_level: data.seniority_level || '',
-      team_size: data.team_size || '',
-      investment_stage: data.investment_stage || '',
-      remote_onsite: data.remote_onsite || '',
-      work_hours: data.work_hours || '',
-      equity: data.equity || '',
-      hiring_urgency: data.hiring_urgency || '',
-      revenue_model: data.revenue_model || '',
-      visa_sponsorship: data.visa_sponsorship || false,
-      // Handle existing or missing expires_at
-      expires_at: data.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+      application_url: data.application_url || ''
     };
   } catch (error) {
     console.error('Error fetching job by ID:', error);
@@ -494,8 +447,7 @@ export const seedJobs = async () => {
         benefits: job.benefits,
         logo: job.logo,
         featured: job.featured,
-        application_url: job.application_url,
-        expires_at: job.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+        application_url: job.application_url
       }))
     );
 

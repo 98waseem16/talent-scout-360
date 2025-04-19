@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -58,8 +57,7 @@ const Dashboard: React.FC = () => {
             logo: job.logo || '',
             featured: job.featured || false,
             user_id: job.user_id,
-            application_url: job.application_url || '',
-            expires_at: job.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            application_url: job.application_url || ''
           }));
           
           setJobs(transformedJobs);

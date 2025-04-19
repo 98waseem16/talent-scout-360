@@ -82,11 +82,10 @@ const JobDetails: React.FC = () => {
     );
   }
 
-  // Ensure application_url and expires_at are defined
+  // Ensure application_url is defined
   const jobWithUrl = {
     ...job,
-    application_url: job.application_url || '',
-    expires_at: job.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+    application_url: job.application_url || ''
   };
 
   return (
