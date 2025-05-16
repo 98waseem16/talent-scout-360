@@ -3,9 +3,6 @@ import { JobDatabaseFields, JobFormData, Job } from '../../types/job.types';
 export const mapJobFormDataToDatabaseFields = (
   formData: JobFormData
 ): JobDatabaseFields => {
-  // Calculate expiration date (30 days from now)
-  const expiresAt = formData.expires_at || new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-  
   return {
     title: formData.title,
     company: formData.company,
@@ -30,8 +27,7 @@ export const mapJobFormDataToDatabaseFields = (
     remote_onsite: formData.remote_onsite || '',
     work_hours: formData.work_hours || '',
     visa_sponsorship: formData.visa_sponsorship || false,
-    hiring_urgency: formData.hiring_urgency || '',
-    expires_at: expiresAt // Set expiration date
+    hiring_urgency: formData.hiring_urgency || ''
   };
 };
 
@@ -216,16 +212,6 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     }
   };
   
-  // Calculate expiration date if not provided (30 days from creation date)
-  let expiresAt = dbFields.expires_at;
-  if (!expiresAt && dbFields.created_at) {
-    const creationDate = new Date(dbFields.created_at);
-    expiresAt = new Date(creationDate.getTime() + 30 * 24 * 60 * 60 * 1000).toISOString();
-  } else if (!expiresAt) {
-    // Fallback: 30 days from now
-    expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-  }
-  
   const mappedJob: Job = {
     id: dbFields.id,
     title: cleanField(dbFields.title),
@@ -255,8 +241,7 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     hiring_urgency: standardizeFieldValue('hiring_urgency', cleanField(dbFields.hiring_urgency)),
     revenue_model: standardizeFieldValue('revenue_model', cleanField(dbFields.revenue_model)),
     visa_sponsorship: Boolean(dbFields.visa_sponsorship),
-    job_type: cleanField(dbFields.type), // For backward compatibility
-    expires_at: expiresAt // Add expiration date
+    job_type: cleanField(dbFields.type) // For backward compatibility
   };
   
   console.log(`📊 Mapped job seniority level: "${mappedJob.seniority_level}"`);

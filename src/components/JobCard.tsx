@@ -2,10 +2,9 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Briefcase, MapPin, DollarSign, Clock, AlertCircle } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Clock } from 'lucide-react';
 import type { Job } from '@/lib/jobs';
 import { GlowEffect } from '@/components/ui/glow-effect';
-import { formatPostedDate } from '@/lib/utils/dateUtils';
 
 interface JobCardProps {
   job: Job;
@@ -17,14 +16,6 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
   // Calculate animation delay based on index
   const animationDelay = `${index * 0.1}s`;
   const isFeatured = featured || job.featured;
-  
-  // Calculate days until expiration
-  const daysUntilExpiration = job.expires_at ? 
-    Math.ceil((new Date(job.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : 
-    null;
-  
-  // Determine if job is expiring soon (within 7 days)
-  const isExpiringSoon = daysUntilExpiration !== null && daysUntilExpiration <= 7;
 
   return (
     <Link 
@@ -66,21 +57,11 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
               <h3 className="text-lg font-medium truncate text-foreground">
                 {job.title}
               </h3>
-              <div className="flex gap-2 flex-shrink-0">
-                {isFeatured && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-destructive text-white shadow-sm">
-                    Featured
-                  </span>
-                )}
-                {isExpiringSoon && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 shadow-sm whitespace-nowrap">
-                    <AlertCircle className="w-3 h-3 mr-1" />
-                    {daysUntilExpiration === 0 ? 'Expires today' : 
-                      daysUntilExpiration === 1 ? 'Expires tomorrow' : 
-                      `Expires in ${daysUntilExpiration} days`}
-                  </span>
-                )}
-              </div>
+              {isFeatured && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-destructive text-white shadow-sm">
+                  Featured
+                </span>
+              )}
             </div>
             <p className="text-muted-foreground">
               {job.company}

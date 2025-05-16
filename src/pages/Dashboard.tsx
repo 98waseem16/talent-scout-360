@@ -57,8 +57,7 @@ const Dashboard: React.FC = () => {
             logo: job.logo || '',
             featured: job.featured || false,
             user_id: job.user_id,
-            application_url: job.application_url || '',
-            expires_at: job.expires_at || new Date(new Date(job.created_at).getTime() + 30 * 24 * 60 * 60 * 1000).toISOString()
+            application_url: job.application_url || ''
           }));
           
           setJobs(transformedJobs);
@@ -88,52 +87,6 @@ const Dashboard: React.FC = () => {
     } catch (error: any) {
       toast.error(`Failed to delete job: ${error.message}`);
     }
-  };
-
-  const handleRenewJob = async (jobId: string) => {
-    try {
-      const newExpirationDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
-      
-      const { error } = await supabase
-        .from('job_postings')
-        .update({ expires_at: newExpirationDate })
-        .eq('id', jobId)
-        .eq('user_id', user?.id);
-
-      if (error) {
-        throw new Error(error.message);
-      }
-
-      setJobs(jobs.map(job => 
-        job.id === jobId 
-          ? { ...job, expires_at: newExpirationDate } 
-          : job
-      ));
-      
-      toast.success('Job listing renewed for 30 more days!');
-    } catch (error: any) {
-      toast.error(`Failed to renew job: ${error.message}`);
-    }
-  };
-
-  const getDaysUntilExpiration = (expiresAt: string | undefined): number | null => {
-    if (!expiresAt) return null;
-    return Math.ceil((new Date(expiresAt).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-  };
-
-  const getExpirationStatusText = (daysUntil: number | null): string => {
-    if (daysUntil === null) return 'No expiration';
-    if (daysUntil <= 0) return 'Expired';
-    if (daysUntil === 1) return 'Expires tomorrow';
-    if (daysUntil <= 7) return `Expires in ${daysUntil} days`;
-    return `Expires in ${daysUntil} days`;
-  };
-
-  const getExpirationStatusClass = (daysUntil: number | null): string => {
-    if (daysUntil === null) return 'bg-gray-100 text-gray-800';
-    if (daysUntil <= 0) return 'bg-red-100 text-red-800';
-    if (daysUntil <= 7) return 'bg-amber-100 text-amber-800';
-    return 'bg-green-100 text-green-800';
   };
 
   if (!user) {
@@ -201,78 +154,49 @@ const Dashboard: React.FC = () => {
                     <p>Loading jobs...</p>
                   ) : jobs.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4">
-                      {jobs.map((job) => {
-                        const daysUntil = getDaysUntilExpiration(job.expires_at);
-                        const expirationText = getExpirationStatusText(daysUntil);
-                        const expirationClass = getExpirationStatusClass(daysUntil);
-                        
-                        return (
-                          <Card key={job.id} className="hover:shadow-lg transition-shadow">
-                            <CardHeader>
-                              <CardTitle className="flex justify-between items-start">
-                                <span>{job.title}</span>
-                                <div className="flex flex-col gap-2 items-end">
-                                  {job.featured && (
-                                    <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded">Featured</span>
-                                  )}
-                                  <span className={`text-xs font-medium px-2 py-1 rounded ${expirationClass}`}>
-                                    {expirationText}
-                                  </span>
-                                </div>
-                              </CardTitle>
-                              <CardDescription className="flex items-center">
-                                <span className="font-medium">{job.company}</span>
-                                <span className="mx-2">•</span>
-                                <span>{job.location}</span>
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                              <p className="text-sm text-muted-foreground mb-2">Posted: {job.posted}</p>
-                              <p className="text-sm mb-2 line-clamp-2">{job.description}</p>
-                              <div className="flex flex-wrap gap-2">
-                                <span className="bg-primary/10 text-primary text-xs font-medium px-2 py-1 rounded">
-                                  {job.type}
-                                </span>
-                                {job.salary && (
-                                  <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
-                                    {job.salary}
-                                  </span>
-                                )}
-                              </div>
-                            </CardContent>
-                            <CardFooter className="flex flex-wrap gap-2 justify-between items-center">
-                              <div className="flex gap-2">
-                                <Link to={`/edit-job/${job.id}`}>
-                                  <Button variant="secondary" size="sm" className="hover-scale">
-                                    <Edit className="mr-2 h-4 w-4" />
-                                    Edit
-                                  </Button>
-                                </Link>
-                                <Button 
-                                  variant="destructive" 
-                                  size="sm" 
-                                  onClick={() => handleDeleteJob(job.id)} 
-                                  className="hover-scale"
-                                >
-                                  <Trash className="mr-2 h-4 w-4" />
-                                  Delete
-                                </Button>
-                              </div>
-                              {daysUntil !== null && daysUntil < 14 && (
-                                <Button 
-                                  variant="outline" 
-                                  size="sm" 
-                                  onClick={() => handleRenewJob(job.id)}
-                                  className="hover-scale"
-                                >
-                                  <Zap className="mr-2 h-4 w-4" />
-                                  Renew for 30 days
-                                </Button>
+                      {jobs.map((job) => (
+                        <Card key={job.id} className="hover:shadow-lg transition-shadow">
+                          <CardHeader>
+                            <CardTitle className="flex justify-between items-start">
+                              <span>{job.title}</span>
+                              {job.featured && (
+                                <span className="bg-amber-100 text-amber-800 text-xs font-medium px-2 py-1 rounded">Featured</span>
                               )}
-                            </CardFooter>
-                          </Card>
-                        );
-                      })}
+                            </CardTitle>
+                            <CardDescription className="flex items-center">
+                              <span className="font-medium">{job.company}</span>
+                              <span className="mx-2">•</span>
+                              <span>{job.location}</span>
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-sm text-muted-foreground mb-2">Posted: {job.posted}</p>
+                            <p className="text-sm mb-2 line-clamp-2">{job.description}</p>
+                            <div className="flex flex-wrap gap-2">
+                              <span className="bg-primary/10 text-primary text-xs font-medium px-2 py-1 rounded">
+                                {job.type}
+                              </span>
+                              {job.salary && (
+                                <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded">
+                                  {job.salary}
+                                </span>
+                              )}
+                            </div>
+                          </CardContent>
+                          <CardFooter className="flex justify-between items-center">
+                            <Link to={`/edit-job/${job.id}`}>
+                              <Button variant="secondary" size="sm" className="hover-scale">
+                                <Edit className="mr-2 h-4 w-4" />
+                                Edit
+                              </Button>
+                            </Link>
+                            <Button variant="destructive" size="sm" onClick={() => handleDeleteJob(job.id)} className="hover-scale">
+                              <Trash className="mr-2 h-4 w-4" />
+                              Delete
+                            </Button>
+                          </CardFooter>
+                        </Card>
+                      ))}
                     </div>
                   ) : (
                     <div className="flex flex-col items-center justify-center py-12 bg-slate-50 rounded-lg">
