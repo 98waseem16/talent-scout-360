@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Briefcase, MapPin, DollarSign, Clock } from 'lucide-react';
 import type { Job } from '@/lib/types/job.types';
-import { GlowEffect } from '@/components/ui/glow-effect';
 import { formatPostedDate } from '@/lib/utils/dateUtils';
 
 interface JobCardProps {
@@ -27,25 +26,12 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
         "transition-all duration-300 ease-in-out"
       )}
     >
-      {/* Enhanced Glow effect with more vibrant colors and smoother animation */}
-      {isFeatured && (
-        <div className="absolute -inset-1.5 rounded-xl overflow-hidden opacity-80 group-hover:opacity-100 transition-opacity">
-          <GlowEffect
-            colors={['#9b87f5', '#D946EF', '#F97316', '#0EA5E9']}
-            mode="flowHorizontal"
-            blur="medium"
-            scale={1.2}
-            duration={8}
-          />
-        </div>
-      )}
-      
       {/* Actual card content with improved background and hover state */}
       <div className={cn(
         "relative z-10 p-6 rounded-xl overflow-hidden transition-all duration-300",
         "transform group-hover:-translate-y-1",
         isFeatured 
-          ? "bg-white/90 backdrop-blur-sm border border-transparent shadow-lg" 
+          ? "bg-white border border-primary/20 shadow-md" 
           : "bg-white shadow-sm border border-border group-hover:shadow-md"
       )}>
         <div className="flex items-start gap-4">
