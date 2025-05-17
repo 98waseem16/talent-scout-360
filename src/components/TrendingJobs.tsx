@@ -14,16 +14,29 @@ const TrendingJobs: React.FC = () => {
   });
 
   return (
-    <section className="py-16 md:py-24 px-6">
+    <section className="py-20 md:py-28 px-6 relative overflow-hidden">
+      {/* Subtle background elements */}
+      <div className="absolute inset-0 -z-10">
+        <div className="absolute right-0 top-1/4 w-72 h-72 bg-gradient-to-br from-primary/5 to-blue-300/5 rounded-full blur-3xl"></div>
+        <div className="absolute left-1/4 bottom-1/4 w-96 h-96 bg-gradient-to-tr from-purple-200/10 to-primary/5 rounded-full blur-3xl"></div>
+      </div>
+
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-wrap items-baseline justify-between mb-8 gap-4">
-          <h2 className="text-2xl md:text-3xl font-medium">Trending Jobs</h2>
+        <div className="flex flex-wrap items-baseline justify-between mb-12 gap-4">
+          <div className="space-y-2">
+            <h2 className="text-3xl md:text-4xl font-medium bg-gradient-to-br from-foreground to-foreground/70 bg-clip-text">
+              <span className="text-transparent">Trending Opportunities</span>
+            </h2>
+            <p className="text-muted-foreground max-w-xl">
+              Discover the most in-demand startup roles that top talent is applying to right now
+            </p>
+          </div>
           <Link 
             to="/jobs" 
-            className="text-primary flex items-center hover:underline font-medium smooth-transition"
+            className="group text-primary flex items-center hover:text-primary/80 font-medium transition-colors"
           >
             View all jobs
-            <ArrowRight className="ml-1 h-4 w-4" />
+            <ArrowRight className="ml-1 h-4 w-4 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
 
@@ -47,7 +60,7 @@ const TrendingJobs: React.FC = () => {
             ))}
           </div>
         ) : error ? (
-          <div className="text-center py-12">
+          <div className="text-center py-12 bg-white/50 backdrop-blur-sm rounded-xl border border-border p-8">
             <p className="text-muted-foreground">Failed to load trending jobs. Please try again later.</p>
           </div>
         ) : (

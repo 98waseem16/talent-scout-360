@@ -3,8 +3,9 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Briefcase, MapPin, DollarSign, Clock } from 'lucide-react';
-import type { Job } from '@/lib/jobs';
+import type { Job } from '@/lib/types/job.types';
 import { GlowEffect } from '@/components/ui/glow-effect';
+import { formatPostedDate } from '@/lib/utils/dateUtils';
 
 interface JobCardProps {
   job: Job;
@@ -13,7 +14,7 @@ interface JobCardProps {
 }
 
 const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) => {
-  // Calculate animation delay based on index
+  // Calculate animation delay based on index for staggered animation
   const animationDelay = `${index * 0.1}s`;
   const isFeatured = featured || job.featured;
 
@@ -22,13 +23,13 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
       to={`/jobs/${job.id}`}
       style={{ animationDelay }}
       className={cn(
-        "block opacity-0 animate-slide-up w-full relative",
-        "hover-scale"
+        "block opacity-0 animate-slide-up w-full relative group",
+        "transition-all duration-300 ease-in-out"
       )}
     >
-      {/* Glow effect container that's slightly larger than the card */}
+      {/* Enhanced Glow effect with more vibrant colors and smoother animation */}
       {isFeatured && (
-        <div className="absolute -inset-1 rounded-xl overflow-hidden">
+        <div className="absolute -inset-1.5 rounded-xl overflow-hidden opacity-80 group-hover:opacity-100 transition-opacity">
           <GlowEffect
             colors={['#9b87f5', '#D946EF', '#F97316', '#0EA5E9']}
             mode="flowHorizontal"
@@ -39,13 +40,17 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
         </div>
       )}
       
-      {/* Actual card content with background */}
+      {/* Actual card content with improved background and hover state */}
       <div className={cn(
-        "relative z-10 p-6 rounded-xl overflow-hidden",
-        isFeatured ? "bg-white/90 backdrop-blur-sm border border-transparent" : "bg-white shadow-sm border border-border"
+        "relative z-10 p-6 rounded-xl overflow-hidden transition-all duration-300",
+        "transform group-hover:-translate-y-1",
+        isFeatured 
+          ? "bg-white/90 backdrop-blur-sm border border-transparent shadow-lg" 
+          : "bg-white shadow-sm border border-border group-hover:shadow-md"
       )}>
         <div className="flex items-start gap-4">
-          <div className="h-12 w-12 rounded-md bg-secondary/50 flex items-center justify-center overflow-hidden">
+          {/* Improved logo container with subtle background gradient */}
+          <div className="h-12 w-12 rounded-md bg-gradient-to-br from-secondary/30 to-secondary/60 flex items-center justify-center overflow-hidden">
             <img 
               src={job.logo} 
               alt={`${job.company} logo`} 
@@ -54,7 +59,7 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-lg font-medium truncate text-foreground">
+              <h3 className="text-lg font-medium truncate text-foreground group-hover:text-primary transition-colors">
                 {job.title}
               </h3>
               {isFeatured && (
