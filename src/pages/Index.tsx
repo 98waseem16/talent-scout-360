@@ -97,32 +97,6 @@ const Index: React.FC = () => {
             </div>
           </div>
         </section>
-
-        {/* CTA Section */}
-        <section className="py-20 px-6 bg-gradient-to-br from-primary/5 to-blue-100/20">
-          <div className="max-w-4xl mx-auto text-center">
-            <h2 className="text-3xl md:text-4xl font-medium mb-4">
-              Ready to find your next opportunity?
-            </h2>
-            <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Join thousands of professionals who have found their dream jobs at innovative startups through our platform
-            </p>
-            <div className="flex flex-wrap gap-4 justify-center">
-              <a 
-                href="/jobs" 
-                className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-medium transition-colors"
-              >
-                Browse Jobs
-              </a>
-              <a 
-                href="/auth" 
-                className="bg-white border border-primary text-primary hover:bg-primary/5 px-6 py-3 rounded-lg font-medium transition-colors"
-              >
-                Create Profile
-              </a>
-            </div>
-          </div>
-        </section>
       </main>
       <Footer />
     </>
