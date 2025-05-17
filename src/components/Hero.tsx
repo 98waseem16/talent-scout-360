@@ -84,25 +84,10 @@ const Hero: React.FC = () => {
             </MovingBorderButton>
           </div>
         </form>
-
-        {/* Added statistics to enhance credibility */}
-        <div className="mt-12 flex flex-wrap justify-center gap-6 sm:gap-12 animate-fade-in" style={{animationDelay: '0.6s'}}>
-          <div className="text-center">
-            <p className="text-2xl sm:text-3xl font-semibold text-foreground">1,200+</p>
-            <p className="text-sm text-muted-foreground">Active Jobs</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl sm:text-3xl font-semibold text-foreground">850+</p>
-            <p className="text-sm text-muted-foreground">Startups</p>
-          </div>
-          <div className="text-center">
-            <p className="text-2xl sm:text-3xl font-semibold text-foreground">10k+</p>
-            <p className="text-sm text-muted-foreground">Professionals</p>
-          </div>
-        </div>
       </div>
     </section>
   );
 };
 
 export default Hero;
+
