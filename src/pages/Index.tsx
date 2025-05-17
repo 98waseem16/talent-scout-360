@@ -4,25 +4,11 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Hero from '@/components/Hero';
 import TrendingJobs from '@/components/TrendingJobs';
-import { CheckCircle, Download, BarChart4, Briefcase, Building, Globe } from 'lucide-react';
+import { Briefcase, Building } from 'lucide-react';
 import { AnimatedTooltipPreview } from '@/components/ui/code-demo';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
 
 const Index: React.FC = () => {
-  const features = [{
-    icon: <BarChart4 className="h-6 w-6 text-primary" />,
-    title: 'AI-Powered Startup Matching',
-    description: 'Our intelligent algorithms match your skills with the perfect startup opportunities based on growth stage and culture fit.'
-  }, {
-    icon: <Download className="h-6 w-6 text-primary" />,
-    title: 'One-Click Applications',
-    description: 'Apply to startup jobs with a single click using your saved profile and resume, skipping tedious application forms.'
-  }, {
-    icon: <CheckCircle className="h-6 w-6 text-primary" />,
-    title: 'Verified Startups',
-    description: 'All startups on our platform are verified to ensure legitimate opportunities with funding information and growth metrics.'
-  }];
-
   const categories = [
     { name: 'Software Engineering', icon: <Briefcase />, count: 230 },
     { name: 'Design', icon: <Briefcase />, count: 158 },
@@ -42,35 +28,6 @@ const Index: React.FC = () => {
         {/* Trending Jobs */}
         <TrendingJobs />
         
-        {/* Features Section with improved design */}
-        <section className="py-20 px-6 bg-gradient-to-b from-white to-blue-50/50">
-          <div className="max-w-7xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className="text-3xl md:text-4xl font-medium mb-4">
-                Why top talent chooses us
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                We connect exceptional candidates with innovative startups through our specialized platform
-              </p>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              {features.map((feature, index) => (
-                <div 
-                  key={index}
-                  className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-border shadow-sm hover:shadow-md transition-all"
-                >
-                  <div className="bg-primary/10 p-3 rounded-lg inline-block mb-4">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-medium mb-2">{feature.title}</h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
         {/* New Browse by Category Section */}
         <section className="py-20 px-6 bg-white">
           <div className="max-w-7xl mx-auto">
