@@ -1,10 +1,16 @@
-
 import { useState, useEffect } from 'react';
-import { getJobById } from '@/lib/jobs/jobsApi';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { useLocation } from 'react-router-dom';
 import { JobFormData } from '@/lib/types/job.types';
 
 export const useJobFormData = (id?: string) => {
+  const { user } = useAuth();
+  const location = useLocation();
+  const isFromScraper = new URLSearchParams(location.search).get('fromScraper') === 'true';
+  
+  // Initialize form data with default values
   const [formData, setFormData] = useState<JobFormData>({
     title: '',
     company: '',
@@ -14,7 +20,8 @@ export const useJobFormData = (id?: string) => {
     responsibilities: [''],
     requirements: [''],
     benefits: [''],
-    logo: '/placeholder.svg',
+    logo: '',
+    application_url: '',
     salary: '',
     investment_stage: '',
     team_size: '',
@@ -27,98 +34,113 @@ export const useJobFormData = (id?: string) => {
     work_hours: '',
     visa_sponsorship: false,
     hiring_urgency: '',
-    featured: false,
-    application_url: '',
   });
-
+  
   const [logoFile, setLogoFile] = useState<File | null>(null);
-  const isEditMode = !!id;
-
+  const [isEditMode] = useState(!!id);
+  
+  // Fetch existing job data if in edit mode
   useEffect(() => {
-    if (isEditMode && id) {
-      const fetchJobData = async () => {
-        try {
-          const jobData = await getJobById(id);
-          if (jobData) {
-            setFormData({
-              title: jobData.title || '',
-              company: jobData.company || '',
-              location: jobData.location || '',
-              type: jobData.type || 'Full-time',
-              description: jobData.description || '',
-              requirements: jobData.requirements || [''],
-              benefits: jobData.benefits || [''],
-              responsibilities: jobData.responsibilities || [''],
-              logo: jobData.logo || '/placeholder.svg',
-              featured: jobData.featured || false,
-              salary: jobData.salary || '',
-              investment_stage: jobData.investment_stage || '',
-              team_size: jobData.team_size || '',
-              revenue_model: jobData.revenue_model || '',
-              department: jobData.department || '',
-              seniority_level: jobData.seniority_level || '',
-              salary_range: jobData.salary_range || '',
-              equity: jobData.equity || '',
-              remote_onsite: jobData.remote_onsite || '',
-              work_hours: jobData.work_hours || '',
-              visa_sponsorship: jobData.visa_sponsorship || false,
-              hiring_urgency: jobData.hiring_urgency || '',
-              application_url: jobData.application_url || '',
-            });
-          }
-        } catch (error) {
-          console.error('Error fetching job data:', error);
-          toast.error('Failed to load job data');
+    const fetchJobData = async () => {
+      if (!id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('job_postings')
+          .select('*')
+          .eq('id', id)
+          .maybeSingle();
+        
+        if (error) {
+          throw error;
         }
-      };
-
-      fetchJobData();
-    }
-  }, [id, isEditMode]);
-
-  const handleInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+        
+        if (!data) {
+          toast.error('Job not found');
+          return;
+        }
+        
+        // If this is a draft job from the scraper, show a notification
+        if (data.is_draft && isFromScraper) {
+          toast.info('This is a draft job created from a scraped URL. Please review and edit before publishing.');
+        }
+        
+        // Ensure arrays have at least one empty item
+        const ensureArrayWithItem = (arr?: string[] | null) => {
+          return (arr && arr.length > 0) ? arr : [''];
+        };
+        
+        setFormData({
+          ...data,
+          responsibilities: ensureArrayWithItem(data.responsibilities),
+          requirements: ensureArrayWithItem(data.requirements),
+          benefits: ensureArrayWithItem(data.benefits),
+        });
+      } catch (error: any) {
+        console.error('Error fetching job data:', error);
+        toast.error(`Failed to load job data: ${error.message}`);
+      }
+    };
+    
+    fetchJobData();
+  }, [id, isFromScraper]);
+  
+  // Handle input changes
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
+  
+  // Handle select changes
   const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
-
+  
+  // Handle switch changes
   const handleSwitchChange = (name: string, checked: boolean) => {
     setFormData(prev => ({ ...prev, [name]: checked }));
   };
   
+  // Handle list items (responsibilities, requirements, benefits)
   const handleListChange = (index: number, value: string, field: 'responsibilities' | 'requirements' | 'benefits') => {
-    const newList = [...(formData[field] as string[])];
-    newList[index] = value;
-    setFormData(prev => ({ ...prev, [field]: newList }));
+    setFormData(prev => {
+      const updatedList = [...prev[field]];
+      updatedList[index] = value;
+      return { ...prev, [field]: updatedList };
+    });
   };
   
   const addListItem = (field: 'responsibilities' | 'requirements' | 'benefits') => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: [...(prev[field] as string[]), '']
-    }));
+    setFormData(prev => {
+      const updatedList = [...prev[field], ''];
+      return { ...prev, [field]: updatedList };
+    });
   };
   
   const removeListItem = (index: number, field: 'responsibilities' | 'requirements' | 'benefits') => {
-    if ((formData[field] as string[]).length <= 1) return;
-    const newList = [...(formData[field] as string[])];
-    newList.splice(index, 1);
-    setFormData(prev => ({ ...prev, [field]: newList }));
+    setFormData(prev => {
+      const updatedList = [...prev[field]];
+      updatedList.splice(index, 1);
+      
+      // Ensure there's always at least one empty item
+      if (updatedList.length === 0) {
+        updatedList.push('');
+      }
+      
+      return { ...prev, [field]: updatedList };
+    });
   };
-
+  
+  // Handle logo upload
   const handleLogoChange = (file: File | null) => {
     setLogoFile(file);
   };
-
+  
   return {
     formData,
     logoFile,
     isEditMode,
+    isFromScraper,
     handleInputChange,
     handleSelectChange,
     handleSwitchChange,

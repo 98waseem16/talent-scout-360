@@ -37,6 +37,7 @@ export type Database = {
           hiring_urgency: string | null
           id: string
           investment_stage: string | null
+          is_draft: boolean
           location: string
           logo: string
           posted: string
@@ -47,6 +48,7 @@ export type Database = {
           salary: string
           salary_range: string | null
           seniority_level: string | null
+          source_url: string | null
           team_size: string | null
           title: string
           type: string
@@ -67,6 +69,7 @@ export type Database = {
           hiring_urgency?: string | null
           id?: string
           investment_stage?: string | null
+          is_draft?: boolean
           location: string
           logo: string
           posted?: string
@@ -77,6 +80,7 @@ export type Database = {
           salary: string
           salary_range?: string | null
           seniority_level?: string | null
+          source_url?: string | null
           team_size?: string | null
           title: string
           type: string
@@ -97,6 +101,7 @@ export type Database = {
           hiring_urgency?: string | null
           id?: string
           investment_stage?: string | null
+          is_draft?: boolean
           location?: string
           logo?: string
           posted?: string
@@ -107,6 +112,7 @@ export type Database = {
           salary?: string
           salary_range?: string | null
           seniority_level?: string | null
+          source_url?: string | null
           team_size?: string | null
           title?: string
           type?: string
@@ -196,6 +202,7 @@ export type Database = {
           results: Json | null
           selectors: Json
           status: string
+          target_job_id: string | null
           updated_at: string
           url: string
           user_id: string
@@ -206,6 +213,7 @@ export type Database = {
           results?: Json | null
           selectors: Json
           status?: string
+          target_job_id?: string | null
           updated_at?: string
           url: string
           user_id: string
@@ -216,11 +224,20 @@ export type Database = {
           results?: Json | null
           selectors?: Json
           status?: string
+          target_job_id?: string | null
           updated_at?: string
           url?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "scraping_jobs_target_job_id_fkey"
+            columns: ["target_job_id"]
+            isOneToOne: false
+            referencedRelation: "job_postings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

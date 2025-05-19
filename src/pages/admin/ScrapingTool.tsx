@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Globe, Plus, FileJson, RefreshCw, Trash2, Save } from 'lucide-react';
+import { Loader2, ArrowLeft, Globe, Plus, FileJson, RefreshCw, Trash2, Save, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -38,6 +38,7 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Json } from '@/integrations/supabase/types';
+import JobScraperForm from '@/components/admin/JobScraperForm';
 
 type JobStatus = 'pending' | 'running' | 'completed' | 'failed';
 
@@ -49,6 +50,7 @@ interface ScrapingJob {
   results: any;
   created_at: string;
   updated_at: string;
+  target_job_id?: string;
 }
 
 const ScrapingTool: React.FC = () => {
@@ -59,13 +61,14 @@ const ScrapingTool: React.FC = () => {
   const [newJobSelectors, setNewJobSelectors] = useState('');
   const [currentJob, setCurrentJob] = useState<ScrapingJob | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activeTab, setActiveTab] = useState('jobs');
   
   const fetchJobs = async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
         .from('scraping_jobs')
-        .select('*')
+        .select('*, job_postings:target_job_id(id, title, is_draft)')
         .order('created_at', { ascending: false });
       
       if (error) {
@@ -165,6 +168,83 @@ const ScrapingTool: React.FC = () => {
       toast.error(`Failed to delete job: ${error.message}`);
     }
   };
+
+  const handleCreateJobFromResults = async (job: ScrapingJob) => {
+    try {
+      if (!job.results) {
+        toast.error('This job has no results to create a job from');
+        return;
+      }
+      
+      // Check if we already have a target job
+      if (job.target_job_id) {
+        // Navigate to edit that job instead
+        window.location.href = `/edit-job/${job.target_job_id}?fromScraper=true`;
+        return;
+      }
+      
+      setIsSubmitting(true);
+      
+      // Extract relevant data from results
+      const {
+        title = 'Untitled Position',
+        company = 'Unknown Company',
+        location = 'Remote',
+        type = 'Full-time',
+        salary = 'Competitive',
+        description = '',
+        requirements = [],
+        responsibilities = [],
+        benefits = [],
+        logo = 'https://placehold.co/400',
+      } = job.results;
+      
+      // Create a new job draft
+      const { data, error } = await supabase
+        .from('job_postings')
+        .insert({
+          title,
+          company,
+          location,
+          type,
+          salary,
+          description,
+          requirements,
+          responsibilities,
+          benefits,
+          logo,
+          source_url: job.url,
+          is_draft: true,
+          user_id: user?.id,
+        })
+        .select();
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (!data || data.length === 0) {
+        throw new Error('No data returned after creating job');
+      }
+      
+      // Update the scraping job with the target job ID
+      await supabase
+        .from('scraping_jobs')
+        .update({ target_job_id: data[0].id })
+        .eq('id', job.id);
+      
+      toast.success('Job draft created successfully');
+      
+      // Navigate to edit the new job
+      window.location.href = `/edit-job/${data[0].id}?fromScraper=true`;
+      
+    } catch (error: any) {
+      console.error('Error creating job from results:', error);
+      toast.error(`Failed to create job: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -189,6 +269,15 @@ const ScrapingTool: React.FC = () => {
         return 'bg-yellow-500/10 text-yellow-600';
     }
   };
+
+  const getDomainFromUrl = (url: string) => {
+    try {
+      const hostname = new URL(url).hostname;
+      return hostname.replace('www.', '');
+    } catch {
+      return url;
+    }
+  };
   
   return (
     <>
@@ -211,10 +300,11 @@ const ScrapingTool: React.FC = () => {
             </Button>
           </div>
           
-          <Tabs defaultValue="jobs">
+          <Tabs defaultValue={activeTab} onValueChange={setActiveTab}>
             <TabsList className="mb-8">
               <TabsTrigger value="jobs">Scraping Jobs</TabsTrigger>
-              <TabsTrigger value="create">Create New Job</TabsTrigger>
+              <TabsTrigger value="job-scraper">Job Scraper</TabsTrigger>
+              <TabsTrigger value="create">Advanced Scraper</TabsTrigger>
             </TabsList>
             
             <TabsContent value="jobs">
@@ -233,14 +323,9 @@ const ScrapingTool: React.FC = () => {
                       <Globe className="w-10 h-10 mx-auto mb-3 opacity-30" />
                       <p>No scraping jobs found. Create your first job to get started.</p>
                       <Button asChild variant="outline" className="mt-4">
-                        <Link to="#" onClick={() => {
-                          const createTab = document.querySelector('button[value="create"]');
-                          if (createTab && 'click' in createTab) {
-                            (createTab as HTMLButtonElement).click();
-                          }
-                        }}>
+                        <Link to="#" onClick={() => setActiveTab('job-scraper')}>
                           <Plus className="w-4 h-4 mr-2" />
-                          Create New Job
+                          Extract Job from URL
                         </Link>
                       </Button>
                     </div>
@@ -249,18 +334,28 @@ const ScrapingTool: React.FC = () => {
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>URL</TableHead>
+                            <TableHead>Source</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead>Created</TableHead>
-                            <TableHead>Updated</TableHead>
+                            <TableHead>Job Draft</TableHead>
                             <TableHead className="text-right">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {jobs.map((job) => (
                             <TableRow key={job.id}>
-                              <TableCell className="font-medium truncate max-w-[200px]">
-                                {job.url}
+                              <TableCell className="font-medium">
+                                <div className="flex flex-col">
+                                  <span className="truncate max-w-[200px]">{getDomainFromUrl(job.url)}</span>
+                                  <a 
+                                    href={job.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-xs text-muted-foreground hover:text-primary flex items-center mt-1"
+                                  >
+                                    <ExternalLink className="w-3 h-3 mr-1" /> View Source
+                                  </a>
+                                </div>
                               </TableCell>
                               <TableCell>
                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(job.status)}`}>
@@ -268,7 +363,26 @@ const ScrapingTool: React.FC = () => {
                                 </span>
                               </TableCell>
                               <TableCell>{formatDate(job.created_at)}</TableCell>
-                              <TableCell>{formatDate(job.updated_at)}</TableCell>
+                              <TableCell>
+                                {job.target_job_id ? (
+                                  <Link 
+                                    to={`/edit-job/${job.target_job_id}?fromScraper=true`}
+                                    className="text-primary hover:underline flex items-center"
+                                  >
+                                    View Draft
+                                  </Link>
+                                ) : job.status === 'completed' ? (
+                                  <Button 
+                                    variant="outline" 
+                                    size="sm" 
+                                    onClick={() => handleCreateJobFromResults(job)}
+                                  >
+                                    Create Job Draft
+                                  </Button>
+                                ) : (
+                                  <span className="text-muted-foreground text-sm">Not available</span>
+                                )}
+                              </TableCell>
                               <TableCell className="text-right">
                                 <div className="flex justify-end gap-2">
                                   <Dialog>
@@ -323,10 +437,59 @@ const ScrapingTool: React.FC = () => {
               </Card>
             </TabsContent>
             
+            <TabsContent value="job-scraper">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div className="md:col-span-1">
+                  <JobScraperForm />
+                </div>
+                <div className="md:col-span-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>How the Job Scraper Works</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="text-lg font-medium mb-2">1. Paste a Job URL</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Simply paste the URL of any job posting from popular job boards or company career pages.
+                        </p>
+                      </div>
+                      
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="text-lg font-medium mb-2">2. Automatic Data Extraction</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Our system will analyze the page and extract key information like job title, company, requirements, and more.
+                        </p>
+                      </div>
+                      
+                      <div className="bg-muted p-4 rounded-md">
+                        <h3 className="text-lg font-medium mb-2">3. Review and Publish</h3>
+                        <p className="text-sm text-muted-foreground">
+                          You'll be directed to the job form where you can review and edit any details before publishing.
+                        </p>
+                      </div>
+                      
+                      <div className="mt-4 text-sm text-muted-foreground">
+                        <p className="font-medium">Supported Job Sources:</p>
+                        <ul className="list-disc list-inside mt-2">
+                          <li>LinkedIn</li>
+                          <li>Indeed</li>
+                          <li>Glassdoor</li>
+                          <li>AngelList</li>
+                          <li>Most company career pages</li>
+                          <li>Other major job boards</li>
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </TabsContent>
+            
             <TabsContent value="create">
               <Card>
                 <CardHeader>
-                  <CardTitle>Create New Scraping Job</CardTitle>
+                  <CardTitle>Create Advanced Scraping Job</CardTitle>
                   <CardDescription>
                     Configure a new web scraping job by specifying the target URL and CSS selectors
                   </CardDescription>
