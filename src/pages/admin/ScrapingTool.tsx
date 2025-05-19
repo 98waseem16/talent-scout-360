@@ -37,11 +37,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Json } from '@/integrations/supabase/types';
 
 interface ScrapingJob {
   id: string;
   url: string;
-  selectors: Record<string, string>;
+  selectors: Json; // Changed from Record<string, string> to Json
   status: 'pending' | 'running' | 'completed' | 'failed';
   results: any;
   created_at: string;
@@ -211,7 +212,12 @@ const ScrapingTool: React.FC = () => {
                       <Globe className="w-10 h-10 mx-auto mb-3 opacity-30" />
                       <p>No scraping jobs found. Create your first job to get started.</p>
                       <Button asChild variant="outline" className="mt-4">
-                        <Link to="#" onClick={() => document.querySelector('button[value="create"]')?.click()}>
+                        <Link to="#" onClick={() => {
+                          const createTab = document.querySelector('button[value="create"]');
+                          if (createTab && 'click' in createTab) {
+                            (createTab as HTMLButtonElement).click();
+                          }
+                        }}>
                           <Plus className="w-4 h-4 mr-2" />
                           Create New Job
                         </Link>
