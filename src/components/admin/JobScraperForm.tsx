@@ -3,17 +3,22 @@ import React, { useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Globe } from 'lucide-react';
+import { Loader2, Globe, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+
+const SCRAPE_TIMEOUT = 30000; // 30 second client-side timeout
 
 const JobScraperForm: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [jobUrl, setJobUrl] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [scrapingStatus, setScrapingStatus] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   
   const handleScrapeJob = async () => {
     if (!jobUrl.trim()) {
@@ -27,31 +32,24 @@ const JobScraperForm: React.FC = () => {
     }
     
     setIsSubmitting(true);
+    setScrapingStatus('Submitting job URL...');
+    setError(null);
     toast.info('Starting job scraping process...');
     
     try {
-      // First create a scraping job entry
-      const { data: scrapingJob, error: createError } = await supabase
-        .from('scraping_jobs')
-        .insert({
-          url: jobUrl,
-          selectors: {}, // No selectors needed for this approach
-          user_id: user?.id,
-          status: 'pending'
-        })
-        .select();
+      // Use AbortController for timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), SCRAPE_TIMEOUT);
       
-      if (createError) {
-        throw createError;
-      }
-      
-      toast.info('Job URL submitted, now extracting data...');
+      setScrapingStatus('Extracting job data...');
       
       // Call our edge function to scrape the job
       const { data: functionData, error: functionError } = await supabase.functions
         .invoke('scrape-job', {
           body: { url: jobUrl, userId: user?.id }
         });
+      
+      clearTimeout(timeoutId);
       
       if (functionError) {
         throw functionError;
@@ -60,15 +58,25 @@ const JobScraperForm: React.FC = () => {
       console.log('Scraping result:', functionData);
       
       if (functionData.jobId) {
+        setScrapingStatus('Job data extracted successfully!');
         toast.success('Job data extracted successfully!');
         // Navigate to the job edit form with the new job ID
         navigate(`/edit-job/${functionData.jobId}?fromScraper=true`);
       } else {
+        setError('No job data could be extracted');
         toast.error('No job data could be extracted');
       }
     } catch (error: any) {
       console.error('Error scraping job:', error);
-      toast.error(`Failed to scrape job: ${error.message}`);
+      
+      // Handle specific error cases
+      if (error.name === 'AbortError') {
+        setError('Scraping timed out. Please try again or use a different URL.');
+        toast.error('Scraping timed out. Please try again or use a different URL.');
+      } else {
+        setError(`Failed to scrape job: ${error.message || 'Unknown error'}`);
+        toast.error(`Failed to scrape job: ${error.message || 'Unknown error'}`);
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -93,11 +101,26 @@ const JobScraperForm: React.FC = () => {
               placeholder="https://example.com/jobs/software-engineer"
               value={jobUrl}
               onChange={(e) => setJobUrl(e.target.value)}
+              disabled={isSubmitting}
             />
             <p className="text-xs text-muted-foreground">
               Paste the URL of any job posting to automatically extract its details
             </p>
           </div>
+          
+          {error && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertDescription className="text-sm">{error}</AlertDescription>
+            </Alert>
+          )}
+          
+          {scrapingStatus && !error && (
+            <Alert className="mt-4 bg-blue-50 border border-blue-200">
+              <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+              <AlertDescription className="text-sm">{scrapingStatus}</AlertDescription>
+            </Alert>
+          )}
         </div>
       </CardContent>
       <CardFooter>
@@ -109,7 +132,7 @@ const JobScraperForm: React.FC = () => {
           {isSubmitting ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Extracting Job Data...
+              {scrapingStatus || 'Processing...'}
             </>
           ) : (
             'Extract Job Data'
