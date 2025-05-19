@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Hero from '@/components/Hero';
 import TrendingJobs from '@/components/TrendingJobs';
+import AdminCTA from '@/components/AdminCTA';
 import { Briefcase, Building } from 'lucide-react';
 import { AnimatedTooltipPreview } from '@/components/ui/code-demo';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
@@ -97,6 +98,9 @@ const Index: React.FC = () => {
             </div>
           </div>
         </section>
+
+        {/* Admin CTA - only shown to admin users */}
+        <AdminCTA />
       </main>
       <Footer />
     </>

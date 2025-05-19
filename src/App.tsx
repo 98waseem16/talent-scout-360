@@ -14,6 +14,12 @@ import Dashboard from '@/pages/Dashboard';
 import NotFound from '@/pages/NotFound';
 import Auth from '@/pages/Auth';
 import AuthCallback from '@/pages/AuthCallback';
+import Unauthorized from '@/pages/Unauthorized';
+
+// Admin Pages
+import RequireAdmin from '@/components/admin/RequireAdmin';
+import AdminDashboard from '@/pages/admin/AdminDashboard';
+import ScrapingTool from '@/pages/admin/ScrapingTool';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -33,6 +39,14 @@ const App: React.FC = () => {
               <Route path="/dashboard" element={<Dashboard />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/auth/callback" element={<AuthCallback />} />
+              <Route path="/unauthorized" element={<Unauthorized />} />
+              
+              {/* Admin Routes */}
+              <Route element={<RequireAdmin />}>
+                <Route path="/admin" element={<AdminDashboard />} />
+                <Route path="/admin/scraping" element={<ScrapingTool />} />
+              </Route>
+              
               <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
