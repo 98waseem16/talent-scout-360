@@ -39,11 +39,13 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Json } from '@/integrations/supabase/types';
 
+type JobStatus = 'pending' | 'running' | 'completed' | 'failed';
+
 interface ScrapingJob {
   id: string;
   url: string;
   selectors: Json; // Changed from Record<string, string> to Json
-  status: 'pending' | 'running' | 'completed' | 'failed';
+  status: JobStatus;
   results: any;
   created_at: string;
   updated_at: string;
@@ -70,13 +72,32 @@ const ScrapingTool: React.FC = () => {
         throw error;
       }
       
-      setJobs(data || []);
+      // Validate and transform the status to ensure it matches our JobStatus type
+      const typedJobs = data?.map(job => ({
+        ...job,
+        status: validateJobStatus(job.status)
+      })) || [];
+      
+      setJobs(typedJobs);
     } catch (error: any) {
       console.error('Error fetching jobs:', error);
       toast.error('Failed to load scraping jobs');
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Helper function to validate job status
+  const validateJobStatus = (status: string): JobStatus => {
+    const validStatuses: JobStatus[] = ['pending', 'running', 'completed', 'failed'];
+    
+    if (validStatuses.includes(status as JobStatus)) {
+      return status as JobStatus;
+    }
+    
+    // Default to 'pending' if the status is not recognized
+    console.warn(`Unknown job status: ${status}, defaulting to 'pending'`);
+    return 'pending';
   };
   
   useEffect(() => {
