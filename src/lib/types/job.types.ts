@@ -1,3 +1,4 @@
+
 export interface Job {
   id: string;
   title: string;
@@ -89,4 +90,6 @@ export interface JobDatabaseFields {
   work_hours?: string;
   visa_sponsorship?: boolean;
   hiring_urgency?: string;
+  is_draft?: boolean; // Added for draft status
+  source_url?: string | null; // Added for tracking source URL
 }
