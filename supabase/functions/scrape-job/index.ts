@@ -222,7 +222,7 @@ function parseJobContent(content: string) {
       if (items.length > 0) {
         result.requirements = items;
       }
-    } else if (lowerSection.includes('responsibilit') || lowerSection.includes('what you'll do')) {
+    } else if (lowerSection.includes('responsibilit') || lowerSection.includes('what you will do')) {
       const items = extractListItems(section);
       if (items.length > 0) {
         result.responsibilities = items;
