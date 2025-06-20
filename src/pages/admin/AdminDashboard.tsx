@@ -4,189 +4,150 @@ import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LineChart, Settings, User, FileText, Plus, Globe } from 'lucide-react';
+import { FileText, Globe, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DraftJobsList from '@/components/admin/DraftJobsList';
 import CareerPageScraper from '@/components/admin/CareerPageScraper';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [draftJobsCount, setDraftJobsCount] = useState<number | null>(null);
+  const [recentScrapingCount, setRecentScrapingCount] = useState<number | null>(null);
 
   useEffect(() => {
-    const fetchDraftJobsCount = async () => {
+    const fetchStats = async () => {
       try {
-        const { count, error } = await supabase
+        // Fetch draft jobs count
+        const { count: draftsCount, error: draftsError } = await supabase
           .from('job_postings')
           .select('*', { count: 'exact', head: true })
           .eq('is_draft', true);
           
-        if (error) {
-          console.error('Error fet ching draft jobs count:', error);
-          return;
+        if (draftsError) {
+          console.error('Error fetching draft jobs count:', draftsError);
+        } else {
+          setDraftJobsCount(draftsCount);
         }
-        
-        setDraftJobsCount(count);
+
+        // Fetch recent scraping jobs count (last 7 days)
+        const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 1000).toISOString();
+        const { count: scrapingCount, error: scrapingError } = await supabase
+          .from('scraping_jobs')
+          .select('*', { count: 'exact', head: true })
+          .gte('started_at', sevenDaysAgo);
+          
+        if (scrapingError) {
+          console.error('Error fetching scraping jobs count:', scrapingError);
+        } else {
+          setRecentScrapingCount(scrapingCount);
+        }
       } catch (error) {
-        console.error('Error fetching draft jobs count:', error);
+        console.error('Error fetching stats:', error);
       }
     };
     
-    fetchDraftJobsCount();
+    fetchStats();
   }, []);
-
-  const adminTools = [
-    {
-      title: 'Job Drafts',
-      description: 'Manage job drafts and published listings',
-      icon: <FileText className="w-5 h-5" />,
-      link: '#job-drafts',
-      color: 'bg-green-500/10',
-      iconColor: 'text-green-500',
-      count: draftJobsCount
-    },
-    {
-      title: 'Career Page Scraper',
-      description: 'Add and manage career page URLs for automatic job scraping',
-      icon: <Globe className="w-5 h-5" />,
-      link: '#career-scraper',
-      color: 'bg-purple-500/10',
-      iconColor: 'text-purple-500'
-    },
-    {
-      title: 'Analytics',
-      description: 'View site statistics and metrics',
-      icon: <LineChart className="w-5 h-5" />,
-      link: '/admin/analytics',
-      color: 'bg-blue-500/10',
-      iconColor: 'text-blue-500',
-      comingSoon: true
-    },
-    {
-      title: 'User Management',
-      description: 'Manage user accounts and permissions',
-      icon: <User className="w-5 h-5" />,
-      link: '/admin/users',
-      color: 'bg-orange-500/10',
-      iconColor: 'text-orange-500',
-      comingSoon: true
-    },
-    {
-      title: 'Site Settings',
-      description: 'Configure global application settings',
-      icon: <Settings className="w-5 h-5" />,
-      link: '/admin/settings',
-      color: 'bg-green-500/10',
-      iconColor: 'text-green-500',
-      comingSoon: true
-    }
-  ];
 
   return (
     <>
       <Header />
       <main className="min-h-screen py-16 px-6">
         <div className="max-w-7xl mx-auto">
+          {/* Header Section */}
           <div className="mb-10">
             <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
-            <p className="text-muted-foreground">
-              Welcome back, {user?.email?.split('@')[0] || 'Admin'}. Manage your application settings and tools.
+            <p className="text-muted-foreground mb-6">
+              Welcome back, {user?.email?.split('@')[0] || 'Admin'}. Manage job drafts and scrape career pages.
             </p>
-          </div>
-
-          <Tabs defaultValue="tools">
-            <TabsList className="mb-8">
-              <TabsTrigger value="tools">Admin Tools</TabsTrigger>
-              <TabsTrigger value="drafts">Job Drafts {draftJobsCount ? `(${draftJobsCount})` : ''}</TabsTrigger>
-              <TabsTrigger value="scraper">Career Scraper</TabsTrigger>
-            </TabsList>
-          
-            <TabsContent value="tools">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {adminTools.map((tool, index) => (
-                  <Card key={index} className="hover:shadow-md transition-shadow">
-                    <CardHeader className="pb-2">
-                      <div className="flex items-center justify-between">
-                        <div className={`p-2 rounded-lg w-fit ${tool.color}`}>
-                          <div className={tool.iconColor}>{tool.icon}</div>
-                        </div>
-                        {typeof tool.count === 'number' && (
-                          <span className="bg-muted rounded-full px-2 py-1 text-xs font-medium">
-                            {tool.count}
-                          </span>
-                        )}
-                      </div>
-                      <CardTitle className="mt-4">{tool.title}</CardTitle>
-                      <CardDescription>{tool.description}</CardDescription>
-                    </CardHeader>
-                    <CardFooter>
-                      <Button 
-                        asChild={!tool.comingSoon} 
-                        variant={!tool.comingSoon ? "default" : "secondary"} 
-                        className="w-full"
-                      >
-                        {!tool.comingSoon ? (
-                          <Link to={tool.link}>
-                            Access Tool
-                          </Link>
-                        ) : (
-                          <>Coming Soon</>
-                        )}
-                      </Button>
-                    </CardFooter>
-                  </Card>
-                ))}
-              </div>
-
-              <div className="mt-12 p-6 bg-muted rounded-lg">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 bg-blue-500/10 rounded-lg">
-                    <Plus className="w-6 h-6 text-blue-500" />
-                  </div>
-                  <h2 className="text-xl font-medium">Job Management</h2>
-                </div>
-                <p className="text-muted-foreground mb-4">
-                  Create and manage job postings on your job board. Post new opportunities 
-                  and manage existing listings to attract the best candidates.
-                </p>
-                <div className="flex flex-wrap gap-3 mt-6">
-                  <Button asChild variant="default">
-                    <Link to="/post-job">
-                      Create New Job
-                    </Link>
-                  </Button>
-                  <Button asChild variant="outline">
-                    <Link to="/dashboard">
-                      View All Jobs
-                    </Link>
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
             
-            <TabsContent value="drafts" id="job-drafts">
-              <DraftJobsList />
-              
-              <div className="mt-8 flex justify-between items-center">
-                <div className="text-sm text-muted-foreground">
-                  <p>Draft jobs can be edited and published when ready.</p>
+            {/* Quick Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div className="bg-white border rounded-lg p-4">
+                <div className="text-2xl font-bold text-orange-600">
+                  {draftJobsCount !== null ? draftJobsCount : '...'}
                 </div>
-                <Button asChild>
+                <div className="text-sm text-muted-foreground">Draft Jobs</div>
+              </div>
+              <div className="bg-white border rounded-lg p-4">
+                <div className="text-2xl font-bold text-purple-600">
+                  {recentScrapingCount !== null ? recentScrapingCount : '...'}
+                </div>
+                <div className="text-sm text-muted-foreground">Recent Scrapes</div>
+              </div>
+              <div className="bg-white border rounded-lg p-4">
+                <div className="text-2xl font-bold text-green-600">
+                  {draftJobsCount !== null && recentScrapingCount !== null ? 
+                    draftJobsCount + recentScrapingCount : '...'
+                  }
+                </div>
+                <div className="text-sm text-muted-foreground">Total Activity</div>
+              </div>
+              <div className="bg-white border rounded-lg p-4 flex items-center">
+                <Button asChild size="sm" className="w-full">
                   <Link to="/post-job">
                     <Plus className="mr-2 h-4 w-4" />
-                    Create New Job
+                    New Job
                   </Link>
                 </Button>
               </div>
-            </TabsContent>
+            </div>
+          </div>
 
-            <TabsContent value="scraper" id="career-scraper">
-              <CareerPageScraper />
-            </TabsContent>
-          </Tabs>
+          {/* Main Content - Two Column Layout */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Left Column - Draft Jobs Management */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-orange-500/10">
+                      <FileText className="w-5 h-5 text-orange-500" />
+                    </div>
+                    Draft Jobs Management
+                    {draftJobsCount !== null && draftJobsCount > 0 && (
+                      <span className="bg-orange-100 text-orange-800 rounded-full px-2 py-1 text-xs font-medium">
+                        {draftJobsCount}
+                      </span>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    Review and approve scraped job postings before they go live
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <DraftJobsList />
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Right Column - Career Page Scraper */}
+            <div className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <div className="p-2 rounded-lg bg-purple-500/10">
+                      <Globe className="w-5 h-5 text-purple-500" />
+                    </div>
+                    Career Page Scraper
+                    {recentScrapingCount !== null && recentScrapingCount > 0 && (
+                      <span className="bg-purple-100 text-purple-800 rounded-full px-2 py-1 text-xs font-medium">
+                        {recentScrapingCount} this week
+                      </span>
+                    )}
+                  </CardTitle>
+                  <CardDescription>
+                    Add and manage career page URLs for automatic job scraping
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <CareerPageScraper />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
       </main>
       <Footer />
