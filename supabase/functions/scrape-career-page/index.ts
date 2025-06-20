@@ -75,8 +75,10 @@ serve(async (req) => {
       throw new Error('Gobi API key not configured')
     }
 
-    // Create detailed prompt for job extraction
+    // Create detailed prompt for job extraction with strict formatting requirements
     const prompt = `Please visit the career page at ${url} and extract all job listings.
+
+CRITICAL: You must return data in the EXACT format specified below. Do not deviate from these requirements.
 
 For each job posting found, extract the following information:
 - title: The job title (required)
@@ -84,8 +86,22 @@ For each job posting found, extract the following information:
 - location: Job location (city, state, remote, etc.)
 - description: Brief job description or summary
 - url: Direct link to the job posting if available, otherwise use the career page URL
-- type: Employment type (Full-time, Part-time, Contract, Remote, Internship, etc.)
+- type: Employment type - MUST be one of these EXACT values:
+  * "Full-time" (not "Full time", "Fulltime", or "Full-Time")
+  * "Part-time" (not "Part time", "Parttime", or "Part-Time")
+  * "Contract" (not "Contractor" or "Contract work")
+  * "Remote" (not "Fully Remote" or "Work from home")
+  * "Freelance" (not "Freelancer" or "Freelance work")
+  * "Internship" (not "Intern" or "Internship position")
 - salary: Salary information if mentioned
+
+IMPORTANT FORMATTING RULES FOR THE TYPE FIELD:
+- If you see "Full time", convert it to "Full-time"
+- If you see "Part time", convert it to "Part-time"
+- If you see compound types like "Full time • On-site", use "Full-time"
+- If you see "Remote" mentioned anywhere, use "Remote"
+- If unclear or not specified, use "Full-time" as default
+- NEVER use any other values besides the 6 listed above
 
 Return ONLY valid job postings. Ignore navigation elements, headers, footers, or other non-job content.
 If no jobs are found, return an empty jobs array.
@@ -99,11 +115,13 @@ Please return the data in this exact JSON format:
       "location": "Location",
       "description": "Job description",
       "url": "Job URL",
-      "type": "Job Type",
+      "type": "Full-time",
       "salary": "Salary info"
     }
   ]
-}`;
+}
+
+VALIDATION: Before returning, verify that every "type" field contains ONLY one of these values: "Full-time", "Part-time", "Contract", "Remote", "Freelance", "Internship"`;
 
     console.log('Calling Gobi.ai API...');
     console.log('Prompt length:', prompt.length);
@@ -215,6 +233,36 @@ Please return the data in this exact JSON format:
       console.log('First job sample:', JSON.stringify(jobs[0], null, 2));
     }
 
+    // Validate and clean job types as a safety net
+    const validJobTypes = ['Full-time', 'Part-time', 'Contract', 'Remote', 'Freelance', 'Internship'];
+    
+    jobs = jobs.map(job => {
+      let cleanType = job.type || 'Full-time';
+      
+      // Normalize common variations
+      if (cleanType.toLowerCase().includes('full') && cleanType.toLowerCase().includes('time')) {
+        cleanType = 'Full-time';
+      } else if (cleanType.toLowerCase().includes('part') && cleanType.toLowerCase().includes('time')) {
+        cleanType = 'Part-time';
+      } else if (cleanType.toLowerCase().includes('remote')) {
+        cleanType = 'Remote';
+      } else if (cleanType.toLowerCase().includes('contract')) {
+        cleanType = 'Contract';
+      } else if (cleanType.toLowerCase().includes('freelance')) {
+        cleanType = 'Freelance';
+      } else if (cleanType.toLowerCase().includes('intern')) {
+        cleanType = 'Internship';
+      } else if (!validJobTypes.includes(cleanType)) {
+        console.log(`Invalid job type "${cleanType}" found, defaulting to "Full-time"`);
+        cleanType = 'Full-time';
+      }
+      
+      return {
+        ...job,
+        type: cleanType
+      };
+    });
+
     // Process and save jobs to Supabase
     let jobsCreated = 0
     const createdJobs = []
@@ -224,6 +272,7 @@ Please return the data in this exact JSON format:
     for (let i = 0; i < jobs.length; i++) {
       const job = jobs[i];
       console.log(`Processing job ${i + 1}/${jobs.length}:`, job.title || 'No title');
+      console.log(`Job type: "${job.type}"`);
 
       if (!job.title || job.title.trim() === '') {
         console.log(`Skipping job ${i + 1}: No title`);
@@ -250,7 +299,7 @@ Please return the data in this exact JSON format:
           posted: new Date().toISOString()
         }
 
-        console.log(`Inserting job ${i + 1} into database...`);
+        console.log(`Inserting job ${i + 1} into database with type: "${jobData.type}"`);
         const { data: createdJob, error: insertError } = await supabase
           .from('job_postings')
           .insert(jobData)
