@@ -14,13 +14,13 @@ import { toast } from 'sonner';
 interface ScrapingJob {
   id: string;
   status: 'pending' | 'running' | 'completed' | 'failed';
-  jobs_found: number;
-  jobs_created: number;
-  error_message?: string;
+  jobs_found: number | null;
+  jobs_created: number | null;
+  error_message?: string | null;
   started_at: string;
-  completed_at?: string;
+  completed_at?: string | null;
   source_url: string;
-  company_name?: string;
+  company_name?: string | null;
 }
 
 const CareerPageScraper: React.FC = () => {
@@ -128,8 +128,14 @@ const CareerPageScraper: React.FC = () => {
 
       if (error) throw error;
 
-      const jobs = data.map(job => ({
-        ...job,
+      const jobs: ScrapingJob[] = data.map(job => ({
+        id: job.id,
+        status: job.status as 'pending' | 'running' | 'completed' | 'failed',
+        jobs_found: job.jobs_found,
+        jobs_created: job.jobs_created,
+        error_message: job.error_message,
+        started_at: job.started_at,
+        completed_at: job.completed_at,
         source_url: job.career_page_sources.url,
         company_name: job.career_page_sources.company_name
       }));
