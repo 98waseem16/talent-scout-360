@@ -5,14 +5,15 @@ import { staticJobs } from '../../data/staticJobs';
 import { mapDatabaseFieldsToJob } from '../utils/jobMappers';
 
 /**
- * Fetches all jobs from the database
+ * Fetches all published jobs from the database (excludes drafts)
  */
 export const getJobs = async (): Promise<Job[]> => {
   try {
-    console.log('Fetching jobs from database...');
+    console.log('Fetching published jobs from database...');
     const { data, error } = await supabase
       .from('job_postings')
       .select('*')
+      .eq('is_draft', false) // Only get published jobs
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -21,7 +22,7 @@ export const getJobs = async (): Promise<Job[]> => {
     }
 
     if (!data || data.length === 0) {
-      console.log('No jobs found in database, returning static jobs');
+      console.log('No published jobs found in database, returning static jobs');
       return staticJobs;
     }
 
@@ -48,7 +49,7 @@ export const getJobs = async (): Promise<Job[]> => {
     }).filter(Boolean) as Job[]; // Filter out any null results
 
     // Log mapped jobs for debugging
-    console.log(`Successfully mapped ${jobs.length} jobs from database`);
+    console.log(`Successfully mapped ${jobs.length} published jobs from database`);
     if (jobs.length > 0) {
       console.log('DEBUG - First mapped job:', {
         id: jobs[0].id,
@@ -72,7 +73,7 @@ export const getJobs = async (): Promise<Job[]> => {
 };
 
 /**
- * Fetches trending (featured) jobs from the database
+ * Fetches trending (featured) jobs from the database (excludes drafts)
  */
 export const getTrendingJobs = async (): Promise<Job[]> => {
   try {
@@ -80,6 +81,7 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
       .from('job_postings')
       .select('*')
       .eq('featured', true)
+      .eq('is_draft', false) // Only get published featured jobs
       .order('created_at', { ascending: false })
       .limit(3);
 

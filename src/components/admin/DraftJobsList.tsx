@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { Loader2, Edit, Eye, Trash2, CheckCircle } from 'lucide-react';
+import { Loader2, Edit, Eye, Trash2, CheckCircle, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -35,6 +35,7 @@ interface DraftJob {
   title: string;
   company: string;
   created_at: string;
+  source_url?: string;
 }
 
 const DraftJobsList: React.FC = () => {
@@ -42,6 +43,7 @@ const DraftJobsList: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [jobToDelete, setJobToDelete] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isPublishing, setIsPublishing] = useState<string | null>(null);
 
   const fetchDraftJobs = async () => {
     try {
@@ -49,7 +51,7 @@ const DraftJobsList: React.FC = () => {
       
       const { data, error } = await supabase
         .from('job_postings')
-        .select('id, title, company, created_at')
+        .select('id, title, company, created_at, source_url')
         .eq('is_draft', true)
         .order('created_at', { ascending: false });
         
@@ -72,6 +74,7 @@ const DraftJobsList: React.FC = () => {
   
   const handlePublishDraft = async (id: string) => {
     try {
+      setIsPublishing(id);
       const { error } = await supabase
         .from('job_postings')
         .update({ is_draft: false })
@@ -86,10 +89,12 @@ const DraftJobsList: React.FC = () => {
     } catch (error: any) {
       console.error('Error publishing job:', error);
       toast.error(`Failed to publish job: ${error.message}`);
+    } finally {
+      setIsPublishing(null);
     }
   };
   
-  const handleDeleteDraft = async () => {
+  const handleDeclineDraft = async () => {
     if (!jobToDelete) return;
     
     try {
@@ -104,12 +109,12 @@ const DraftJobsList: React.FC = () => {
         throw error;
       }
       
-      toast.success('Draft job deleted successfully!');
+      toast.success('Draft job declined and removed successfully!');
       fetchDraftJobs();
       setJobToDelete(null);
     } catch (error: any) {
-      console.error('Error deleting job:', error);
-      toast.error(`Failed to delete job: ${error.message}`);
+      console.error('Error declining job:', error);
+      toast.error(`Failed to decline job: ${error.message}`);
     } finally {
       setIsDeleting(false);
     }
@@ -130,7 +135,7 @@ const DraftJobsList: React.FC = () => {
     <Card>
       <CardHeader>
         <CardTitle>Draft Jobs</CardTitle>
-        <CardDescription>Manage your draft job postings</CardDescription>
+        <CardDescription>Review and approve scraped job postings before they go live</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -153,6 +158,7 @@ const DraftJobsList: React.FC = () => {
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead>Company</TableHead>
+                  <TableHead>Source</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -162,20 +168,16 @@ const DraftJobsList: React.FC = () => {
                   <TableRow key={job.id}>
                     <TableCell className="font-medium">{job.title}</TableCell>
                     <TableCell>{job.company}</TableCell>
+                    <TableCell>
+                      {job.source_url ? (
+                        <span className="text-sm text-blue-600">Scraped</span>
+                      ) : (
+                        <span className="text-sm text-gray-500">Manual</span>
+                      )}
+                    </TableCell>
                     <TableCell>{formatDate(job.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        <Button 
-                          variant="outline" 
-                          size="icon"
-                          title="Edit draft"
-                          asChild
-                        >
-                          <Link to={`/edit-job/${job.id}`}>
-                            <Edit className="w-4 h-4" />
-                          </Link>
-                        </Button>
-                        
                         <Button
                           variant="outline"
                           size="icon"
@@ -187,31 +189,51 @@ const DraftJobsList: React.FC = () => {
                           </Link>
                         </Button>
 
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          title="Edit draft"
+                          asChild
+                        >
+                          <Link to={`/edit-job/${job.id}`}>
+                            <Edit className="w-4 h-4" />
+                          </Link>
+                        </Button>
+
                         <Button
                           variant="outline"
                           size="icon"
-                          title="Publish job"
+                          title="Approve & publish job"
                           onClick={() => handlePublishDraft(job.id)}
+                          disabled={isPublishing === job.id}
                           className="text-green-600 hover:text-green-700"
                         >
-                          <CheckCircle className="w-4 h-4" />
+                          {isPublishing === job.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <CheckCircle className="w-4 h-4" />
+                          )}
                         </Button>
                         
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button
-                              variant="destructive"
+                              variant="outline"
                               size="icon"
                               onClick={() => setJobToDelete(job.id)}
+                              title="Decline & delete job"
+                              className="text-red-600 hover:text-red-700"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <X className="w-4 h-4" />
                             </Button>
                           </DialogTrigger>
                           <DialogContent>
                             <DialogHeader>
-                              <DialogTitle>Confirm Deletion</DialogTitle>
+                              <DialogTitle>Decline Draft Job</DialogTitle>
                               <DialogDescription>
-                                Are you sure you want to delete this draft job? This action cannot be undone.
+                                Are you sure you want to decline and delete this draft job? 
+                                This will permanently remove "{job.title}" at {job.company}. 
+                                This action cannot be undone.
                               </DialogDescription>
                             </DialogHeader>
                             <DialogFooter className="mt-4">
@@ -223,16 +245,16 @@ const DraftJobsList: React.FC = () => {
                               </Button>
                               <Button 
                                 variant="destructive" 
-                                onClick={handleDeleteDraft}
+                                onClick={handleDeclineDraft}
                                 disabled={isDeleting}
                               >
                                 {isDeleting ? (
                                   <>
                                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                    Deleting...
+                                    Declining...
                                   </>
                                 ) : (
-                                  'Delete Draft'
+                                  'Decline & Delete'
                                 )}
                               </Button>
                             </DialogFooter>
