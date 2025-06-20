@@ -1,19 +1,52 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { UserCircle, LogOut, Menu, X, Rocket, Briefcase, Home } from 'lucide-react';
+import { UserCircle, LogOut, Menu, X, Rocket, Briefcase, Home, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { supabase } from '@/integrations/supabase/client';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isCheckingAdmin, setIsCheckingAdmin] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut, isLoading } = useAuth();
   const [scrolled, setScrolled] = useState(false);
+
+  // Check admin status
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) {
+        setIsAdmin(false);
+        setIsCheckingAdmin(false);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase.rpc('is_admin');
+        
+        if (error) {
+          console.error('Error checking admin status:', error);
+          setIsAdmin(false);
+        } else {
+          setIsAdmin(!!data);
+        }
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      } finally {
+        setIsCheckingAdmin(false);
+      }
+    };
+
+    if (!isLoading) {
+      checkAdminStatus();
+    }
+  }, [user, isLoading]);
 
   // Close mobile menu when route changes
   useEffect(() => {
@@ -140,6 +173,20 @@ const Header: React.FC = () => {
               Post a Job
             </Button>
           </Link>
+
+          {/* Admin Dashboard Button - Desktop */}
+          {user && isAdmin && !isCheckingAdmin && (
+            <Link to="/admin">
+              <Button 
+                variant="destructive"
+                size="sm"
+                className="flex items-center gap-1.5 bg-red-600 hover:bg-red-700"
+              >
+                <ShieldCheck className="h-4 w-4" />
+                Admin
+              </Button>
+            </Link>
+          )}
           
           <div className="flex items-center gap-3 ml-4 border-l pl-4 border-border">
             {renderAuthSection()}
@@ -192,6 +239,19 @@ const Header: React.FC = () => {
               Post a Startup Job
             </Button>
           </Link>
+
+          {/* Admin Dashboard Button - Mobile */}
+          {user && isAdmin && !isCheckingAdmin && (
+            <Link to="/admin" className="mt-2">
+              <Button 
+                variant="destructive"
+                className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700"
+              >
+                <ShieldCheck className="h-5 w-5" />
+                Admin Dashboard
+              </Button>
+            </Link>
+          )}
           
           <div className="flex flex-col space-y-3 pt-4 mt-2 border-t border-border">
             {renderAuthSection(true)}
