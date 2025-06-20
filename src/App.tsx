@@ -19,7 +19,6 @@ import Unauthorized from '@/pages/Unauthorized';
 // Admin Pages
 import RequireAdmin from '@/components/admin/RequireAdmin';
 import AdminDashboard from '@/pages/admin/AdminDashboard';
-import ScrapingTool from '@/pages/admin/ScrapingTool';
 
 // Create a client
 const queryClient = new QueryClient();
@@ -44,7 +43,6 @@ const App: React.FC = () => {
               {/* Admin Routes */}
               <Route element={<RequireAdmin />}>
                 <Route path="/admin" element={<AdminDashboard />} />
-                <Route path="/admin/scraping" element={<ScrapingTool />} />
               </Route>
               
               <Route path="*" element={<NotFound />} />

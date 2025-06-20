@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,8 +15,6 @@ import JobFormHeader from './JobFormHeader';
 import JobFormActions from './JobFormActions';
 import { useJobFormData } from './hooks/useJobFormData';
 import { useJobFormSubmit } from './hooks/useJobFormSubmit';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { InfoIcon } from 'lucide-react';
 
 const JobForm: React.FC = () => {
   const { user } = useAuth();
@@ -25,7 +24,6 @@ const JobForm: React.FC = () => {
     formData,
     logoFile,
     isEditMode,
-    isFromScraper,
     handleInputChange,
     handleSelectChange,
     handleSwitchChange,
@@ -45,24 +43,8 @@ const JobForm: React.FC = () => {
     <div className="bg-white rounded-xl border border-border shadow-sm p-8 mb-8">
       <JobFormHeader isEditMode={isEditMode} />
       
-      {/* Show info message if coming from scraper */}
-      {isFromScraper && (
-        <Alert className="mb-6 bg-blue-50 border border-blue-200">
-          <InfoIcon className="h-5 w-5 text-blue-500" />
-          <AlertTitle>Draft Job from URL</AlertTitle>
-          <AlertDescription>
-            This job was created from a URL. Please review and edit the information before publishing.
-            {formData.source_url && (
-              <p className="mt-2">
-                Source: <a href={formData.source_url} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{formData.source_url}</a>
-              </p>
-            )}
-          </AlertDescription>
-        </Alert>
-      )}
-      
       {/* Benefits of posting */}
-      {!isEditMode && !isFromScraper && <PostJobBenefits />}
+      {!isEditMode && <PostJobBenefits />}
       
       {/* Job Posting Form */}
       <form onSubmit={onSubmit} className="grid gap-6">
@@ -117,7 +99,6 @@ const JobForm: React.FC = () => {
         <JobFormActions 
           isSubmitting={isSubmitting} 
           isEditMode={isEditMode} 
-          isFromScraper={isFromScraper} 
         />
       </form>
     </div>

@@ -35,7 +35,6 @@ interface DraftJob {
   title: string;
   company: string;
   created_at: string;
-  source_url: string | null;
 }
 
 const DraftJobsList: React.FC = () => {
@@ -50,7 +49,7 @@ const DraftJobsList: React.FC = () => {
       
       const { data, error } = await supabase
         .from('job_postings')
-        .select('id, title, company, created_at, source_url')
+        .select('id, title, company, created_at')
         .eq('is_draft', true)
         .order('created_at', { ascending: false });
         
@@ -126,23 +125,12 @@ const DraftJobsList: React.FC = () => {
       minute: '2-digit'
     }).format(date);
   };
-  
-  const getDomainFromUrl = (url: string | null) => {
-    if (!url) return 'Manual Entry';
-    
-    try {
-      const hostname = new URL(url).hostname;
-      return hostname.replace('www.', '');
-    } catch {
-      return 'Unknown Source';
-    }
-  };
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Draft Jobs</CardTitle>
-        <CardDescription>Job drafts created from the scraping tool</CardDescription>
+        <CardDescription>Manage your draft job postings</CardDescription>
       </CardHeader>
       <CardContent>
         {loading ? (
@@ -153,8 +141,8 @@ const DraftJobsList: React.FC = () => {
           <div className="text-center py-10 text-muted-foreground">
             <p>No draft jobs found.</p>
             <Button asChild variant="outline" className="mt-4">
-              <Link to="/admin/scraping">
-                Create Job from URL
+              <Link to="/post-job">
+                Create New Job
               </Link>
             </Button>
           </div>
@@ -165,7 +153,6 @@ const DraftJobsList: React.FC = () => {
                 <TableRow>
                   <TableHead>Title</TableHead>
                   <TableHead>Company</TableHead>
-                  <TableHead>Source</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
@@ -175,20 +162,6 @@ const DraftJobsList: React.FC = () => {
                   <TableRow key={job.id}>
                     <TableCell className="font-medium">{job.title}</TableCell>
                     <TableCell>{job.company}</TableCell>
-                    <TableCell>
-                      {job.source_url ? (
-                        <a 
-                          href={job.source_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-muted-foreground hover:text-primary flex items-center"
-                        >
-                          {getDomainFromUrl(job.source_url)}
-                        </a>
-                      ) : (
-                        'Manual Entry'
-                      )}
-                    </TableCell>
                     <TableCell>{formatDate(job.created_at)}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
@@ -198,7 +171,7 @@ const DraftJobsList: React.FC = () => {
                           title="Edit draft"
                           asChild
                         >
-                          <Link to={`/edit-job/${job.id}?fromScraper=true`}>
+                          <Link to={`/edit-job/${job.id}`}>
                             <Edit className="w-4 h-4" />
                           </Link>
                         </Button>

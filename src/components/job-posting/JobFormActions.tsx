@@ -7,13 +7,11 @@ import { Loader2 } from 'lucide-react';
 interface JobFormActionsProps {
   isSubmitting: boolean;
   isEditMode: boolean;
-  isFromScraper?: boolean;
 }
 
 const JobFormActions: React.FC<JobFormActionsProps> = ({ 
   isSubmitting, 
-  isEditMode,
-  isFromScraper = false
+  isEditMode
 }) => {
   return (
     <div className="flex items-center justify-between border-t pt-6">
@@ -29,9 +27,7 @@ const JobFormActions: React.FC<JobFormActionsProps> = ({
           </>
         ) : (
           <>
-            {isEditMode ? 
-              (isFromScraper ? 'Publish Job' : 'Update Job') : 
-              'Create Job'}
+            {isEditMode ? 'Update Job' : 'Create Job'}
           </>
         )}
       </Button>

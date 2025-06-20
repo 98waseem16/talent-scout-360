@@ -28,7 +28,6 @@ export interface Job {
   hiring_urgency?: string;
   job_type?: string;  // Added this for backward compatibility
   is_draft?: boolean; // Added for draft status
-  source_url?: string; // Added for tracking source URL
 }
 
 export interface JobFormData {
@@ -58,7 +57,6 @@ export interface JobFormData {
   visa_sponsorship?: boolean;
   hiring_urgency?: string;
   is_draft?: boolean; // Added for draft status
-  source_url?: string; // Added for tracking source URL
 }
 
 export interface JobDatabaseFields {
@@ -91,5 +89,4 @@ export interface JobDatabaseFields {
   visa_sponsorship?: boolean;
   hiring_urgency?: string;
   is_draft?: boolean; // Added for draft status
-  source_url?: string | null; // Added for tracking source URL
 }
