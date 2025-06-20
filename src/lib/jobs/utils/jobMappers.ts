@@ -1,3 +1,4 @@
+
 import { JobDatabaseFields, JobFormData, Job } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
@@ -28,8 +29,7 @@ export const mapJobFormDataToDatabaseFields = (
     work_hours: formData.work_hours || '',
     visa_sponsorship: formData.visa_sponsorship || false,
     hiring_urgency: formData.hiring_urgency || '',
-    is_draft: formData.is_draft || false, // Added for draft status
-    source_url: formData.source_url || null // Added for tracking source URL
+    is_draft: formData.is_draft || false
   };
 };
 
@@ -231,7 +231,6 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     application_url: cleanField(dbFields.application_url),
     user_id: cleanField(dbFields.user_id),
     is_draft: Boolean(dbFields.is_draft),
-    source_url: cleanField(dbFields.source_url),
     
     // Ensure proper standardization of filter fields
     seniority_level: standardizeSeniorityLevel(dbFields.seniority_level),
