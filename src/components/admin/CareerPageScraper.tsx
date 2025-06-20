@@ -375,29 +375,32 @@ const CareerPageScraper: React.FC = () => {
               {recentJobs.map((job) => (
                 <div
                   key={job.id}
-                  className="flex items-center justify-between p-3 border rounded-lg"
+                  className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 border rounded-lg gap-3"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     {getStatusIcon(job.status)}
-                    <div>
-                      <p className="font-medium">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium truncate">
                         {job.company_name || new URL(job.source_url).hostname}
                       </p>
-                      <p className="text-sm text-muted-foreground truncate max-w-md">
+                      <p className="text-sm text-muted-foreground truncate">
                         {job.source_url}
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3 text-right">
-                    <div className="text-sm">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:text-right">
+                    <div className="text-sm min-w-0 flex-1">
                       {job.status === 'completed' && (
                         <p className="text-green-600">
                           {job.jobs_created} of {job.jobs_found} jobs imported
                         </p>
                       )}
                       {job.status === 'failed' && job.error_message && (
-                        <p className="text-red-500 max-w-xs truncate" title={job.error_message}>
-                          {job.error_message}
+                        <p className="text-red-500 break-words" title={job.error_message}>
+                          {job.error_message.length > 50 
+                            ? `${job.error_message.substring(0, 50)}...` 
+                            : job.error_message
+                          }
                         </p>
                       )}
                       {job.status === 'running' && (
@@ -410,7 +413,9 @@ const CareerPageScraper: React.FC = () => {
                         {new Date(job.started_at).toLocaleString()}
                       </p>
                     </div>
-                    {getStatusBadge(job.status)}
+                    <div className="flex-shrink-0">
+                      {getStatusBadge(job.status)}
+                    </div>
                   </div>
                 </div>
               ))}
