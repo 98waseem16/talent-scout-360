@@ -1,4 +1,3 @@
-
 import { JobDatabaseFields, JobFormData, Job } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
@@ -29,7 +28,8 @@ export const mapJobFormDataToDatabaseFields = (
     work_hours: formData.work_hours || '',
     visa_sponsorship: formData.visa_sponsorship || false,
     hiring_urgency: formData.hiring_urgency || '',
-    is_draft: formData.is_draft || false
+    is_draft: formData.is_draft || false,
+    source_url: formData.source_url || ''
   };
 };
 
@@ -244,7 +244,12 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     hiring_urgency: standardizeFieldValue('hiring_urgency', cleanField(dbFields.hiring_urgency)),
     revenue_model: standardizeFieldValue('revenue_model', cleanField(dbFields.revenue_model)),
     visa_sponsorship: Boolean(dbFields.visa_sponsorship),
-    job_type: cleanField(dbFields.type) // For backward compatibility
+    job_type: cleanField(dbFields.type), // For backward compatibility
+    
+    // New fields for scraped jobs
+    source_url: cleanField(dbFields.source_url),
+    scraped_at: cleanField(dbFields.scraped_at),
+    scraping_job_id: cleanField(dbFields.scraping_job_id)
   };
   
   console.log(`📊 Mapped job seniority level: "${mappedJob.seniority_level}"`);

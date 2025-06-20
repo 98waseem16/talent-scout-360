@@ -6,10 +6,11 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LineChart, Settings, User, FileText, Plus } from 'lucide-react';
+import { LineChart, Settings, User, FileText, Plus, Globe } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DraftJobsList from '@/components/admin/DraftJobsList';
+import CareerPageScraper from '@/components/admin/CareerPageScraper';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -24,7 +25,7 @@ const AdminDashboard: React.FC = () => {
           .eq('is_draft', true);
           
         if (error) {
-          console.error('Error fetching draft jobs count:', error);
+          console.error('Error fet ching draft jobs count:', error);
           return;
         }
         
@@ -46,6 +47,14 @@ const AdminDashboard: React.FC = () => {
       color: 'bg-green-500/10',
       iconColor: 'text-green-500',
       count: draftJobsCount
+    },
+    {
+      title: 'Career Page Scraper',
+      description: 'Add and manage career page URLs for automatic job scraping',
+      icon: <Globe className="w-5 h-5" />,
+      link: '#career-scraper',
+      color: 'bg-purple-500/10',
+      iconColor: 'text-purple-500'
     },
     {
       title: 'Analytics',
@@ -92,6 +101,7 @@ const AdminDashboard: React.FC = () => {
             <TabsList className="mb-8">
               <TabsTrigger value="tools">Admin Tools</TabsTrigger>
               <TabsTrigger value="drafts">Job Drafts {draftJobsCount ? `(${draftJobsCount})` : ''}</TabsTrigger>
+              <TabsTrigger value="scraper">Career Scraper</TabsTrigger>
             </TabsList>
           
             <TabsContent value="tools">
@@ -171,6 +181,10 @@ const AdminDashboard: React.FC = () => {
                   </Link>
                 </Button>
               </div>
+            </TabsContent>
+
+            <TabsContent value="scraper" id="career-scraper">
+              <CareerPageScraper />
             </TabsContent>
           </Tabs>
         </div>

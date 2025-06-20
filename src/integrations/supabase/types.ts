@@ -24,6 +24,39 @@ export type Database = {
         }
         Relationships: []
       }
+      career_page_sources: {
+        Row: {
+          added_by: string
+          company_name: string | null
+          created_at: string
+          id: string
+          is_active: boolean
+          last_scraped_at: string | null
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          added_by: string
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_scraped_at?: string | null
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          added_by?: string
+          company_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          last_scraped_at?: string | null
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       job_postings: {
         Row: {
           application_url: string | null
@@ -47,7 +80,10 @@ export type Database = {
           revenue_model: string | null
           salary: string
           salary_range: string | null
+          scraped_at: string | null
+          scraping_job_id: string | null
           seniority_level: string | null
+          source_url: string | null
           team_size: string | null
           title: string
           type: string
@@ -78,7 +114,10 @@ export type Database = {
           revenue_model?: string | null
           salary: string
           salary_range?: string | null
+          scraped_at?: string | null
+          scraping_job_id?: string | null
           seniority_level?: string | null
+          source_url?: string | null
           team_size?: string | null
           title: string
           type: string
@@ -109,7 +148,10 @@ export type Database = {
           revenue_model?: string | null
           salary?: string
           salary_range?: string | null
+          scraped_at?: string | null
+          scraping_job_id?: string | null
           seniority_level?: string | null
+          source_url?: string | null
           team_size?: string | null
           title?: string
           type?: string
@@ -118,7 +160,15 @@ export type Database = {
           visa_sponsorship?: boolean | null
           work_hours?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "job_postings_scraping_job_id_fkey"
+            columns: ["scraping_job_id"]
+            isOneToOne: false
+            referencedRelation: "scraping_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {
@@ -191,6 +241,50 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
+      }
+      scraping_jobs: {
+        Row: {
+          completed_at: string | null
+          created_by: string
+          error_message: string | null
+          id: string
+          jobs_created: number | null
+          jobs_found: number | null
+          source_id: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_by: string
+          error_message?: string | null
+          id?: string
+          jobs_created?: number | null
+          jobs_found?: number | null
+          source_id: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_by?: string
+          error_message?: string | null
+          id?: string
+          jobs_created?: number | null
+          jobs_found?: number | null
+          source_id?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "scraping_jobs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "career_page_sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
