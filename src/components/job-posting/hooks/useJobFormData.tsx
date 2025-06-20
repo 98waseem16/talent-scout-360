@@ -1,14 +1,12 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import { useLocation } from 'react-router-dom';
 import { JobFormData } from '@/lib/types/job.types';
 
 export const useJobFormData = (id?: string) => {
   const { user } = useAuth();
-  const location = useLocation();
-  const isFromScraper = new URLSearchParams(location.search).get('fromScraper') === 'true';
   
   // Initialize form data with default values
   const [formData, setFormData] = useState<JobFormData>({
@@ -60,11 +58,6 @@ export const useJobFormData = (id?: string) => {
           return;
         }
         
-        // If this is a draft job from the scraper, show a notification
-        if (data.is_draft && isFromScraper) {
-          toast.info('This is a draft job created from a scraped URL. Please review and edit before publishing.');
-        }
-        
         // Ensure arrays have at least one empty item
         const ensureArrayWithItem = (arr?: string[] | null) => {
           return (arr && arr.length > 0) ? arr : [''];
@@ -83,7 +76,7 @@ export const useJobFormData = (id?: string) => {
     };
     
     fetchJobData();
-  }, [id, isFromScraper]);
+  }, [id]);
   
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -140,7 +133,6 @@ export const useJobFormData = (id?: string) => {
     formData,
     logoFile,
     isEditMode,
-    isFromScraper,
     handleInputChange,
     handleSelectChange,
     handleSwitchChange,

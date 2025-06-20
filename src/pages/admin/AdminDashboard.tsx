@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Database, LineChart, Settings, User, Box, FileText, ExternalLink } from 'lucide-react';
+import { LineChart, Settings, User, FileText, Plus } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import DraftJobsList from '@/components/admin/DraftJobsList';
@@ -14,7 +14,6 @@ import DraftJobsList from '@/components/admin/DraftJobsList';
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [draftJobsCount, setDraftJobsCount] = useState<number | null>(null);
-  const [scrapingJobsCount, setScrapingJobsCount] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchDraftJobsCount = async () => {
@@ -34,41 +33,14 @@ const AdminDashboard: React.FC = () => {
         console.error('Error fetching draft jobs count:', error);
       }
     };
-
-    const fetchScrapingJobsCount = async () => {
-      try {
-        const { count, error } = await supabase
-          .from('scraping_jobs')
-          .select('*', { count: 'exact', head: true });
-          
-        if (error) {
-          console.error('Error fetching scraping jobs count:', error);
-          return;
-        }
-        
-        setScrapingJobsCount(count);
-      } catch (error) {
-        console.error('Error fetching scraping jobs count:', error);
-      }
-    };
     
     fetchDraftJobsCount();
-    fetchScrapingJobsCount();
   }, []);
 
   const adminTools = [
     {
-      title: 'Scraping Tool',
-      description: 'Configure and run web scraping jobs',
-      icon: <Database className="w-5 h-5" />,
-      link: '/admin/scraping',
-      color: 'bg-primary/10',
-      iconColor: 'text-primary',
-      count: scrapingJobsCount
-    },
-    {
       title: 'Job Drafts',
-      description: 'Manage scraped job drafts',
+      description: 'Manage job drafts and published listings',
       icon: <FileText className="w-5 h-5" />,
       link: '#job-drafts',
       color: 'bg-green-500/10',
@@ -161,24 +133,24 @@ const AdminDashboard: React.FC = () => {
 
               <div className="mt-12 p-6 bg-muted rounded-lg">
                 <div className="flex items-center gap-4 mb-4">
-                  <div className="p-3 bg-yellow-500/10 rounded-lg">
-                    <Box className="w-6 h-6 text-yellow-500" />
+                  <div className="p-3 bg-blue-500/10 rounded-lg">
+                    <Plus className="w-6 h-6 text-blue-500" />
                   </div>
-                  <h2 className="text-xl font-medium">Job Posting Automation</h2>
+                  <h2 className="text-xl font-medium">Job Management</h2>
                 </div>
                 <p className="text-muted-foreground mb-4">
-                  Use the Job Scraper to quickly import job postings from external sources.
-                  Simply paste a URL, review the extracted data, and publish to your job board.
+                  Create and manage job postings on your job board. Post new opportunities 
+                  and manage existing listings to attract the best candidates.
                 </p>
                 <div className="flex flex-wrap gap-3 mt-6">
                   <Button asChild variant="default">
-                    <Link to="/admin/scraping?tab=job-scraper">
-                      Extract Job from URL
+                    <Link to="/post-job">
+                      Create New Job
                     </Link>
                   </Button>
                   <Button asChild variant="outline">
-                    <Link to="/post-job">
-                      Create Job Manually
+                    <Link to="/dashboard">
+                      View All Jobs
                     </Link>
                   </Button>
                 </div>
@@ -193,9 +165,9 @@ const AdminDashboard: React.FC = () => {
                   <p>Draft jobs can be edited and published when ready.</p>
                 </div>
                 <Button asChild>
-                  <Link to="/admin/scraping?tab=job-scraper">
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    Extract New Job
+                  <Link to="/post-job">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create New Job
                   </Link>
                 </Button>
               </div>

@@ -53,11 +53,8 @@ const AdminCTA: React.FC = () => {
           </div>
           
           <div className="flex gap-4">
-            <Button asChild variant="outline">
-              <Link to="/admin">Admin Dashboard</Link>
-            </Button>
             <Button asChild>
-              <Link to="/admin/scraping">Scraping Tool</Link>
+              <Link to="/admin">Admin Dashboard</Link>
             </Button>
           </div>
         </div>

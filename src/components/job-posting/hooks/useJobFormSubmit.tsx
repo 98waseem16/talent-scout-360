@@ -1,5 +1,6 @@
+
 import { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { JobFormData } from '@/lib/types/job.types';
@@ -9,9 +10,7 @@ import { uploadCompanyLogo } from '@/lib/jobs';
 export const useJobFormSubmit = (id?: string) => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const isEditMode = !!id;
-  const isFromScraper = new URLSearchParams(location.search).get('fromScraper') === 'true';
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent, formData: JobFormData, logoFile: File | null) => {
@@ -96,13 +95,7 @@ export const useJobFormSubmit = (id?: string) => {
       if (isEditMode && id) {
         try {
           await updateJobListing(id, jobDataToSubmit);
-          
-          if (isFromScraper) {
-            toast.success('Job has been edited and published successfully!');
-          } else {
-            toast.success('Job listing updated successfully!');
-          }
-          
+          toast.success('Job listing updated successfully!');
           // Redirect to dashboard
           navigate('/dashboard');
         } catch (updateError: any) {
@@ -139,7 +132,6 @@ export const useJobFormSubmit = (id?: string) => {
   return {
     isEditMode,
     isSubmitting,
-    isFromScraper,
     handleSubmit
   };
 };

@@ -48,7 +48,6 @@ export type Database = {
           salary: string
           salary_range: string | null
           seniority_level: string | null
-          source_url: string | null
           team_size: string | null
           title: string
           type: string
@@ -80,7 +79,6 @@ export type Database = {
           salary: string
           salary_range?: string | null
           seniority_level?: string | null
-          source_url?: string | null
           team_size?: string | null
           title: string
           type: string
@@ -112,7 +110,6 @@ export type Database = {
           salary?: string
           salary_range?: string | null
           seniority_level?: string | null
-          source_url?: string | null
           team_size?: string | null
           title?: string
           type?: string
@@ -194,50 +191,6 @@ export type Database = {
           website?: string | null
         }
         Relationships: []
-      }
-      scraping_jobs: {
-        Row: {
-          created_at: string
-          id: string
-          results: Json | null
-          selectors: Json
-          status: string
-          target_job_id: string | null
-          updated_at: string
-          url: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          results?: Json | null
-          selectors: Json
-          status?: string
-          target_job_id?: string | null
-          updated_at?: string
-          url: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          results?: Json | null
-          selectors?: Json
-          status?: string
-          target_job_id?: string | null
-          updated_at?: string
-          url?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "scraping_jobs_target_job_id_fkey"
-            columns: ["target_job_id"]
-            isOneToOne: false
-            referencedRelation: "job_postings"
-            referencedColumns: ["id"]
-          },
-        ]
       }
     }
     Views: {
