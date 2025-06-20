@@ -48,6 +48,7 @@ const DraftJobsList: React.FC = () => {
   const fetchDraftJobs = async () => {
     try {
       setLoading(true);
+      console.log('Fetching draft jobs...');
       
       const { data, error } = await supabase
         .from('job_postings')
@@ -56,13 +57,15 @@ const DraftJobsList: React.FC = () => {
         .order('created_at', { ascending: false });
         
       if (error) {
+        console.error('Error fetching draft jobs:', error);
         throw error;
       }
       
+      console.log(`Fetched ${data?.length || 0} draft jobs`);
       setDraftJobs(data || []);
     } catch (error: any) {
       console.error('Error fetching draft jobs:', error);
-      toast.error('Failed to load draft jobs');
+      toast.error(`Failed to load draft jobs: ${error.message}`);
     } finally {
       setLoading(false);
     }
@@ -75,17 +78,29 @@ const DraftJobsList: React.FC = () => {
   const handlePublishDraft = async (id: string) => {
     try {
       setIsPublishing(id);
-      const { error } = await supabase
+      console.log(`Publishing job ${id}...`);
+      
+      const { error, data } = await supabase
         .from('job_postings')
         .update({ is_draft: false })
-        .eq('id', id);
+        .eq('id', id)
+        .select();
         
       if (error) {
+        console.error('Error publishing job:', error);
         throw error;
       }
       
-      toast.success('Job published successfully!');
-      fetchDraftJobs();
+      if (!data || data.length === 0) {
+        console.error('No job found or updated');
+        throw new Error('Job not found or you do not have permission to publish it');
+      }
+      
+      console.log('Job published successfully:', data[0]);
+      toast.success(`Job "${draftJobs.find(job => job.id === id)?.title}" published successfully!`);
+      
+      // Refresh the draft jobs list
+      await fetchDraftJobs();
     } catch (error: any) {
       console.error('Error publishing job:', error);
       toast.error(`Failed to publish job: ${error.message}`);
@@ -99,21 +114,34 @@ const DraftJobsList: React.FC = () => {
     
     try {
       setIsDeleting(true);
+      console.log(`Deleting job ${jobToDelete}...`);
       
-      const { error } = await supabase
+      const jobTitle = draftJobs.find(job => job.id === jobToDelete)?.title;
+      
+      const { error, data } = await supabase
         .from('job_postings')
         .delete()
-        .eq('id', jobToDelete);
+        .eq('id', jobToDelete)
+        .select();
         
       if (error) {
+        console.error('Error deleting job:', error);
         throw error;
       }
       
-      toast.success('Draft job declined and removed successfully!');
-      fetchDraftJobs();
+      if (!data || data.length === 0) {
+        console.error('No job found or deleted');
+        throw new Error('Job not found or you do not have permission to delete it');
+      }
+      
+      console.log('Job deleted successfully:', data[0]);
+      toast.success(`Draft job "${jobTitle}" declined and removed successfully!`);
+      
+      // Refresh the draft jobs list
+      await fetchDraftJobs();
       setJobToDelete(null);
     } catch (error: any) {
-      console.error('Error declining job:', error);
+      console.error('Error deleting job:', error);
       toast.error(`Failed to decline job: ${error.message}`);
     } finally {
       setIsDeleting(false);
