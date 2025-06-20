@@ -17,6 +17,13 @@ interface JobData {
   salary?: string;
 }
 
+interface GobiResponse {
+  id: string;
+  status: 'completed' | 'failed' | 'in_progress';
+  result?: JobData[];
+  error_message?: string;
+}
+
 serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
@@ -43,38 +50,111 @@ serve(async (req) => {
 
     console.log(`Starting to scrape: ${url}`)
 
-    // Call Gobi.ai API (you'll need to add your Gobi API key as a secret)
+    // Get Gobi.ai API key
     const gobiApiKey = Deno.env.get('GOBI_API_KEY')
     if (!gobiApiKey) {
       throw new Error('Gobi API key not configured')
     }
 
-    const gobiResponse = await fetch('https://api.gobi.ai/v1/scrape', {
+    // Define the structured output schema for job data
+    const outputSchema = {
+      type: "object",
+      properties: {
+        jobs: {
+          type: "array",
+          items: {
+            type: "object",
+            properties: {
+              title: { type: "string" },
+              company: { type: "string" },
+              location: { type: "string" },
+              description: { type: "string" },
+              url: { type: "string" },
+              type: { type: "string" },
+              salary: { type: "string" }
+            },
+            required: ["title"],
+            additionalProperties: false
+          }
+        }
+      },
+      required: ["jobs"],
+      additionalProperties: false
+    }
+
+    // Create detailed prompt for job extraction
+    const prompt = `Visit the career page at ${url} and extract all job listings. 
+    
+    For each job posting found, extract:
+    - title: The job title (required)
+    - company: Company name (use "${companyName || 'from the website'}" if not found)
+    - location: Job location (city, state, remote, etc.)
+    - description: Brief job description or summary
+    - url: Direct link to the job posting if available, otherwise use the career page URL
+    - type: Employment type (Full-time, Part-time, Contract, Remote, Internship, etc.)
+    - salary: Salary information if mentioned
+    
+    Return ONLY valid job postings, ignore navigation elements, headers, footers, or other non-job content.
+    If no jobs are found, return an empty jobs array.
+    
+    Return the data as structured JSON matching the provided schema.`
+
+    // Call Gobi.ai API with structured output
+    const gobiResponse = await fetch('https://gobii.ai/api/v1/tasks/browser-use/', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${gobiApiKey}`,
+        'X-Api-Key': gobiApiKey,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        url: url,
-        prompt: `Extract job listings from this career page. Return a JSON array where each job has these fields: title (required), company, location, description, url (direct link to job), type (Full-time/Part-time/Contract), salary. Only return valid job postings, ignore navigation elements, headers, footers. Return clean, structured data as JSON array.`,
-        format: 'json'
+        prompt: prompt,
+        output_schema: outputSchema,
+        wait: 300 // Wait up to 5 minutes for completion
       })
     })
 
     if (!gobiResponse.ok) {
-      throw new Error(`Gobi API error: ${gobiResponse.statusText}`)
+      throw new Error(`Gobi API error: ${gobiResponse.status} ${gobiResponse.statusText}`)
     }
 
-    const gobiData = await gobiResponse.json()
-    let jobs: JobData[] = []
+    const gobiData: GobiResponse = await gobiResponse.json()
+    console.log('Gobi response:', JSON.stringify(gobiData, null, 2))
 
-    try {
-      // Parse the JSON response from Gobi
-      jobs = Array.isArray(gobiData.data) ? gobiData.data : JSON.parse(gobiData.data || '[]')
-    } catch (parseError) {
-      console.error('Failed to parse Gobi response:', parseError)
-      jobs = []
+    // Handle different response statuses
+    if (gobiData.status === 'failed') {
+      throw new Error(`Scraping failed: ${gobiData.error_message || 'Unknown error'}`)
+    }
+
+    if (gobiData.status === 'in_progress') {
+      // Update job status to indicate it's still processing
+      await supabase
+        .from('scraping_jobs')
+        .update({
+          status: 'running',
+          error_message: 'Scraping is taking longer than expected. Please check back later.'
+        })
+        .eq('id', scrapingJobId)
+
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: 'Scraping is still in progress. Please check the recent jobs list for updates.',
+          status: 'in_progress'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      )
+    }
+
+    // Extract jobs from structured response
+    let jobs: JobData[] = []
+    if (gobiData.status === 'completed' && gobiData.result) {
+      if (Array.isArray(gobiData.result)) {
+        jobs = gobiData.result
+      } else if (gobiData.result.jobs && Array.isArray(gobiData.result.jobs)) {
+        jobs = gobiData.result.jobs
+      }
     }
 
     console.log(`Found ${jobs.length} jobs`)
@@ -84,21 +164,21 @@ serve(async (req) => {
     const createdJobs = []
 
     for (const job of jobs) {
-      if (!job.title) continue // Skip jobs without titles
+      if (!job.title || job.title.trim() === '') continue // Skip jobs without titles
 
       try {
         const jobData = {
-          title: job.title,
-          company: job.company || companyName || new URL(url).hostname,
-          location: job.location || '',
-          description: job.description || '',
-          salary: job.salary || '',
-          type: job.type || 'Full-time',
+          title: job.title.trim(),
+          company: job.company?.trim() || companyName || new URL(url).hostname,
+          location: job.location?.trim() || '',
+          description: job.description?.trim() || '',
+          salary: job.salary?.trim() || '',
+          type: job.type?.trim() || 'Full-time',
           responsibilities: [],
           requirements: [],
           benefits: [],
           logo: '/placeholder.svg',
-          application_url: job.url || url,
+          application_url: job.url?.trim() || url,
           source_url: url,
           scraped_at: new Date().toISOString(),
           scraping_job_id: scrapingJobId,
@@ -150,7 +230,8 @@ serve(async (req) => {
         success: true,
         jobs: createdJobs,
         jobsFound: jobs.length,
-        jobsCreated: jobsCreated
+        jobsCreated: jobsCreated,
+        message: `Successfully scraped ${jobs.length} jobs and created ${jobsCreated} job drafts.`
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -186,7 +267,11 @@ serve(async (req) => {
     }
 
     return new Response(
-      JSON.stringify({ error: error.message }),
+      JSON.stringify({ 
+        success: false,
+        error: error.message,
+        message: 'Scraping failed. Please check the URL and try again.'
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

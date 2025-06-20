@@ -101,8 +101,15 @@ const CareerPageScraper: React.FC = () => {
         throw error;
       }
 
-      setPreviewResults(data.jobs || []);
-      toast.success(`Found ${data.jobs?.length || 0} job postings!`);
+      // Handle different response types
+      if (data.success) {
+        setPreviewResults(data.jobs || []);
+        toast.success(data.message || `Found ${data.jobsFound || 0} job postings!`);
+      } else if (data.status === 'in_progress') {
+        toast.info('Scraping is taking longer than expected. Check the recent jobs list for updates.');
+      } else {
+        throw new Error(data.message || 'Scraping failed');
+      }
       
       // Refresh recent jobs
       fetchRecentJobs();
@@ -188,7 +195,7 @@ const CareerPageScraper: React.FC = () => {
             Career Page Scraper
           </CardTitle>
           <CardDescription>
-            Add a company's career page URL to automatically scrape and import job listings
+            Add a company's career page URL to automatically scrape and import job listings using AI-powered extraction
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -217,14 +224,22 @@ const CareerPageScraper: React.FC = () => {
             </div>
           </div>
 
+          <Alert>
+            <CheckCircle className="h-4 w-4" />
+            <AlertDescription>
+              The scraper uses AI to intelligently extract job listings from career pages. 
+              Jobs will be saved as drafts for your review before publishing.
+            </AlertDescription>
+          </Alert>
+
           <Button onClick={handleScrapeNow} disabled={isLoading || !url.trim()}>
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Scraping...
+                Scraping with AI...
               </>
             ) : (
-              'Scrape Now'
+              'Scrape Jobs Now'
             )}
           </Button>
 
@@ -248,7 +263,7 @@ const CareerPageScraper: React.FC = () => {
             Recent Scraping Jobs
           </CardTitle>
           <CardDescription>
-            Track the status of your recent scraping operations
+            Track the status of your recent AI-powered scraping operations
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -282,8 +297,13 @@ const CareerPageScraper: React.FC = () => {
                         </p>
                       )}
                       {job.status === 'failed' && job.error_message && (
-                        <p className="text-red-500">
+                        <p className="text-red-500 max-w-xs truncate">
                           {job.error_message}
+                        </p>
+                      )}
+                      {job.status === 'running' && (
+                        <p className="text-blue-500">
+                          Processing...
                         </p>
                       )}
                       <p className="text-muted-foreground">
