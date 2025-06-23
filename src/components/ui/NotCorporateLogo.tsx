@@ -20,45 +20,50 @@ const NotCorporateLogo: React.FC<NotCorporateLogoProps> = ({
       className={cn("inline-block", className)}
       xmlns="http://www.w3.org/2000/svg"
     >
-      {/* Briefcase */}
-      <path
-        d="M16 20V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2Z"
+      {/* Simple Briefcase */}
+      <rect
+        x="6"
+        y="8"
+        width="12"
+        height="8"
+        rx="1"
         stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
+        strokeWidth="2"
         fill="none"
       />
+      
+      {/* Briefcase Handle */}
       <path
-        d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+        d="M9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"
         stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M10 12h4"
-        stroke="currentColor"
-        strokeWidth="1.5"
+        strokeWidth="2"
         strokeLinecap="round"
       />
       
-      {/* Prohibition Sign - Red Circle with Diagonal Slash */}
-      <circle
-        cx="12"
-        cy="12"
-        r="10"
-        fill="none"
-        stroke="#DC2626"
-        strokeWidth="2"
-        opacity="0.9"
+      {/* Briefcase Lock/Detail */}
+      <rect
+        x="11"
+        y="11"
+        width="2"
+        height="2"
+        fill="currentColor"
       />
+      
+      {/* Prohibition Sign - Smaller and positioned bottom-right */}
+      <circle
+        cx="17"
+        cy="17"
+        r="4.5"
+        fill="#DC2626"
+        opacity="0.95"
+      />
+      
+      {/* Diagonal Slash */}
       <path
-        d="M6 6l12 12"
-        stroke="#DC2626"
-        strokeWidth="2.5"
+        d="M14.5 14.5l5 5"
+        stroke="white"
+        strokeWidth="2"
         strokeLinecap="round"
-        opacity="0.9"
       />
     </svg>
   );
