@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -88,99 +89,89 @@ serve(async (req) => {
       throw new Error('Gobi API key not configured')
     }
 
-    // Create comprehensive prompt for deep job extraction
-    const prompt = `You are an expert web scraper tasked with extracting comprehensive job information from a career page. Visit ${url} and perform DEEP EXTRACTION of all job listings.
+    // Create optimized prompt for fast individual job extraction
+    const prompt = `You are an expert web scraper. Visit ${url} and extract comprehensive job information efficiently.
 
-MISSION: Extract COMPLETE job information for each position by:
-1. First, identify all job listings on the main career page
-2. For each job found, click through to the individual job posting page to get FULL details
-3. Extract comprehensive information for each job (not just basic summaries)
+MISSION: FAST EXTRACTION of all job listings by clicking individual job pages.
 
-CRITICAL EXTRACTION REQUIREMENTS:
+EFFICIENT TWO-PHASE PROCESS:
+1. PHASE 1: Quickly scan the main career page and identify ALL job listing links
+2. PHASE 2: Visit each individual job page efficiently and extract key data
 
-For each job posting, extract ALL available information in this EXACT JSON structure:
+SPEED REQUIREMENTS:
+- Work quickly and efficiently - extract key information fast
+- Spend maximum 10-15 seconds per individual job page
+- Click each job link once, extract data quickly, move to next
+- Complete the entire process within 90 seconds
 
+EXTRACTION STRATEGY:
+- Click through to EVERY individual job posting page (mandatory)
+- Extract visible information efficiently without deep analysis
+- Target standard job page sections (title, description, requirements, benefits)
+- Don't hunt for hidden sections or PDFs - extract what's clearly visible
+
+REQUIRED JSON OUTPUT STRUCTURE:
 {
   "jobs": [
     {
       "title": "Full job title",
       "company": "${companyName || 'Extract from website'}",
-      "location": "Full location details (city, state, remote options, hybrid details)",
-      "description": "COMPLETE job description (extract the full text, not a summary)",
+      "location": "Location details (city, state, remote options)",
+      "description": "Job description (extract main content efficiently)",
       "responsibilities": [
-        "Extract each responsibility as separate array item",
-        "Include ALL responsibilities listed"
+        "Extract key responsibilities as array items",
+        "Get from visible sections quickly"
       ],
       "requirements": [
-        "Extract each requirement as separate array item", 
-        "Include education, experience, skills, certifications"
+        "Extract key requirements as array items", 
+        "Include education, experience, skills efficiently"
       ],
       "benefits": [
-        "Extract each benefit as separate array item",
-        "Include salary, health, vacation, equity, perks"
+        "Extract key benefits as array items",
+        "Include compensation, health, perks efficiently"
       ],
       "url": "Direct link to individual job posting",
-      "type": "MUST be exactly one of: Full-time|Part-time|Contract|Remote|Freelance|Internship",
-      "salary": "Full salary information if available",
+      "type": "EXACTLY one of: Full-time|Part-time|Contract|Remote|Freelance|Internship",
+      "salary": "Salary information if clearly visible",
       "department": "Engineering|Sales|Marketing|Product|Design|Operations|HR|Finance|Legal|Other",
       "seniority_level": "Entry|Junior|Mid|Senior|Lead|Principal|Director|VP|C-Level",
-      "team_size": "Size of team or department if mentioned",
+      "team_size": "Team size if mentioned",
       "remote_onsite": "Remote|Hybrid|On-site",
-      "work_hours": "Full-time|Part-time|Flexible|Specific hours if mentioned",
+      "work_hours": "Full-time|Part-time|Flexible|Specific hours",
       "visa_sponsorship": true/false,
-      "equity": "Equity details if mentioned",
-      "salary_range": "Salary range if different from salary field",
+      "equity": "Equity details if visible",
+      "salary_range": "Salary range if different from salary",
       "investment_stage": "Seed|Series A|Series B|Series C|Pre-IPO|Public|Other",
-      "revenue_model": "Revenue model if company info available",
+      "revenue_model": "Revenue model if available",
       "hiring_urgency": "Immediate|Within 30 days|Within 90 days|Not specified"
     }
   ]
 }
 
-DEEP EXTRACTION STRATEGY:
-1. ALWAYS click through to individual job posting pages - don't just scrape the listings page
-2. Look for detailed job descriptions, not just summaries
-3. Extract requirements and responsibilities as separate detailed arrays
-4. Find salary/compensation information wherever it appears
-5. Look for company culture, benefits, and perks sections
-6. Identify department/team information
-7. Determine seniority level from title and description
-8. Check for remote work policies and visa sponsorship info
+FIELD EXTRACTION RULES:
+- type: Normalize "Full time" → "Full-time", "Remote work" → "Remote"
+- department: Map job functions (Software Engineer → Engineering)
+- seniority_level: Extract from titles (Senior Developer → Senior)
+- responsibilities/requirements/benefits: Get from standard sections efficiently
 
-FIELD STANDARDIZATION RULES:
-- type: Convert variations like "Full time" → "Full-time", "Fully Remote" → "Remote"
-- department: Map job functions to standard categories (Software Engineer → Engineering)
-- seniority_level: Extract from titles (Senior Software Engineer → Senior)
-- remote_onsite: Look for remote work policies and classify accurately
-- visa_sponsorship: Look for H1B, work authorization, or sponsorship mentions
+QUALITY REQUIREMENTS:
+- Every job MUST have title and description
+- Extract at least 3-5 key data points per job when available
+- Validate type field uses only the 6 specified values
+- Skip navigation elements, headers, non-job content
 
-CONTENT RECOGNITION:
-- Job descriptions: Extract the complete description, not summaries
-- Responsibilities: Look for "What you'll do", "Responsibilities", "Day-to-day" sections
-- Requirements: Find "Requirements", "Qualifications", "What we're looking for" sections  
-- Benefits: Extract from "Benefits", "What we offer", "Perks", compensation sections
-- Company info: Look for "About us", company stage, team size information
+EFFICIENCY RULES:
+- Visit ALL individual job pages but work fast
+- Extract what's clearly visible without extensive searching
+- Don't analyze deeply - grab key information and move on
+- Complete extraction quickly while maintaining data quality
 
-QUALITY ASSURANCE:
-- Ensure every job has a meaningful title and description
-- Validate that type field only uses the 6 specified values
-- Don't include navigation elements, headers, or non-job content
-- If no jobs found, return empty jobs array
-- Extract at least 5-10 data points per job when available
+Return ONLY the JSON structure with job data. Focus on speed while getting essential information for each job posting.`;
 
-DEEP CRAWLING INSTRUCTIONS:
-- Spend time on each individual job page to get complete information
-- Don't rush - thorough extraction is more valuable than speed
-- If a job page has expandable sections, click to expand them
-- Look for PDF job descriptions or additional detail links
-- Extract company culture and team information when available
+    console.log('Calling Gobi.ai API with optimized fast extraction prompt...');
+    console.log('Optimized prompt length:', prompt.length);
 
-Return ONLY the JSON structure above with comprehensive job data. The goal is to populate a complete job board with rich, detailed information that job seekers need to make informed decisions.`;
-
-    console.log('Calling Gobi.ai API with enhanced prompt...');
-    console.log('Enhanced prompt length:', prompt.length);
-
-    // Call Gobi.ai API with increased timeout for deep crawling
+    // Call Gobi.ai API with optimized 90-second timeout for fast extraction
     const gobiResponse = await fetch('https://gobii.ai/api/v1/tasks/browser-use/', {
       method: 'POST',
       headers: {
@@ -189,7 +180,7 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
       },
       body: JSON.stringify({
         prompt: prompt,
-        wait: 180 // Increased to 3 minutes for deep crawling
+        wait: 90 // Optimized to 90 seconds for fast individual job extraction
       })
     })
 
@@ -210,24 +201,24 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
 
     // Handle different response statuses
     if (gobiData.status === 'failed') {
-      console.error('Gobi scraping failed:', gobiData.error_message);
-      throw new Error(`Scraping failed: ${gobiData.error_message || 'Unknown error'}`)
+      console.error('Gobi fast extraction failed:', gobiData.error_message);
+      throw new Error(`Fast extraction failed: ${gobiData.error_message || 'Unknown error'}`)
     }
 
     if (gobiData.status === 'in_progress') {
-      console.log('Scraping still in progress, updating job status...');
+      console.log('Fast extraction still in progress, updating job status...');
       await supabase
         .from('scraping_jobs')
         .update({
           status: 'running',
-          error_message: 'Deep crawling in progress. This may take longer due to comprehensive extraction.'
+          error_message: 'Fast individual job extraction in progress. Please check back shortly.'
         })
         .eq('id', scrapingJobId)
 
       return new Response(
         JSON.stringify({
           success: false,
-          message: 'Deep crawling is in progress. Please check the recent jobs list for updates.',
+          message: 'Fast individual job extraction is in progress. Please check the recent jobs list for updates.',
           status: 'in_progress'
         }),
         {
@@ -238,7 +229,7 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
 
     // Extract jobs from response - handle multiple possible formats
     let jobs: JobData[] = []
-    console.log('=== EXTRACTING JOBS FROM RESPONSE ===');
+    console.log('=== EXTRACTING JOBS FROM FAST EXTRACTION RESPONSE ===');
     
     if (gobiData.status === 'completed' && gobiData.result) {
       console.log('Gobi result type:', typeof gobiData.result);
@@ -281,13 +272,13 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
       }
     }
 
-    console.log('=== JOBS EXTRACTION COMPLETE ===');
+    console.log('=== FAST EXTRACTION COMPLETE ===');
     console.log('Total jobs found:', jobs.length);
     if (jobs.length > 0) {
       console.log('First job sample:', JSON.stringify(jobs[0], null, 2));
     }
 
-    // Validate and clean job types as a safety net
+    // Validate and clean job types
     const validJobTypes = ['Full-time', 'Part-time', 'Contract', 'Remote', 'Freelance', 'Internship'];
     
     jobs = jobs.map(job => {
@@ -317,15 +308,15 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
       };
     });
 
-    // Process and save jobs to Supabase with enhanced data mapping
+    // Process and save jobs to Supabase
     let jobsCreated = 0
     const createdJobs = []
 
-    console.log('=== PROCESSING ENHANCED JOBS FOR DATABASE ===');
+    console.log('=== PROCESSING FAST EXTRACTED JOBS FOR DATABASE ===');
 
     for (let i = 0; i < jobs.length; i++) {
       const job = jobs[i];
-      console.log(`Processing enhanced job ${i + 1}/${jobs.length}:`, job.title || 'No title');
+      console.log(`Processing fast extracted job ${i + 1}/${jobs.length}:`, job.title || 'No title');
 
       if (!job.title || job.title.trim() === '') {
         console.log(`Skipping job ${i + 1}: No title`);
@@ -333,7 +324,7 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
       }
 
       try {
-        // Enhanced job data mapping with comprehensive fields
+        // Enhanced job data mapping
         const jobData = {
           title: job.title.trim(),
           company: job.company?.trim() || companyName || new URL(url).hostname,
@@ -373,7 +364,7 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
           posted: new Date().toISOString()
         }
 
-        console.log(`Inserting enhanced job ${i + 1} with comprehensive data:`, {
+        console.log(`Inserting fast extracted job ${i + 1}:`, {
           title: jobData.title,
           department: jobData.department,
           seniority_level: jobData.seniority_level,
@@ -389,15 +380,15 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
           .single()
 
         if (insertError) {
-          console.error(`Error inserting enhanced job ${i + 1}:`, insertError);
+          console.error(`Error inserting fast extracted job ${i + 1}:`, insertError);
           continue
         }
 
-        console.log(`Enhanced job ${i + 1} inserted successfully with ID:`, createdJob.id);
+        console.log(`Fast extracted job ${i + 1} inserted successfully with ID:`, createdJob.id);
         createdJobs.push(createdJob)
         jobsCreated++
       } catch (jobError) {
-        console.error(`Error processing enhanced job ${i + 1}:`, jobError);
+        console.error(`Error processing fast extracted job ${i + 1}:`, jobError);
         continue
       }
     }
@@ -435,8 +426,8 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
       console.error('Error updating source:', sourceUpdateError);
     }
 
-    console.log('=== SCRAPING COMPLETE ===');
-    console.log('Success! Enhanced jobs found:', jobs.length, 'Enhanced jobs created:', jobsCreated);
+    console.log('=== FAST EXTRACTION COMPLETE ===');
+    console.log('Success! Fast extracted jobs found:', jobs.length, 'Fast extracted jobs created:', jobsCreated);
 
     return new Response(
       JSON.stringify({
@@ -444,7 +435,7 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
         jobs: createdJobs,
         jobsFound: jobs.length,
         jobsCreated: jobsCreated,
-        message: `Successfully scraped ${jobs.length} jobs with comprehensive details and created ${jobsCreated} enhanced job drafts.`
+        message: `Successfully fast extracted ${jobs.length} jobs with individual page data and created ${jobsCreated} job drafts.`
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -452,7 +443,7 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
     )
 
   } catch (error) {
-    console.error('=== SCRAPING ERROR ===');
+    console.error('=== FAST EXTRACTION ERROR ===');
     console.error('Error:', error);
     console.error('Stack:', error.stack);
 
@@ -485,7 +476,7 @@ Return ONLY the JSON structure above with comprehensive job data. The goal is to
       JSON.stringify({ 
         success: false,
         error: error.message,
-        message: 'Scraping failed. Please check the logs and try again.'
+        message: 'Fast extraction failed. Please check the logs and try again.'
       }),
       {
         status: 500,
