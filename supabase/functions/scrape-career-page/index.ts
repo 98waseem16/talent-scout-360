@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -36,68 +37,6 @@ interface GobiResponse {
   result?: any;
   error_message?: string;
 }
-
-// Helper function to map equity values to valid constraint values
-const mapEquityValue = (equityValue?: string): string => {
-  if (!equityValue) {
-    console.log('🔄 Equity mapping: empty/null -> "None"');
-    return 'None';
-  }
-  
-  const cleanValue = equityValue.trim();
-  console.log(`🔄 Equity mapping: "${cleanValue}" -> processing...`);
-  
-  // Valid constraint values that should pass through unchanged
-  const validValues = ['None', '0.1%-0.5%', '0.5%-1%', '1%+'];
-  if (validValues.includes(cleanValue)) {
-    console.log(`✅ Equity mapping: "${cleanValue}" -> "${cleanValue}" (already valid)`);
-    return cleanValue;
-  }
-  
-  // Map common variations to "None"
-  const lowerValue = cleanValue.toLowerCase();
-  const noneVariations = [
-    'not specified',
-    'n/a',
-    'na',
-    'none specified',
-    'not available',
-    'no equity',
-    'not mentioned',
-    'tbd',
-    'to be determined',
-    'unspecified'
-  ];
-  
-  if (noneVariations.includes(lowerValue)) {
-    console.log(`✅ Equity mapping: "${cleanValue}" -> "None" (mapped from variation)`);
-    return 'None';
-  }
-  
-  // Try to match percentage patterns to valid ranges
-  if (lowerValue.includes('%')) {
-    if (lowerValue.includes('0.1') || lowerValue.includes('0.2') || lowerValue.includes('0.3') || lowerValue.includes('0.4') || lowerValue.includes('0.5')) {
-      if (!lowerValue.includes('1%') && !lowerValue.includes('2%')) {
-        console.log(`✅ Equity mapping: "${cleanValue}" -> "0.1%-0.5%" (pattern match)`);
-        return '0.1%-0.5%';
-      }
-    }
-    if (lowerValue.includes('0.5') || lowerValue.includes('0.6') || lowerValue.includes('0.7') || lowerValue.includes('0.8') || lowerValue.includes('0.9') || lowerValue.includes('1%')) {
-      if (!lowerValue.includes('1.1') && !lowerValue.includes('2%')) {
-        console.log(`✅ Equity mapping: "${cleanValue}" -> "0.5%-1%" (pattern match)`);
-        return '0.5%-1%';
-      }
-    }
-    if (lowerValue.includes('1%') || lowerValue.includes('2%') || lowerValue.includes('3%') || lowerValue.includes('+')) {
-      console.log(`✅ Equity mapping: "${cleanValue}" -> "1%+" (pattern match)`);
-      return '1%+';
-    }
-  }
-  
-  // If we can't map it, default to "None" and log for monitoring
-  console.log(`⚠️ Equity mapping: "${cleanValue}" -> "None" (unmapped value, defaulting)`);
-  return 'None';
-};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -150,7 +89,7 @@ serve(async (req) => {
       throw new Error('Gobi API key not configured')
     }
 
-    // Create enhanced prompt for 5-minute thorough extraction
+    // Create enhanced prompt for 5-minute thorough extraction with proper field formatting
     const prompt = `You are an expert web scraper. Visit ${url} and extract comprehensive job information with thorough analysis.
 
 MISSION: COMPREHENSIVE EXTRACTION of all job listings by visiting individual job pages.
@@ -207,7 +146,7 @@ REQUIRED JSON OUTPUT STRUCTURE:
       "remote_onsite": "Remote|Hybrid|On-site",
       "work_hours": "Full-time|Part-time|Flexible|Specific hours",
       "visa_sponsorship": true/false,
-      "equity": "Equity compensation details if available",
+      "equity": "EXACTLY one of: None|0.1%-0.5%|0.5%-1%|1%+ (use 'None' if equity compensation is not specified, not available, or not mentioned)",
       "salary_range": "Salary range if different from salary",
       "investment_stage": "Seed|Series A|Series B|Series C|Pre-IPO|Public|Other",
       "revenue_model": "Company revenue model if available",
@@ -220,6 +159,12 @@ FIELD EXTRACTION RULES:
 - type: Normalize variations ("Full time" → "Full-time", "Remote work" → "Remote")
 - department: Map job functions intelligently (Software Engineer → Engineering)
 - seniority_level: Extract from titles and job descriptions
+- equity: CRITICAL - Must return exactly one of: "None", "0.1%-0.5%", "0.5%-1%", "1%+"
+  * If equity is not mentioned, not specified, or not available → use "None"
+  * If equity mentions small percentages (0.1-0.5%) → use "0.1%-0.5%"
+  * If equity mentions medium percentages (0.5-1%) → use "0.5%-1%"
+  * If equity mentions higher percentages (1%+) → use "1%+"
+  * Examples: "equity package available" → "None", "0.25% equity" → "0.1%-0.5%", "up to 2%" → "1%+"
 - responsibilities/requirements/benefits: Extract from all available sections
 - Look for expandable content sections and click them for more details
 
@@ -227,6 +172,7 @@ QUALITY REQUIREMENTS:
 - Every job MUST have title and comprehensive description
 - Extract at least 5-8 key data points per job when available
 - Validate type field uses only the 6 specified values
+- Validate equity field uses only the 4 specified values (None, 0.1%-0.5%, 0.5%-1%, 1%+)
 - Skip navigation elements, headers, footer content
 - Focus on job-specific content only
 
@@ -396,11 +342,9 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
       }
 
       try {
-        // Map and validate equity value before insertion
-        const mappedEquityValue = mapEquityValue(job.equity);
-        console.log(`🔧 Job ${i + 1} equity processing complete: "${job.equity}" -> "${mappedEquityValue}"`);
+        console.log(`🔧 Job ${i + 1} equity value from Gobi: "${job.equity}"`);
 
-        // Enhanced job data mapping with proper equity handling
+        // Enhanced job data mapping - equity should now come properly formatted from Gobi
         const jobData = {
           title: job.title.trim(),
           company: job.company?.trim() || companyName || new URL(url).hostname,
@@ -417,14 +361,14 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
           benefits: Array.isArray(job.benefits) ? 
             job.benefits.filter(b => b && b.trim()) : [],
           
-          // Additional comprehensive fields with proper equity mapping
+          // Additional comprehensive fields - equity should be properly formatted from Gobi now
           department: job.department?.trim() || null,
           seniority_level: job.seniority_level?.trim() || null,
           team_size: job.team_size?.trim() || null,
           remote_onsite: job.remote_onsite?.trim() || null,
           work_hours: job.work_hours?.trim() || null,
           visa_sponsorship: job.visa_sponsorship === true || job.visa_sponsorship === 'true',
-          equity: mappedEquityValue, // Use the mapped value
+          equity: job.equity?.trim() || 'None', // Default to 'None' if not provided
           salary_range: job.salary_range?.trim() || null,
           investment_stage: job.investment_stage?.trim() || null,
           revenue_model: job.revenue_model?.trim() || null,
