@@ -138,41 +138,48 @@ REQUIRED JSON OUTPUT STRUCTURE:
         "Include equity, bonuses, and compensation details"
       ],
       "url": "Direct link to individual job posting",
-      "type": "EXACTLY one of: Full-time|Part-time|Contract|Remote|Freelance|Internship",
+      "type": "EXACTLY one of: Full-time|Part-time|Contract|Remote",
       "salary": "Detailed salary information if available",
-      "department": "Engineering|Sales|Marketing|Product|Design|Operations|HR|Finance|Legal|Other",
-      "seniority_level": "Entry|Junior|Mid|Senior|Lead|Principal|Director|VP|C-Level",
-      "team_size": "Team size and structure if mentioned",
-      "remote_onsite": "Remote|Hybrid|On-site",
-      "work_hours": "Full-time|Part-time|Flexible|Specific hours",
+      "department": "EXACTLY one of: Engineering|Sales|Marketing|Product|Design|Operations|HR|Finance|Legal|Customer Support|Other",
+      "seniority_level": "EXACTLY one of: Entry-Level|Junior|Mid-Level|Senior|Lead|Principal|Director|VP|C-Level|Internship|Who Cares",
+      "team_size": "EXACTLY one of: 1-10|11-50|51-200|201-500|500+",
+      "remote_onsite": "EXACTLY one of: Fully Remote|Hybrid|Onsite",
+      "work_hours": "EXACTLY one of: Flexible|Fixed|Async Work",
       "visa_sponsorship": true/false,
       "equity": "EXACTLY one of: None|0.1%-0.5%|0.5%-1%|1%+ (use 'None' if equity compensation is not specified, not available, or not mentioned)",
-      "salary_range": "Salary range if different from salary",
-      "investment_stage": "Seed|Series A|Series B|Series C|Pre-IPO|Public|Other",
-      "revenue_model": "Company revenue model if available",
-      "hiring_urgency": "Immediate|Within 30 days|Within 90 days|Not specified"
+      "salary_range": "EXACTLY one of: Negotiable|$40K-$60K|$60K-$80K|$80K-$120K|$120K+",
+      "investment_stage": "EXACTLY one of: Bootstrapped|Pre-Seed|Seed|Series A|Series B|Series C+|Pre-IPO|Public",
+      "revenue_model": "EXACTLY one of: Subscription|Marketplace|SaaS|Enterprise|Ads|E-commerce|Other",
+      "hiring_urgency": "EXACTLY one of: Immediate Hire|Within a Month|Open to Future Applicants"
     }
   ]
 }
 
-FIELD EXTRACTION RULES:
-- type: Normalize variations ("Full time" → "Full-time", "Remote work" → "Remote")
-- department: Map job functions intelligently (Software Engineer → Engineering)
-- seniority_level: Extract from titles and job descriptions
+CRITICAL FIELD EXTRACTION RULES:
+- type: Must be exactly one of: "Full-time", "Part-time", "Contract", "Remote" (normalize variations like "Full time" → "Full-time")
+- department: Map job functions intelligently (Software Engineer → "Engineering", Support → "Customer Support"). If unclear, use "Other"
+- seniority_level: Extract from titles and job descriptions. Use "Entry-Level" for entry positions, "Mid-Level" for mid positions
+- team_size: Estimate based on company info or descriptions. If unknown, use "1-10" for startups, "11-50" for small companies
+- remote_onsite: Use "Fully Remote" for remote work, "Onsite" for office-based, "Hybrid" for mixed
+- work_hours: Use "Flexible" if flexible hours mentioned, "Fixed" for standard hours, "Async Work" for async-friendly roles
 - equity: CRITICAL - Must return exactly one of: "None", "0.1%-0.5%", "0.5%-1%", "1%+"
   * If equity is not mentioned, not specified, or not available → use "None"
   * If equity mentions small percentages (0.1-0.5%) → use "0.1%-0.5%"
   * If equity mentions medium percentages (0.5-1%) → use "0.5%-1%"
   * If equity mentions higher percentages (1%+) → use "1%+"
   * Examples: "equity package available" → "None", "0.25% equity" → "0.1%-0.5%", "up to 2%" → "1%+"
+- salary_range: Estimate based on salary info. If no salary info, use "Negotiable"
+- investment_stage: Research company stage. If unknown, use "Bootstrapped" for small companies
+- revenue_model: Determine from company description. If unclear, use "Other"
+- hiring_urgency: Use "Immediate Hire" for urgent roles, "Within a Month" for standard hiring, "Open to Future Applicants" as default
 - responsibilities/requirements/benefits: Extract from all available sections
 - Look for expandable content sections and click them for more details
 
-QUALITY REQUIREMENTS:
+VALIDATION REQUIREMENTS:
+- Every field must use EXACTLY the specified values - no variations allowed
+- If unsure about a constrained field value, prefer "Other" where available, otherwise use the most conservative option
 - Every job MUST have title and comprehensive description
 - Extract at least 5-8 key data points per job when available
-- Validate type field uses only the 6 specified values
-- Validate equity field uses only the 4 specified values (None, 0.1%-0.5%, 0.5%-1%, 1%+)
 - Skip navigation elements, headers, footer content
 - Focus on job-specific content only
 
@@ -186,8 +193,8 @@ COMPREHENSIVE EXTRACTION RULES:
 
 Return ONLY the JSON structure with comprehensive job data. Use the full 5 minutes to ensure thorough extraction of all available information.`;
 
-    console.log('Calling Gobi.ai API with enhanced 5-minute extraction prompt...');
-    console.log('Enhanced prompt length:', prompt.length);
+    console.log('Calling Gobi.ai API with database-compliant extraction prompt...');
+    console.log('Updated prompt length:', prompt.length);
 
     // Call Gobi.ai API with 5-minute timeout for comprehensive extraction
     const gobiResponse = await fetch('https://gobii.ai/api/v1/tasks/browser-use/', {
@@ -247,7 +254,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
 
     // Extract jobs from response - handle multiple possible formats
     let jobs: JobData[] = []
-    console.log('=== EXTRACTING JOBS FROM COMPREHENSIVE EXTRACTION RESPONSE ===');
+    console.log('=== EXTRACTING JOBS FROM DATABASE-COMPLIANT EXTRACTION RESPONSE ===');
     
     if (gobiData.status === 'completed' && gobiData.result) {
       console.log('Gobi result type:', typeof gobiData.result);
@@ -290,51 +297,21 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
       }
     }
 
-    console.log('=== COMPREHENSIVE EXTRACTION COMPLETE ===');
+    console.log('=== DATABASE-COMPLIANT EXTRACTION COMPLETE ===');
     console.log('Total jobs found:', jobs.length);
     if (jobs.length > 0) {
       console.log('First job sample:', JSON.stringify(jobs[0], null, 2));
     }
 
-    // Validate and clean job types
-    const validJobTypes = ['Full-time', 'Part-time', 'Contract', 'Remote', 'Freelance', 'Internship'];
-    
-    jobs = jobs.map(job => {
-      let cleanType = job.type || 'Full-time';
-      
-      // Normalize common variations
-      if (cleanType.toLowerCase().includes('full') && cleanType.toLowerCase().includes('time')) {
-        cleanType = 'Full-time';
-      } else if (cleanType.toLowerCase().includes('part') && cleanType.toLowerCase().includes('time')) {
-        cleanType = 'Part-time';
-      } else if (cleanType.toLowerCase().includes('remote')) {
-        cleanType = 'Remote';
-      } else if (cleanType.toLowerCase().includes('contract')) {
-        cleanType = 'Contract';
-      } else if (cleanType.toLowerCase().includes('freelance')) {
-        cleanType = 'Freelance';
-      } else if (cleanType.toLowerCase().includes('intern')) {
-        cleanType = 'Internship';
-      } else if (!validJobTypes.includes(cleanType)) {
-        console.log(`Invalid job type "${cleanType}" found, defaulting to "Full-time"`);
-        cleanType = 'Full-time';
-      }
-      
-      return {
-        ...job,
-        type: cleanType
-      };
-    });
-
     // Process and save jobs to Supabase
     let jobsCreated = 0
     const createdJobs = []
 
-    console.log('=== PROCESSING COMPREHENSIVE EXTRACTED JOBS FOR DATABASE ===');
+    console.log('=== PROCESSING DATABASE-COMPLIANT EXTRACTED JOBS FOR DATABASE ===');
 
     for (let i = 0; i < jobs.length; i++) {
       const job = jobs[i];
-      console.log(`Processing comprehensive job ${i + 1}/${jobs.length}:`, job.title || 'No title');
+      console.log(`Processing database-compliant job ${i + 1}/${jobs.length}:`, job.title || 'No title');
 
       if (!job.title || job.title.trim() === '') {
         console.log(`Skipping job ${i + 1}: No title`);
@@ -342,9 +319,21 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
       }
 
       try {
-        console.log(`🔧 Job ${i + 1} equity value from Gobi: "${job.equity}"`);
+        console.log(`🔧 Job ${i + 1} field values from Gobi:`, {
+          equity: job.equity,
+          hiring_urgency: job.hiring_urgency,
+          department: job.department,
+          seniority_level: job.seniority_level,
+          team_size: job.team_size,
+          remote_onsite: job.remote_onsite,
+          work_hours: job.work_hours,
+          investment_stage: job.investment_stage,
+          revenue_model: job.revenue_model,
+          salary_range: job.salary_range,
+          type: job.type
+        });
 
-        // Enhanced job data mapping - equity should now come properly formatted from Gobi
+        // Enhanced job data mapping - all fields should now come properly formatted from Gobi
         const jobData = {
           title: job.title.trim(),
           company: job.company?.trim() || companyName || new URL(url).hostname,
@@ -361,14 +350,14 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
           benefits: Array.isArray(job.benefits) ? 
             job.benefits.filter(b => b && b.trim()) : [],
           
-          // Additional comprehensive fields - equity should be properly formatted from Gobi now
+          // Additional comprehensive fields - all should be properly formatted from Gobi now
           department: job.department?.trim() || null,
           seniority_level: job.seniority_level?.trim() || null,
           team_size: job.team_size?.trim() || null,
           remote_onsite: job.remote_onsite?.trim() || null,
           work_hours: job.work_hours?.trim() || null,
           visa_sponsorship: job.visa_sponsorship === true || job.visa_sponsorship === 'true',
-          equity: job.equity?.trim() || 'None', // Default to 'None' if not provided
+          equity: job.equity?.trim() || 'None',
           salary_range: job.salary_range?.trim() || null,
           investment_stage: job.investment_stage?.trim() || null,
           revenue_model: job.revenue_model?.trim() || null,
@@ -384,11 +373,19 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
           posted: new Date().toISOString()
         }
 
-        console.log(`Inserting comprehensive job ${i + 1}:`, {
+        console.log(`Inserting database-compliant job ${i + 1}:`, {
           title: jobData.title,
           department: jobData.department,
           seniority_level: jobData.seniority_level,
           equity: jobData.equity,
+          hiring_urgency: jobData.hiring_urgency,
+          team_size: jobData.team_size,
+          remote_onsite: jobData.remote_onsite,
+          work_hours: jobData.work_hours,
+          investment_stage: jobData.investment_stage,
+          revenue_model: jobData.revenue_model,
+          salary_range: jobData.salary_range,
+          type: jobData.type,
           responsibilities_count: jobData.responsibilities.length,
           requirements_count: jobData.requirements.length,
           benefits_count: jobData.benefits.length
@@ -401,24 +398,28 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
           .single()
 
         if (insertError) {
-          console.error(`❌ Error inserting comprehensive job ${i + 1}:`, insertError);
+          console.error(`❌ Error inserting database-compliant job ${i + 1}:`, insertError);
           console.error(`❌ Failed job data:`, {
             title: jobData.title,
             equity: jobData.equity,
+            hiring_urgency: jobData.hiring_urgency,
+            department: jobData.department,
+            seniority_level: jobData.seniority_level,
             errorCode: insertError.code,
             errorMessage: insertError.message
           });
           continue
         }
 
-        console.log(`✅ Comprehensive job ${i + 1} inserted successfully with ID:`, createdJob.id);
+        console.log(`✅ Database-compliant job ${i + 1} inserted successfully with ID:`, createdJob.id);
         createdJobs.push(createdJob)
         jobsCreated++
       } catch (jobError) {
-        console.error(`❌ Error processing comprehensive job ${i + 1}:`, jobError);
+        console.error(`❌ Error processing database-compliant job ${i + 1}:`, jobError);
         console.error(`❌ Failed job details:`, {
           title: job.title,
           equity: job.equity,
+          hiring_urgency: job.hiring_urgency,
           error: jobError.message
         });
         continue
@@ -458,8 +459,8 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
       console.error('Error updating source:', sourceUpdateError);
     }
 
-    console.log('=== COMPREHENSIVE EXTRACTION COMPLETE ===');
-    console.log('Success! Comprehensive jobs found:', jobs.length, 'Comprehensive jobs created:', jobsCreated);
+    console.log('=== DATABASE-COMPLIANT EXTRACTION COMPLETE ===');
+    console.log('Success! Database-compliant jobs found:', jobs.length, 'Database-compliant jobs created:', jobsCreated);
 
     return new Response(
       JSON.stringify({
@@ -467,7 +468,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
         jobs: createdJobs,
         jobsFound: jobs.length,
         jobsCreated: jobsCreated,
-        message: `Successfully extracted ${jobs.length} jobs with comprehensive data and created ${jobsCreated} job drafts.`
+        message: `Successfully extracted ${jobs.length} jobs with database-compliant data and created ${jobsCreated} job drafts.`
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -475,7 +476,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
     )
 
   } catch (error) {
-    console.error('=== COMPREHENSIVE EXTRACTION ERROR ===');
+    console.error('=== DATABASE-COMPLIANT EXTRACTION ERROR ===');
     console.error('Error:', error);
     console.error('Stack:', error.stack);
 
@@ -508,7 +509,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
       JSON.stringify({ 
         success: false,
         error: error.message,
-        message: 'Comprehensive extraction failed. Please check the logs and try again.'
+        message: 'Database-compliant extraction failed. Please check the logs and try again.'
       }),
       {
         status: 500,
