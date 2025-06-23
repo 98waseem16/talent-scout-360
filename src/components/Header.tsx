@@ -7,6 +7,7 @@ import { UserCircle, LogOut, Menu, X, Rocket, Briefcase, Home, ShieldCheck } fro
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
 import { supabase } from '@/integrations/supabase/client';
+import NotCorporateLogo from '@/components/ui/NotCorporateLogo';
 
 const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -132,7 +133,7 @@ const Header: React.FC = () => {
         {/* Logo */}
         <Link to="/" className="font-bold text-xl text-primary flex items-center gap-2">
           <span className="bg-primary text-white p-1.5 rounded-md">
-            <Briefcase className="h-4 w-4" />
+            <NotCorporateLogo className="h-4 w-4" />
           </span>
           notCorporate
         </Link>
