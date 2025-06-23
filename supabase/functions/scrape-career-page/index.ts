@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -37,6 +36,68 @@ interface GobiResponse {
   result?: any;
   error_message?: string;
 }
+
+// Helper function to map equity values to valid constraint values
+const mapEquityValue = (equityValue?: string): string => {
+  if (!equityValue) {
+    console.log('🔄 Equity mapping: empty/null -> "None"');
+    return 'None';
+  }
+  
+  const cleanValue = equityValue.trim();
+  console.log(`🔄 Equity mapping: "${cleanValue}" -> processing...`);
+  
+  // Valid constraint values that should pass through unchanged
+  const validValues = ['None', '0.1%-0.5%', '0.5%-1%', '1%+'];
+  if (validValues.includes(cleanValue)) {
+    console.log(`✅ Equity mapping: "${cleanValue}" -> "${cleanValue}" (already valid)`);
+    return cleanValue;
+  }
+  
+  // Map common variations to "None"
+  const lowerValue = cleanValue.toLowerCase();
+  const noneVariations = [
+    'not specified',
+    'n/a',
+    'na',
+    'none specified',
+    'not available',
+    'no equity',
+    'not mentioned',
+    'tbd',
+    'to be determined',
+    'unspecified'
+  ];
+  
+  if (noneVariations.includes(lowerValue)) {
+    console.log(`✅ Equity mapping: "${cleanValue}" -> "None" (mapped from variation)`);
+    return 'None';
+  }
+  
+  // Try to match percentage patterns to valid ranges
+  if (lowerValue.includes('%')) {
+    if (lowerValue.includes('0.1') || lowerValue.includes('0.2') || lowerValue.includes('0.3') || lowerValue.includes('0.4') || lowerValue.includes('0.5')) {
+      if (!lowerValue.includes('1%') && !lowerValue.includes('2%')) {
+        console.log(`✅ Equity mapping: "${cleanValue}" -> "0.1%-0.5%" (pattern match)`);
+        return '0.1%-0.5%';
+      }
+    }
+    if (lowerValue.includes('0.5') || lowerValue.includes('0.6') || lowerValue.includes('0.7') || lowerValue.includes('0.8') || lowerValue.includes('0.9') || lowerValue.includes('1%')) {
+      if (!lowerValue.includes('1.1') && !lowerValue.includes('2%')) {
+        console.log(`✅ Equity mapping: "${cleanValue}" -> "0.5%-1%" (pattern match)`);
+        return '0.5%-1%';
+      }
+    }
+    if (lowerValue.includes('1%') || lowerValue.includes('2%') || lowerValue.includes('3%') || lowerValue.includes('+')) {
+      console.log(`✅ Equity mapping: "${cleanValue}" -> "1%+" (pattern match)`);
+      return '1%+';
+    }
+  }
+  
+  // If we can't map it, default to "None" and log for monitoring
+  console.log(`⚠️ Equity mapping: "${cleanValue}" -> "None" (unmapped value, defaulting)`);
+  return 'None';
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -335,7 +396,11 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
       }
 
       try {
-        // Enhanced job data mapping
+        // Map and validate equity value before insertion
+        const mappedEquityValue = mapEquityValue(job.equity);
+        console.log(`🔧 Job ${i + 1} equity processing complete: "${job.equity}" -> "${mappedEquityValue}"`);
+
+        // Enhanced job data mapping with proper equity handling
         const jobData = {
           title: job.title.trim(),
           company: job.company?.trim() || companyName || new URL(url).hostname,
@@ -352,14 +417,14 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
           benefits: Array.isArray(job.benefits) ? 
             job.benefits.filter(b => b && b.trim()) : [],
           
-          // Additional comprehensive fields
+          // Additional comprehensive fields with proper equity mapping
           department: job.department?.trim() || null,
           seniority_level: job.seniority_level?.trim() || null,
           team_size: job.team_size?.trim() || null,
           remote_onsite: job.remote_onsite?.trim() || null,
           work_hours: job.work_hours?.trim() || null,
           visa_sponsorship: job.visa_sponsorship === true || job.visa_sponsorship === 'true',
-          equity: job.equity?.trim() || null,
+          equity: mappedEquityValue, // Use the mapped value
           salary_range: job.salary_range?.trim() || null,
           investment_stage: job.investment_stage?.trim() || null,
           revenue_model: job.revenue_model?.trim() || null,
@@ -379,6 +444,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
           title: jobData.title,
           department: jobData.department,
           seniority_level: jobData.seniority_level,
+          equity: jobData.equity,
           responsibilities_count: jobData.responsibilities.length,
           requirements_count: jobData.requirements.length,
           benefits_count: jobData.benefits.length
@@ -391,15 +457,26 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
           .single()
 
         if (insertError) {
-          console.error(`Error inserting comprehensive job ${i + 1}:`, insertError);
+          console.error(`❌ Error inserting comprehensive job ${i + 1}:`, insertError);
+          console.error(`❌ Failed job data:`, {
+            title: jobData.title,
+            equity: jobData.equity,
+            errorCode: insertError.code,
+            errorMessage: insertError.message
+          });
           continue
         }
 
-        console.log(`Comprehensive job ${i + 1} inserted successfully with ID:`, createdJob.id);
+        console.log(`✅ Comprehensive job ${i + 1} inserted successfully with ID:`, createdJob.id);
         createdJobs.push(createdJob)
         jobsCreated++
       } catch (jobError) {
-        console.error(`Error processing comprehensive job ${i + 1}:`, jobError);
+        console.error(`❌ Error processing comprehensive job ${i + 1}:`, jobError);
+        console.error(`❌ Failed job details:`, {
+          title: job.title,
+          equity: job.equity,
+          error: jobError.message
+        });
         continue
       }
     }
