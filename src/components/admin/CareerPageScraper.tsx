@@ -166,6 +166,9 @@ const CareerPageScraper: React.FC = () => {
         throw error;
       }
 
+      // Reset isSubmitting immediately after successful edge function call
+      setIsSubmitting(false);
+
       // Handle different response types
       if (data?.success) {
         setPreviewResults(data.jobs || []);
@@ -175,7 +178,7 @@ const CareerPageScraper: React.FC = () => {
           jobsCreated: data.jobsCreated
         });
       } else if (data?.status === 'in_progress') {
-        toast.info('Comprehensive scraping is in progress (5-minute deep analysis). Check the recent jobs list for updates.');
+        toast.success('Comprehensive scraping job queued successfully! Check the recent jobs list for updates.');
         console.log('Comprehensive scraping in progress, will need to check back later');
       } else {
         const errorMessage = data?.message || data?.error || 'Comprehensive scraping failed';
@@ -191,7 +194,6 @@ const CareerPageScraper: React.FC = () => {
     } catch (error: any) {
       console.error('Comprehensive scraping process error:', error);
       toast.error(`Comprehensive scraping failed: ${error.message}`);
-    } finally {
       setIsSubmitting(false);
     }
   };
@@ -365,7 +367,7 @@ const CareerPageScraper: React.FC = () => {
               {isSubmitting ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Starting Comprehensive Analysis...
+                  Queuing Job...
                 </>
               ) : (
                 <>
