@@ -5,15 +5,16 @@ import { staticJobs } from '../../data/staticJobs';
 import { mapDatabaseFieldsToJob } from '../utils/jobMappers';
 
 /**
- * Fetches all published jobs from the database (excludes drafts)
+ * Fetches all published and non-expired jobs from the database
  */
 export const getJobs = async (): Promise<Job[]> => {
   try {
-    console.log('Fetching published jobs from database...');
+    console.log('Fetching published and non-expired jobs from database...');
     const { data, error } = await supabase
       .from('job_postings')
       .select('*')
       .eq('is_draft', false) // Only get published jobs
+      .eq('is_expired', false) // Only get non-expired jobs
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -22,7 +23,7 @@ export const getJobs = async (): Promise<Job[]> => {
     }
 
     if (!data || data.length === 0) {
-      console.log('No published jobs found in database, returning static jobs');
+      console.log('No published, non-expired jobs found in database, returning static jobs');
       return staticJobs;
     }
 
@@ -33,6 +34,8 @@ export const getJobs = async (): Promise<Job[]> => {
       console.log('DEBUG - First job raw data:', {
         id: data[0].id,
         title: data[0].title,
+        expires_at: data[0].expires_at,
+        is_expired: data[0].is_expired,
         department: data[0].department,
         department_type: typeof data[0].department,
         seniority_level: data[0].seniority_level,
@@ -49,7 +52,7 @@ export const getJobs = async (): Promise<Job[]> => {
     }).filter(Boolean) as Job[]; // Filter out any null results
 
     // Log mapped jobs for debugging
-    console.log(`Successfully mapped ${jobs.length} published jobs from database`);
+    console.log(`Successfully mapped ${jobs.length} published, non-expired jobs from database`);
     if (jobs.length > 0) {
       console.log('DEBUG - First mapped job:', {
         id: jobs[0].id,
@@ -73,7 +76,7 @@ export const getJobs = async (): Promise<Job[]> => {
 };
 
 /**
- * Fetches trending (featured) jobs from the database (excludes drafts)
+ * Fetches trending (featured) and non-expired jobs from the database
  */
 export const getTrendingJobs = async (): Promise<Job[]> => {
   try {
@@ -82,6 +85,7 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
       .select('*')
       .eq('featured', true)
       .eq('is_draft', false) // Only get published featured jobs
+      .eq('is_expired', false) // Only get non-expired jobs
       .order('created_at', { ascending: false })
       .limit(3);
 
@@ -104,7 +108,7 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
 };
 
 /**
- * Fetches a job by its ID from the database
+ * Fetches a job by its ID from the database (returns undefined if expired)
  */
 export const getJobById = async (id: string): Promise<Job | undefined> => {
   try {
@@ -113,6 +117,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       .from('job_postings')
       .select('*')
       .eq('id', id)
+      .eq('is_expired', false) // Only return non-expired jobs
       .maybeSingle(); // Using maybeSingle() instead of single() to avoid errors when no job is found
 
     if (error) {
@@ -121,14 +126,16 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
     }
 
     if (!data) {
-      console.log(`No job found with ID ${id}, returning static job`);
+      console.log(`No non-expired job found with ID ${id}, returning static job`);
       return staticJobs.find(job => job.id === id);
     }
 
     // Log the complete job data from database to verify all fields
     console.log('DEBUG - Job data from database - full record:', data);
-    console.log('DEBUG - Raw seniority_level value:', data.seniority_level);
-    console.log('DEBUG - Raw seniority_level type:', typeof data.seniority_level);
+    console.log('DEBUG - Job expiration info:', {
+      expires_at: data.expires_at,
+      is_expired: data.is_expired
+    });
     
     // Map and return the job with all fields
     const mappedJob = mapDatabaseFieldsToJob(data);

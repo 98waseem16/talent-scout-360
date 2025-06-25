@@ -31,6 +31,8 @@ export interface Job {
   source_url?: string; // Added for tracking scraped jobs
   scraped_at?: string; // Added for tracking when job was scraped
   scraping_job_id?: string; // Added for linking to scraping job
+  expires_at?: string; // Added for job expiration
+  is_expired?: boolean; // Added for job expiration status
 }
 
 export interface JobFormData {
@@ -61,6 +63,8 @@ export interface JobFormData {
   hiring_urgency?: string;
   is_draft?: boolean; // Added for draft status
   source_url?: string; // Added for tracking scraped jobs
+  expires_at?: string; // Added for job expiration
+  is_expired?: boolean; // Added for job expiration status
 }
 
 export interface JobDatabaseFields {
@@ -96,4 +100,6 @@ export interface JobDatabaseFields {
   source_url?: string; // Added for tracking scraped jobs
   scraped_at?: string; // Added for tracking when job was scraped
   scraping_job_id?: string; // Added for linking to scraping job
+  expires_at?: string; // Added for job expiration
+  is_expired?: boolean; // Added for job expiration status
 }

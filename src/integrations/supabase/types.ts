@@ -66,11 +66,13 @@ export type Database = {
           department: string | null
           description: string
           equity: string | null
+          expires_at: string
           featured: boolean | null
           hiring_urgency: string | null
           id: string
           investment_stage: string | null
           is_draft: boolean
+          is_expired: boolean
           location: string
           logo: string
           posted: string
@@ -100,11 +102,13 @@ export type Database = {
           department?: string | null
           description: string
           equity?: string | null
+          expires_at: string
           featured?: boolean | null
           hiring_urgency?: string | null
           id?: string
           investment_stage?: string | null
           is_draft?: boolean
+          is_expired?: boolean
           location: string
           logo: string
           posted?: string
@@ -134,11 +138,13 @@ export type Database = {
           department?: string | null
           description?: string
           equity?: string | null
+          expires_at?: string
           featured?: boolean | null
           hiring_urgency?: string | null
           id?: string
           investment_stage?: string | null
           is_draft?: boolean
+          is_expired?: boolean
           location?: string
           logo?: string
           posted?: string
@@ -294,6 +300,10 @@ export type Database = {
       is_admin: {
         Args: Record<PropertyKey, never>
         Returns: boolean
+      }
+      mark_expired_jobs: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
       }
     }
     Enums: {
