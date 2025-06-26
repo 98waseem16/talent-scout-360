@@ -33,7 +33,7 @@ interface JobData {
 
 interface GobiResponse {
   id: string;
-  status: 'completed' | 'failed';
+  status: 'pending' | 'completed' | 'failed';
   result?: any;
   error_message?: string;
 }
@@ -185,9 +185,9 @@ ADAPTIVE EXTRACTION RULES:
 
 Return ONLY the JSON structure with comprehensive job data. Extract the most complete information available using the most effective strategy for the specific career page structure.`;
 
-    console.log('Calling Gobi.ai API without timeout constraints...');
+    console.log('Initiating Gobi.ai scraping task...');
 
-    // Call Gobi.ai API without wait parameter - let it complete naturally
+    // Call Gobi.ai API to start the task
     const gobiResponse = await fetch('https://gobii.ai/api/v1/tasks/browser-use/', {
       method: 'POST',
       headers: {
@@ -196,7 +196,6 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
       },
       body: JSON.stringify({
         prompt: prompt
-        // Removed wait parameter - let Gobi complete without time constraints
       })
     })
 
@@ -208,42 +207,96 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
       throw new Error(`Gobi API error: ${gobiResponse.status} ${gobiResponse.statusText} - ${errorText}`)
     }
 
-    const gobiData: GobiResponse = await gobiResponse.json()
-    console.log('=== GOBI API RESPONSE ===');
-    console.log('Response status:', gobiData.status);
-    console.log('Response ID:', gobiData.id);
-    console.log('Full response:', JSON.stringify(gobiData, null, 2));
+    const initialGobiData: GobiResponse = await gobiResponse.json()
+    console.log('=== INITIAL GOBI API RESPONSE ===');
+    console.log('Response status:', initialGobiData.status);
+    console.log('Response ID:', initialGobiData.id);
 
-    // Handle response - should only be completed or failed now
-    if (gobiData.status === 'failed') {
-      console.error('Gobi extraction failed:', gobiData.error_message);
-      throw new Error(`Extraction failed: ${gobiData.error_message || 'Unknown error'}`)
+    if (initialGobiData.status === 'failed') {
+      console.error('Gobi task failed immediately:', initialGobiData.error_message);
+      throw new Error(`Extraction failed: ${initialGobiData.error_message || 'Unknown error'}`)
     }
 
-    if (gobiData.status !== 'completed') {
-      console.error('Unexpected Gobi status:', gobiData.status);
-      throw new Error(`Unexpected response status: ${gobiData.status}`)
+    // If task is completed immediately, process it
+    if (initialGobiData.status === 'completed') {
+      console.log('Task completed immediately, processing results...');
+    } else if (initialGobiData.status === 'pending') {
+      console.log('Task is pending, starting polling...');
+      
+      // Poll for completion with 30-second intervals, max 10 minutes
+      const taskId = initialGobiData.id;
+      const maxWaitTime = 10 * 60 * 1000; // 10 minutes in milliseconds
+      const pollInterval = 30 * 1000; // 30 seconds in milliseconds
+      const startTime = Date.now();
+      
+      let finalGobiData = initialGobiData;
+      
+      while (finalGobiData.status === 'pending' && (Date.now() - startTime) < maxWaitTime) {
+        console.log(`Polling Gobi task ${taskId} - elapsed time: ${Math.round((Date.now() - startTime) / 1000)}s`);
+        
+        // Wait for the poll interval
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        
+        // Check task status
+        const statusResponse = await fetch(`https://gobii.ai/api/v1/tasks/${taskId}`, {
+          method: 'GET',
+          headers: {
+            'X-Api-Key': gobiApiKey,
+            'Content-Type': 'application/json',
+          }
+        });
+        
+        if (!statusResponse.ok) {
+          console.error('Error checking Gobi task status:', statusResponse.status);
+          throw new Error(`Failed to check task status: ${statusResponse.status}`);
+        }
+        
+        finalGobiData = await statusResponse.json();
+        console.log(`Poll result - Status: ${finalGobiData.status}`);
+        
+        if (finalGobiData.status === 'completed') {
+          console.log('Task completed during polling!');
+          break;
+        } else if (finalGobiData.status === 'failed') {
+          console.error('Task failed during polling:', finalGobiData.error_message);
+          throw new Error(`Extraction failed: ${finalGobiData.error_message || 'Unknown error'}`);
+        }
+      }
+      
+      // Check if we timed out
+      if (finalGobiData.status === 'pending') {
+        console.error('Task timed out after 10 minutes');
+        throw new Error('Extraction timed out after 10 minutes');
+      }
+      
+      // Update the gobiData reference for processing
+      initialGobiData.status = finalGobiData.status;
+      initialGobiData.result = finalGobiData.result;
+      initialGobiData.error_message = finalGobiData.error_message;
     }
+
+    // Process the completed task
+    console.log('=== PROCESSING COMPLETED TASK ===');
+    console.log('Final status:', initialGobiData.status);
 
     // Extract jobs from completed response
     let jobs: JobData[] = []
-    console.log('=== EXTRACTING JOBS FROM COMPLETED RESPONSE ===');
     
-    if (gobiData.result) {
-      console.log('Gobi result type:', typeof gobiData.result);
-      console.log('Gobi result structure:', JSON.stringify(gobiData.result, null, 2));
+    if (initialGobiData.result) {
+      console.log('Gobi result type:', typeof initialGobiData.result);
+      console.log('Gobi result structure:', JSON.stringify(initialGobiData.result, null, 2));
 
       // Try different extraction methods
-      if (Array.isArray(gobiData.result)) {
+      if (Array.isArray(initialGobiData.result)) {
         console.log('Result is array, using directly');
-        jobs = gobiData.result;
-      } else if (gobiData.result.jobs && Array.isArray(gobiData.result.jobs)) {
+        jobs = initialGobiData.result;
+      } else if (initialGobiData.result.jobs && Array.isArray(initialGobiData.result.jobs)) {
         console.log('Result has jobs array property');
-        jobs = gobiData.result.jobs;
-      } else if (typeof gobiData.result === 'string') {
+        jobs = initialGobiData.result.jobs;
+      } else if (typeof initialGobiData.result === 'string') {
         console.log('Result is string, attempting to parse JSON');
         try {
-          const parsed = JSON.parse(gobiData.result);
+          const parsed = JSON.parse(initialGobiData.result);
           if (Array.isArray(parsed)) {
             jobs = parsed;
           } else if (parsed.jobs && Array.isArray(parsed.jobs)) {
@@ -252,12 +305,12 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
         } catch (parseError) {
           console.error('Failed to parse result string as JSON:', parseError);
         }
-      } else if (gobiData.result.content) {
+      } else if (initialGobiData.result.content) {
         console.log('Result has content property, checking structure');
         try {
-          const content = typeof gobiData.result.content === 'string' 
-            ? JSON.parse(gobiData.result.content) 
-            : gobiData.result.content;
+          const content = typeof initialGobiData.result.content === 'string' 
+            ? JSON.parse(initialGobiData.result.content) 
+            : initialGobiData.result.content;
           
           if (Array.isArray(content)) {
             jobs = content;
