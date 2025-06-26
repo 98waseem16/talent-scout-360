@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { getJobById } from '@/lib/jobs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -12,7 +12,6 @@ import Footer from '@/components/Footer';
 // Import components
 import JobHeader from '@/components/job-details/JobHeader';
 import JobDescription from '@/components/job-details/JobDescription';
-import QuickApplyForm from '@/components/job-details/QuickApplyForm';
 import CompanyInfo from '@/components/job-details/CompanyInfo';
 import JobInsights from '@/components/job-details/JobInsights';
 import LoadingState from '@/components/job-details/LoadingState';
@@ -23,6 +22,7 @@ const JobDetails: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   
   const { data: job, isLoading, error } = useQuery({
     queryKey: ['job', id],
@@ -32,11 +32,17 @@ const JobDetails: React.FC = () => {
 
   const handleApply = () => {
     if (!user) {
+      // Store the current job URL for redirect after authentication
+      localStorage.setItem('authReturnPath', `/jobs/${id}`);
+      
       toast({
         title: "Authentication required",
         description: "Please sign in to apply for this job",
         variant: "destructive"
       });
+      
+      // Redirect to auth page
+      navigate('/auth');
     } else if (job && job.application_url) {
       // If user is logged in, redirect to the application URL
       window.open(job.application_url, '_blank');
@@ -99,15 +105,9 @@ const JobDetails: React.FC = () => {
           {/* Main Content Area - Stacked on mobile, side-by-side on desktop */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
             {/* Job description takes full width on mobile, 2/3 on desktop */}
-            <div className="md:col-span-2 space-y-6">
+            <div className="md:col-span-2">
               {/* Job Description with responsibilities, requirements, and benefits */}
               <JobDescription job={jobWithUrl} />
-              
-              {/* Application Form */}
-              <section className="bg-white rounded-xl border border-border shadow-sm p-5 sm:p-6 md:p-8">
-                <h2 className="text-xl font-medium mb-4">Quick Apply</h2>
-                <QuickApplyForm user={user} handleApply={handleApply} job={jobWithUrl} />
-              </section>
             </div>
             
             {/* Sidebar - Layout adjustments for mobile */}
