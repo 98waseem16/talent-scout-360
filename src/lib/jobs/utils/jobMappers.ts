@@ -1,8 +1,13 @@
+
 import { JobDatabaseFields, JobFormData, Job } from '../../types/job.types';
 
 export const mapJobFormDataToDatabaseFields = (
   formData: JobFormData
 ): JobDatabaseFields => {
+  // Calculate expiration date (30 days from now)
+  const expiresAt = new Date();
+  expiresAt.setDate(expiresAt.getDate() + 30);
+
   return {
     title: formData.title,
     company: formData.company,
@@ -29,7 +34,9 @@ export const mapJobFormDataToDatabaseFields = (
     visa_sponsorship: formData.visa_sponsorship || false,
     hiring_urgency: formData.hiring_urgency || '',
     is_draft: formData.is_draft || false,
-    source_url: formData.source_url || ''
+    source_url: formData.source_url || '',
+    expires_at: expiresAt.toISOString(),
+    is_expired: false
   };
 };
 
@@ -249,7 +256,11 @@ export const mapDatabaseFieldsToJob = (dbFields: any): Job | null => {
     // New fields for scraped jobs
     source_url: cleanField(dbFields.source_url),
     scraped_at: cleanField(dbFields.scraped_at),
-    scraping_job_id: cleanField(dbFields.scraping_job_id)
+    scraping_job_id: cleanField(dbFields.scraping_job_id),
+    
+    // Job expiration fields
+    expires_at: cleanField(dbFields.expires_at),
+    is_expired: Boolean(dbFields.is_expired)
   };
   
   console.log(`📊 Mapped job seniority level: "${mappedJob.seniority_level}"`);
