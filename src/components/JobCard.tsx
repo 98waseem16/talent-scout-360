@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Briefcase, MapPin, DollarSign, Clock, Heart, ExternalLink } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Heart, ExternalLink } from 'lucide-react';
 import type { Job } from '@/lib/types/job.types';
 import { formatPostedDate } from '@/lib/utils/dateUtils';
 import { useSavedJobs } from '@/hooks/useSavedJobs';
@@ -132,10 +132,6 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
                 <div className="flex items-center">
                   <Briefcase className="mr-1 h-3.5 w-3.5" />
                   <span>{job.type}</span>
-                </div>
-                <div className="flex items-center">
-                  <Clock className="mr-1 h-3.5 w-3.5" />
-                  <span>{job.posted}</span>
                 </div>
               </div>
             </div>

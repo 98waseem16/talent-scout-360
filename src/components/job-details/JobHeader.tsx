@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Bookmark, Share2, MapPin, DollarSign, Briefcase, Clock } from 'lucide-react';
+import { ArrowLeft, Bookmark, Share2, MapPin, DollarSign, Briefcase } from 'lucide-react';
 import type { Job } from '@/lib/types/job.types';
 
 interface JobHeaderProps {
@@ -46,10 +46,6 @@ const JobHeader: React.FC<JobHeaderProps> = ({ job, handleApply }) => {
                   <div className="flex items-center">
                     <Briefcase className="mr-1 h-4 w-4" />
                     <span>{job.type}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Clock className="mr-1 h-4 w-4" />
-                    <span>Posted {job.posted}</span>
                   </div>
                 </div>
               </div>
