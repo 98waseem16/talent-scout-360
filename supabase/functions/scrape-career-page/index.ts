@@ -89,29 +89,23 @@ serve(async (req) => {
       throw new Error('Gobi API key not configured')
     }
 
-    // Create enhanced prompt for 5-minute thorough extraction with proper field formatting
-    const prompt = `You are an expert web scraper. Visit ${url} and extract comprehensive job information with thorough analysis.
+    // Create adaptive extraction prompt with flexible strategy
+    const prompt = `You are an expert web scraper. Visit ${url} and extract comprehensive job information using an adaptive approach.
 
-MISSION: COMPREHENSIVE EXTRACTION of all job listings by visiting individual job pages.
+MISSION: COMPREHENSIVE EXTRACTION of all job listings using the best available strategy.
 
-ENHANCED EXTRACTION PROCESS (5 minutes available):
-1. PHASE 1: Scan the main career page and identify ALL job listing links
-2. PHASE 2: Visit each individual job page and perform thorough data extraction
-3. PHASE 3: Validate and enrich the extracted data
+ADAPTIVE EXTRACTION STRATEGY:
+1. ANALYZE the career page structure and identify all job listings
+2. ATTEMPT to visit individual job pages if they are accessible and contain additional detail
+3. FALLBACK to extracting comprehensive information from the main careers page if individual pages are not accessible
+4. EXTRACT the most complete information available regardless of the page structure
 
-TIME ALLOCATION:
-- You have 5 minutes total for comprehensive extraction
-- Spend 30-45 seconds per individual job page for thorough analysis
-- Extract detailed information from each job posting
-- Look for expandable sections, additional details, and comprehensive benefits
-
-EXTRACTION STRATEGY:
-- Click through to EVERY individual job posting page (mandatory)
-- Extract comprehensive information including hidden sections
-- Look for expandable content sections (click "Show more", "Read more", etc.)
-- Check for detailed benefits, compensation, and company culture information
-- Extract technical requirements and nice-to-have skills separately
-- Look for team information, reporting structure, and growth opportunities
+EXTRACTION APPROACH:
+- First, scan the main career page and identify ALL job listing opportunities
+- Try to access individual job detail pages where links are available and functional
+- If individual job pages are not accessible or don't provide additional details, extract comprehensive information from the main page
+- Look for expandable sections, additional details, and comprehensive information wherever it's available
+- Focus on gathering complete job information rather than following a rigid extraction path
 
 REQUIRED JSON OUTPUT STRUCTURE:
 {
@@ -120,7 +114,7 @@ REQUIRED JSON OUTPUT STRUCTURE:
       "title": "Complete job title",
       "company": "${companyName || 'Extract from website'}",
       "location": "Detailed location (city, state, country, remote options)",
-      "description": "Comprehensive job description with all details",
+      "description": "Comprehensive job description with all available details",
       "responsibilities": [
         "Extract all key responsibilities and duties",
         "Include day-to-day activities and expectations",
@@ -137,7 +131,7 @@ REQUIRED JSON OUTPUT STRUCTURE:
         "Capture perks, vacation, professional development",
         "Include equity, bonuses, and compensation details"
       ],
-      "url": "Direct link to individual job posting",
+      "url": "Direct link to individual job posting or main careers page",
       "type": "EXACTLY one of: Full-time|Part-time|Contract|Remote",
       "salary": "Detailed salary information if available",
       "department": "EXACTLY one of: Engineering|Sales|Marketing|Product|Design|Operations|HR|Finance|Legal|Customer Support|Other",
@@ -173,30 +167,29 @@ CRITICAL FIELD EXTRACTION RULES:
 - revenue_model: Determine from company description. If unclear, use "Other"
 - hiring_urgency: Use "Immediate Hire" for urgent roles, "Within a Month" for standard hiring, "Open to Future Applicants" as default
 - responsibilities/requirements/benefits: Extract from all available sections
-- Look for expandable content sections and click them for more details
+- Look for expandable content sections and extract details where available
 
 VALIDATION REQUIREMENTS:
 - Every field must use EXACTLY the specified values - no variations allowed
 - If unsure about a constrained field value, prefer "Other" where available, otherwise use the most conservative option
 - Every job MUST have title and comprehensive description
-- Extract at least 5-8 key data points per job when available
+- Extract comprehensive information from whatever source is available (main page or individual pages)
 - Skip navigation elements, headers, footer content
 - Focus on job-specific content only
 
-COMPREHENSIVE EXTRACTION RULES:
-- Visit ALL individual job pages for complete data
-- Extract detailed information from each page
-- Look for additional details in expandable sections
-- Capture comprehensive benefits and compensation information
-- Extract detailed requirements and qualifications
-- Include company culture and growth opportunity details
+ADAPTIVE EXTRACTION RULES:
+- Prioritize extracting complete job information over rigid page navigation requirements
+- Use the best available source of information (main page comprehensive listings vs individual pages)
+- Extract detailed information from expandable sections where available
+- Include company culture and growth opportunity details when present
+- Focus on data quality and completeness rather than specific extraction methodology
 
-Return ONLY the JSON structure with comprehensive job data. Use the full 5 minutes to ensure thorough extraction of all available information.`;
+Return ONLY the JSON structure with comprehensive job data. Extract the most complete information available using the most effective strategy for the specific career page structure.`;
 
-    console.log('Calling Gobi.ai API with database-compliant extraction prompt...');
+    console.log('Calling Gobi.ai API with adaptive extraction prompt...');
     console.log('Updated prompt length:', prompt.length);
 
-    // Call Gobi.ai API with 5-minute timeout for comprehensive extraction
+    // Call Gobi.ai API with 3-minute timeout for balanced extraction
     const gobiResponse = await fetch('https://gobii.ai/api/v1/tasks/browser-use/', {
       method: 'POST',
       headers: {
@@ -205,7 +198,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
       },
       body: JSON.stringify({
         prompt: prompt,
-        wait: 300 // Enhanced to 5 minutes (300 seconds) for comprehensive extraction
+        wait: 180 // Reduced to 3 minutes (180 seconds) for more balanced extraction
       })
     })
 
@@ -226,24 +219,24 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
 
     // Handle different response statuses
     if (gobiData.status === 'failed') {
-      console.error('Gobi comprehensive extraction failed:', gobiData.error_message);
-      throw new Error(`Comprehensive extraction failed: ${gobiData.error_message || 'Unknown error'}`)
+      console.error('Gobi adaptive extraction failed:', gobiData.error_message);
+      throw new Error(`Adaptive extraction failed: ${gobiData.error_message || 'Unknown error'}`)
     }
 
     if (gobiData.status === 'in_progress') {
-      console.log('Comprehensive extraction still in progress, updating job status...');
+      console.log('Adaptive extraction still in progress, updating job status...');
       await supabase
         .from('scraping_jobs')
         .update({
           status: 'running',
-          error_message: 'Comprehensive extraction in progress (5-minute deep analysis). Please check back shortly.'
+          error_message: 'Adaptive extraction in progress. Please check back shortly.'
         })
         .eq('id', scrapingJobId)
 
       return new Response(
         JSON.stringify({
           success: false,
-          message: 'Comprehensive extraction is in progress (5-minute deep analysis). Please check the recent jobs list for updates.',
+          message: 'Adaptive extraction is in progress. Please check the recent jobs list for updates.',
           status: 'in_progress'
         }),
         {
@@ -254,7 +247,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
 
     // Extract jobs from response - handle multiple possible formats
     let jobs: JobData[] = []
-    console.log('=== EXTRACTING JOBS FROM DATABASE-COMPLIANT EXTRACTION RESPONSE ===');
+    console.log('=== EXTRACTING JOBS FROM ADAPTIVE EXTRACTION RESPONSE ===');
     
     if (gobiData.status === 'completed' && gobiData.result) {
       console.log('Gobi result type:', typeof gobiData.result);
@@ -297,7 +290,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
       }
     }
 
-    console.log('=== DATABASE-COMPLIANT EXTRACTION COMPLETE ===');
+    console.log('=== ADAPTIVE EXTRACTION COMPLETE ===');
     console.log('Total jobs found:', jobs.length);
     if (jobs.length > 0) {
       console.log('First job sample:', JSON.stringify(jobs[0], null, 2));
@@ -307,11 +300,11 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
     let jobsCreated = 0
     const createdJobs = []
 
-    console.log('=== PROCESSING DATABASE-COMPLIANT EXTRACTED JOBS FOR DATABASE ===');
+    console.log('=== PROCESSING EXTRACTED JOBS FOR DATABASE ===');
 
     for (let i = 0; i < jobs.length; i++) {
       const job = jobs[i];
-      console.log(`Processing database-compliant job ${i + 1}/${jobs.length}:`, job.title || 'No title');
+      console.log(`Processing job ${i + 1}/${jobs.length}:`, job.title || 'No title');
 
       if (!job.title || job.title.trim() === '') {
         console.log(`Skipping job ${i + 1}: No title`);
@@ -373,7 +366,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
           posted: new Date().toISOString()
         }
 
-        console.log(`Inserting database-compliant job ${i + 1}:`, {
+        console.log(`Inserting job ${i + 1}:`, {
           title: jobData.title,
           department: jobData.department,
           seniority_level: jobData.seniority_level,
@@ -398,7 +391,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
           .single()
 
         if (insertError) {
-          console.error(`❌ Error inserting database-compliant job ${i + 1}:`, insertError);
+          console.error(`❌ Error inserting job ${i + 1}:`, insertError);
           console.error(`❌ Failed job data:`, {
             title: jobData.title,
             equity: jobData.equity,
@@ -411,11 +404,11 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
           continue
         }
 
-        console.log(`✅ Database-compliant job ${i + 1} inserted successfully with ID:`, createdJob.id);
+        console.log(`✅ Job ${i + 1} inserted successfully with ID:`, createdJob.id);
         createdJobs.push(createdJob)
         jobsCreated++
       } catch (jobError) {
-        console.error(`❌ Error processing database-compliant job ${i + 1}:`, jobError);
+        console.error(`❌ Error processing job ${i + 1}:`, jobError);
         console.error(`❌ Failed job details:`, {
           title: job.title,
           equity: job.equity,
@@ -459,8 +452,8 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
       console.error('Error updating source:', sourceUpdateError);
     }
 
-    console.log('=== DATABASE-COMPLIANT EXTRACTION COMPLETE ===');
-    console.log('Success! Database-compliant jobs found:', jobs.length, 'Database-compliant jobs created:', jobsCreated);
+    console.log('=== ADAPTIVE EXTRACTION COMPLETE ===');
+    console.log('Success! Jobs found:', jobs.length, 'Jobs created:', jobsCreated);
 
     return new Response(
       JSON.stringify({
@@ -468,7 +461,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
         jobs: createdJobs,
         jobsFound: jobs.length,
         jobsCreated: jobsCreated,
-        message: `Successfully extracted ${jobs.length} jobs with database-compliant data and created ${jobsCreated} job drafts.`
+        message: `Successfully extracted ${jobs.length} jobs using adaptive strategy and created ${jobsCreated} job drafts.`
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -476,7 +469,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
     )
 
   } catch (error) {
-    console.error('=== DATABASE-COMPLIANT EXTRACTION ERROR ===');
+    console.error('=== ADAPTIVE EXTRACTION ERROR ===');
     console.error('Error:', error);
     console.error('Stack:', error.stack);
 
@@ -509,7 +502,7 @@ Return ONLY the JSON structure with comprehensive job data. Use the full 5 minut
       JSON.stringify({ 
         success: false,
         error: error.message,
-        message: 'Database-compliant extraction failed. Please check the logs and try again.'
+        message: 'Adaptive extraction failed. Please check the logs and try again.'
       }),
       {
         status: 500,
