@@ -3,10 +3,14 @@ import { supabase } from '@/integrations/supabase/client';
 import { JobFormData, JobDatabaseFields } from '../../types/job.types';
 
 /**
- * Creates a new job posting with automatic expiration date
+ * Creates a new job posting with automatic expiration date (30 days from now)
  */
 export const createJob = async (jobData: JobFormData): Promise<{ success: boolean; id?: string; error?: string }> => {
   try {
+    // Calculate expiration date (30 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+
     // Prepare the job data for insertion with expiration date
     const jobRecord: Omit<JobDatabaseFields, 'id' | 'created_at' | 'updated_at'> = {
       title: jobData.title,
@@ -34,10 +38,13 @@ export const createJob = async (jobData: JobFormData): Promise<{ success: boolea
       visa_sponsorship: jobData.visa_sponsorship,
       hiring_urgency: jobData.hiring_urgency,
       is_draft: jobData.is_draft || false,
-      source_url: jobData.source_url
+      source_url: jobData.source_url,
+      expires_at: expiresAt.toISOString(),
+      is_expired: false,
+      posted: new Date().toISOString()
     };
 
-    // Insert the job record - expires_at will be automatically set by database trigger/function
+    // Insert the job record
     const { data, error } = await supabase
       .from('job_postings')
       .insert([jobRecord])
@@ -143,7 +150,11 @@ export const seedJobs = async (): Promise<{ success: boolean; error?: string }> 
     // Import static jobs data
     const { staticJobs } = await import('../../data/staticJobs');
     
-    // Transform static jobs to database format
+    // Calculate expiration date (30 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+    
+    // Transform static jobs to database format with required fields
     const jobRecords = staticJobs.map(job => ({
       id: job.id,
       title: job.title,
@@ -170,7 +181,10 @@ export const seedJobs = async (): Promise<{ success: boolean; error?: string }> 
       visa_sponsorship: job.visa_sponsorship,
       hiring_urgency: job.hiring_urgency,
       is_draft: job.is_draft || false,
-      source_url: job.source_url
+      source_url: job.source_url,
+      expires_at: expiresAt.toISOString(),
+      is_expired: false,
+      posted: new Date().toISOString()
     }));
 
     const { error } = await supabase

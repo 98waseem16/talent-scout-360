@@ -100,6 +100,6 @@ export interface JobDatabaseFields {
   source_url?: string; // Added for tracking scraped jobs
   scraped_at?: string; // Added for tracking when job was scraped
   scraping_job_id?: string; // Added for linking to scraping job
-  expires_at?: string; // Added for job expiration
-  is_expired?: boolean; // Added for job expiration status
+  expires_at: string; // Made required to match database schema
+  is_expired: boolean; // Made required to match database schema
 }
