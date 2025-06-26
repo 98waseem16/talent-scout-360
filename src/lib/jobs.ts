@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from './file-upload';
 
@@ -243,6 +242,8 @@ export const getJobs = async (): Promise<Job[]> => {
     const { data, error } = await supabase
       .from('job_postings')
       .select('*')
+      .eq('is_draft', false) // Only get published jobs
+      .eq('is_expired', false) // Only get non-expired jobs
       .order('posted', { ascending: false });
 
     if (error) {
@@ -280,6 +281,8 @@ export const getTrendingJobs = async (): Promise<Job[]> => {
       .from('job_postings')
       .select('*')
       .eq('featured', true)
+      .eq('is_draft', false) // Only get published featured jobs
+      .eq('is_expired', false) // Only get non-expired jobs
       .order('posted', { ascending: false })
       .limit(3);
 
@@ -318,6 +321,7 @@ export const getJobById = async (id: string): Promise<Job | undefined> => {
       .from('job_postings')
       .select('*')
       .eq('id', id)
+      .eq('is_expired', false) // Only return non-expired jobs
       .single();
 
     if (error) {
