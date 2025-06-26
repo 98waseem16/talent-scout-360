@@ -33,7 +33,7 @@ interface JobData {
 
 interface GobiResponse {
   id: string;
-  status: 'completed' | 'failed' | 'in_progress';
+  status: 'completed' | 'failed';
   result?: any;
   error_message?: string;
 }
@@ -83,13 +83,12 @@ serve(async (req) => {
     // Get Gobi.ai API key
     const gobiApiKey = Deno.env.get('GOBI_API_KEY')
     console.log('Gobi API key exists:', !!gobiApiKey);
-    console.log('Gobi API key length:', gobiApiKey?.length || 0);
 
     if (!gobiApiKey) {
       throw new Error('Gobi API key not configured')
     }
 
-    // Create adaptive extraction prompt with flexible strategy
+    // Create adaptive extraction prompt
     const prompt = `You are an expert web scraper. Visit ${url} and extract comprehensive job information using an adaptive approach.
 
 MISSION: COMPREHENSIVE EXTRACTION of all job listings using the best available strategy.
@@ -186,10 +185,9 @@ ADAPTIVE EXTRACTION RULES:
 
 Return ONLY the JSON structure with comprehensive job data. Extract the most complete information available using the most effective strategy for the specific career page structure.`;
 
-    console.log('Calling Gobi.ai API with adaptive extraction prompt...');
-    console.log('Updated prompt length:', prompt.length);
+    console.log('Calling Gobi.ai API without timeout constraints...');
 
-    // Call Gobi.ai API with 3-minute timeout for balanced extraction
+    // Call Gobi.ai API without wait parameter - let it complete naturally
     const gobiResponse = await fetch('https://gobii.ai/api/v1/tasks/browser-use/', {
       method: 'POST',
       headers: {
@@ -197,13 +195,12 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        prompt: prompt,
-        wait: 180 // Reduced to 3 minutes (180 seconds) for more balanced extraction
+        prompt: prompt
+        // Removed wait parameter - let Gobi complete without time constraints
       })
     })
 
     console.log('Gobi API response status:', gobiResponse.status);
-    console.log('Gobi API response headers:', Object.fromEntries(gobiResponse.headers.entries()));
 
     if (!gobiResponse.ok) {
       const errorText = await gobiResponse.text();
@@ -217,39 +214,22 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
     console.log('Response ID:', gobiData.id);
     console.log('Full response:', JSON.stringify(gobiData, null, 2));
 
-    // Handle different response statuses
+    // Handle response - should only be completed or failed now
     if (gobiData.status === 'failed') {
-      console.error('Gobi adaptive extraction failed:', gobiData.error_message);
-      throw new Error(`Adaptive extraction failed: ${gobiData.error_message || 'Unknown error'}`)
+      console.error('Gobi extraction failed:', gobiData.error_message);
+      throw new Error(`Extraction failed: ${gobiData.error_message || 'Unknown error'}`)
     }
 
-    if (gobiData.status === 'in_progress') {
-      console.log('Adaptive extraction still in progress, updating job status...');
-      await supabase
-        .from('scraping_jobs')
-        .update({
-          status: 'running',
-          error_message: 'Adaptive extraction in progress. Please check back shortly.'
-        })
-        .eq('id', scrapingJobId)
-
-      return new Response(
-        JSON.stringify({
-          success: false,
-          message: 'Adaptive extraction is in progress. Please check the recent jobs list for updates.',
-          status: 'in_progress'
-        }),
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      )
+    if (gobiData.status !== 'completed') {
+      console.error('Unexpected Gobi status:', gobiData.status);
+      throw new Error(`Unexpected response status: ${gobiData.status}`)
     }
 
-    // Extract jobs from response - handle multiple possible formats
+    // Extract jobs from completed response
     let jobs: JobData[] = []
-    console.log('=== EXTRACTING JOBS FROM ADAPTIVE EXTRACTION RESPONSE ===');
+    console.log('=== EXTRACTING JOBS FROM COMPLETED RESPONSE ===');
     
-    if (gobiData.status === 'completed' && gobiData.result) {
+    if (gobiData.result) {
       console.log('Gobi result type:', typeof gobiData.result);
       console.log('Gobi result structure:', JSON.stringify(gobiData.result, null, 2));
 
@@ -290,7 +270,7 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
       }
     }
 
-    console.log('=== ADAPTIVE EXTRACTION COMPLETE ===');
+    console.log('=== EXTRACTION COMPLETE ===');
     console.log('Total jobs found:', jobs.length);
     if (jobs.length > 0) {
       console.log('First job sample:', JSON.stringify(jobs[0], null, 2));
@@ -326,7 +306,7 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
           type: job.type
         });
 
-        // Enhanced job data mapping - all fields should now come properly formatted from Gobi
+        // Enhanced job data mapping
         const jobData = {
           title: job.title.trim(),
           company: job.company?.trim() || companyName || new URL(url).hostname,
@@ -343,7 +323,7 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
           benefits: Array.isArray(job.benefits) ? 
             job.benefits.filter(b => b && b.trim()) : [],
           
-          // Additional comprehensive fields - all should be properly formatted from Gobi now
+          // Additional comprehensive fields
           department: job.department?.trim() || null,
           seniority_level: job.seniority_level?.trim() || null,
           team_size: job.team_size?.trim() || null,
@@ -452,7 +432,7 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
       console.error('Error updating source:', sourceUpdateError);
     }
 
-    console.log('=== ADAPTIVE EXTRACTION COMPLETE ===');
+    console.log('=== EXTRACTION COMPLETE ===');
     console.log('Success! Jobs found:', jobs.length, 'Jobs created:', jobsCreated);
 
     return new Response(
@@ -461,7 +441,7 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
         jobs: createdJobs,
         jobsFound: jobs.length,
         jobsCreated: jobsCreated,
-        message: `Successfully extracted ${jobs.length} jobs using adaptive strategy and created ${jobsCreated} job drafts.`
+        message: `Successfully extracted ${jobs.length} jobs and created ${jobsCreated} job drafts.`
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -469,7 +449,7 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
     )
 
   } catch (error) {
-    console.error('=== ADAPTIVE EXTRACTION ERROR ===');
+    console.error('=== EXTRACTION ERROR ===');
     console.error('Error:', error);
     console.error('Stack:', error.stack);
 
@@ -502,7 +482,7 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
       JSON.stringify({ 
         success: false,
         error: error.message,
-        message: 'Adaptive extraction failed. Please check the logs and try again.'
+        message: 'Extraction failed. Please check the logs and try again.'
       }),
       {
         status: 500,
