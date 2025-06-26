@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { uploadFile } from './file-upload';
 
@@ -434,6 +435,10 @@ export const uploadCompanyLogo = async (file: File): Promise<string> => {
 
 export const seedJobs = async () => {
   try {
+    // Calculate expiration date (30 days from now)
+    const expiresAt = new Date();
+    expiresAt.setDate(expiresAt.getDate() + 30);
+    
     const { error } = await supabase.from('job_postings').insert(
       staticJobs.map(job => ({
         title: job.title,
@@ -447,7 +452,21 @@ export const seedJobs = async () => {
         benefits: job.benefits,
         logo: job.logo,
         featured: job.featured,
-        application_url: job.application_url
+        application_url: job.application_url,
+        department: job.department,
+        seniority_level: job.seniority_level,
+        salary_range: job.salary_range,
+        team_size: job.team_size,
+        investment_stage: job.investment_stage,
+        remote_onsite: job.remote_onsite,
+        work_hours: job.work_hours,
+        equity: job.equity,
+        hiring_urgency: job.hiring_urgency,
+        revenue_model: job.revenue_model,
+        visa_sponsorship: job.visa_sponsorship,
+        expires_at: expiresAt.toISOString(),
+        is_expired: false,
+        posted: new Date().toISOString()
       }))
     );
 
