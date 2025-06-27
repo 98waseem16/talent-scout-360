@@ -248,6 +248,36 @@ export type Database = {
         }
         Relationships: []
       }
+      queue_monitoring: {
+        Row: {
+          created_at: string
+          failed_jobs: number
+          id: string
+          processed_jobs: number
+          processing_time_ms: number | null
+          queue_size: number
+          trigger_source: string
+        }
+        Insert: {
+          created_at?: string
+          failed_jobs?: number
+          id?: string
+          processed_jobs?: number
+          processing_time_ms?: number | null
+          queue_size?: number
+          trigger_source?: string
+        }
+        Update: {
+          created_at?: string
+          failed_jobs?: number
+          id?: string
+          processed_jobs?: number
+          processing_time_ms?: number | null
+          queue_size?: number
+          trigger_source?: string
+        }
+        Relationships: []
+      }
       scraping_batches: {
         Row: {
           completed_at: string | null

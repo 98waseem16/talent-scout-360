@@ -7,17 +7,19 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Globe, Plus, Upload } from 'lucide-react';
+import { FileText, Globe, Plus, Upload, Activity } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import DraftJobsList from '@/components/admin/DraftJobsList';
 import CareerPageScraper from '@/components/admin/CareerPageScraper';
 import BulkScrapingUpload from '@/components/admin/BulkScrapingUpload';
+import QueueStatus from '@/components/admin/QueueStatus';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [draftJobsCount, setDraftJobsCount] = useState<number | null>(null);
   const [recentScrapingCount, setRecentScrapingCount] = useState<number | null>(null);
   const [activeBatchesCount, setActiveBatchesCount] = useState<number | null>(null);
+  const [queuePendingCount, setQueuePendingCount] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -58,6 +60,18 @@ const AdminDashboard: React.FC = () => {
         } else {
           setActiveBatchesCount(batchesCount);
         }
+
+        // Fetch pending queue jobs count
+        const { count: pendingCount, error: pendingError } = await supabase
+          .from('scraping_jobs')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'pending');
+          
+        if (pendingError) {
+          console.error('Error fetching pending jobs count:', pendingError);
+        } else {
+          setQueuePendingCount(pendingCount);
+        }
       } catch (error) {
         console.error('Error fetching stats:', error);
       }
@@ -79,7 +93,7 @@ const AdminDashboard: React.FC = () => {
             </p>
             
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
               <div className="bg-white border rounded-lg p-4">
                 <div className="text-2xl font-bold text-orange-600">
                   {draftJobsCount !== null ? draftJobsCount : '...'}
@@ -98,6 +112,12 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="text-sm text-muted-foreground">Active Batches</div>
               </div>
+              <div className="bg-white border rounded-lg p-4">
+                <div className="text-2xl font-bold text-yellow-600">
+                  {queuePendingCount !== null ? queuePendingCount : '...'}
+                </div>
+                <div className="text-sm text-muted-foreground">Queue Pending</div>
+              </div>
               <div className="bg-white border rounded-lg p-4 flex items-center">
                 <Button asChild size="sm" className="w-full">
                   <Link to="/post-job">
@@ -111,7 +131,7 @@ const AdminDashboard: React.FC = () => {
 
           {/* Main Content - Tabbed Interface */}
           <Tabs defaultValue="drafts" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="drafts" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Draft Jobs
@@ -122,7 +142,7 @@ const AdminDashboard: React.FC = () => {
                 )}
               </TabsTrigger>
               <TabsTrigger value="single" className="flex items-center gap-2">
-                <Globe className="w-4 w-4" />
+                <Globe className="w-4 h-4" />
                 Single Scraper
                 {recentScrapingCount !== null && recentScrapingCount > 0 && (
                   <span className="bg-purple-100 text-purple-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
@@ -136,6 +156,15 @@ const AdminDashboard: React.FC = () => {
                 {activeBatchesCount !== null && activeBatchesCount > 0 && (
                   <span className="bg-blue-100 text-blue-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
                     {activeBatchesCount}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="queue" className="flex items-center gap-2">
+                <Activity className="w-4 h-4" />
+                Queue Status
+                {queuePendingCount !== null && queuePendingCount > 0 && (
+                  <span className="bg-yellow-100 text-yellow-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
+                    {queuePendingCount}
                   </span>
                 )}
               </TabsTrigger>
@@ -181,6 +210,10 @@ const AdminDashboard: React.FC = () => {
 
             <TabsContent value="bulk">
               <BulkScrapingUpload />
+            </TabsContent>
+
+            <TabsContent value="queue">
+              <QueueStatus />
             </TabsContent>
           </Tabs>
         </div>

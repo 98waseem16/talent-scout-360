@@ -107,6 +107,17 @@ export const useScrapingBatches = () => {
 
       console.log(`Created batch ${batch.id} with ${scrapingJobs.length} jobs`);
       
+      // Immediately trigger queue processing for faster response (hybrid approach)
+      try {
+        await supabase.functions.invoke('process-scraping-queue', {
+          body: { trigger: 'batch_creation', batch_id: batch.id }
+        });
+        console.log('Triggered immediate queue processing');
+      } catch (triggerError) {
+        console.log('Failed to trigger immediate processing, will rely on cron:', triggerError);
+        // Don't fail the batch creation if immediate processing fails
+      }
+      
       // Refresh batches
       fetchBatches();
       
