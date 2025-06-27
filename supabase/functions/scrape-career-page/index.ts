@@ -237,8 +237,8 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
         // Wait for the poll interval
         await new Promise(resolve => setTimeout(resolve, pollInterval));
         
-        // Check task status
-        const statusResponse = await fetch(`https://gobii.ai/api/v1/tasks/${taskId}`, {
+        // Check task status using the correct browser-use endpoint
+        const statusResponse = await fetch(`https://gobii.ai/api/v1/tasks/browser-use/${taskId}`, {
           method: 'GET',
           headers: {
             'X-Api-Key': gobiApiKey,
