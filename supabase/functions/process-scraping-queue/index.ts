@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
@@ -112,47 +111,107 @@ serve(async (req) => {
           })
           .eq('id', job.id);
 
-        // Create detailed prompt for Gobi API
+        // Create detailed prompt for Gobi API with the new comprehensive prompt
         const companyName = job.career_page_sources.company_name || 'Unknown Company';
         const careersUrl = job.career_page_sources.url;
         
-        const prompt = `Please scrape the career page at ${careersUrl} for ${companyName}. 
+        const prompt = `You are an expert web scraper. Visit ${careersUrl} and extract comprehensive job information using an adaptive approach.
 
-Extract all job listings and return them as a JSON array. For each job, extract:
-- title: Job title
-- location: Job location (city, state, country or "Remote")
-- type: Employment type (Full-time, Part-time, Contract, Internship)
-- salary: Salary range if available
-- description: Job description
-- requirements: List of requirements/qualifications
-- responsibilities: List of key responsibilities
-- benefits: List of benefits if mentioned
-- application_url: Direct link to apply for the job
-- department: Department or team if specified
-- seniority_level: Experience level (Entry, Mid, Senior, Executive)
+MISSION: COMPREHENSIVE EXTRACTION of all job listings using the best available strategy.
 
-Navigate through pagination if there are multiple pages of jobs. Click on individual job listings to get detailed information when needed.
+ADAPTIVE EXTRACTION STRATEGY:
+1. ANALYZE the career page structure and identify all job listings
+2. ATTEMPT to visit individual job pages if they are accessible and contain additional detail
+3. FALLBACK to extracting comprehensive information from the main careers page if individual pages are not accessible
+4. EXTRACT the most complete information available regardless of the page structure
 
-Return the data in this exact JSON format:
+EXTRACTION APPROACH:
+- First, scan the main career page and identify ALL job listing opportunities
+- Try to access individual job detail pages where links are available and functional
+- If individual job pages are not accessible or don't provide additional details, extract comprehensive information from the main page
+- Look for expandable sections, additional details, and comprehensive information wherever it's available
+- Focus on gathering complete job information rather than following a rigid extraction path
+
+REQUIRED JSON OUTPUT STRUCTURE:
 {
   "jobs": [
     {
-      "title": "Software Engineer",
-      "location": "San Francisco, CA",
-      "type": "Full-time",
-      "salary": "$120,000 - $180,000",
-      "description": "Job description here...",
-      "requirements": ["Requirement 1", "Requirement 2"],
-      "responsibilities": ["Responsibility 1", "Responsibility 2"],
-      "benefits": ["Benefit 1", "Benefit 2"],
-      "application_url": "https://...",
-      "department": "Engineering",
-      "seniority_level": "Mid"
+      "title": "Complete job title",
+      "company": "Extract from website",
+      "location": "Detailed location (city, state, country, remote options)",
+      "description": "Comprehensive job description with all available details",
+      "responsibilities": [
+        "Extract all key responsibilities and duties",
+        "Include day-to-day activities and expectations",
+        "Capture growth and learning opportunities"
+      ],
+      "requirements": [
+        "Extract all required qualifications", 
+        "Include education, experience, technical skills",
+        "Separate must-have from nice-to-have requirements"
+      ],
+      "benefits": [
+        "Extract comprehensive benefits package",
+        "Include health, dental, vision, retirement",
+        "Capture perks, vacation, professional development",
+        "Include equity, bonuses, and compensation details"
+      ],
+      "url": "Direct link to individual job posting or main careers page",
+      "type": "EXACTLY one of: Full-time|Part-time|Contract|Remote",
+      "salary": "Detailed salary information if available",
+      "department": "EXACTLY one of: Engineering|Sales|Marketing|Product|Design|Operations|HR|Finance|Legal|Customer Support|Other",
+      "seniority_level": "EXACTLY one of: Entry-Level|Junior|Mid-Level|Senior|Lead|Principal|Director|VP|C-Level|Internship|Who Cares",
+      "team_size": "EXACTLY one of: 1-10|11-50|51-200|201-500|500+",
+      "remote_onsite": "EXACTLY one of: Fully Remote|Hybrid|Onsite",
+      "work_hours": "EXACTLY one of: Flexible|Fixed|Async Work",
+      "visa_sponsorship": true/false,
+      "equity": "EXACTLY one of: None|0.1%-0.5%|0.5%-1%|1%+ (use 'None' if equity compensation is not specified, not available, or not mentioned)",
+      "salary_range": "EXACTLY one of: Negotiable|$40K-$60K|$60K-$80K|$80K-$120K|$120K+",
+      "investment_stage": "EXACTLY one of: Bootstrapped|Pre-Seed|Seed|Series A|Series B|Series C+|Pre-IPO|Public",
+      "revenue_model": "EXACTLY one of: Subscription|Marketplace|SaaS|Enterprise|Ads|E-commerce|Other",
+      "hiring_urgency": "EXACTLY one of: Immediate Hire|Within a Month|Open to Future Applicants"
     }
   ]
-}`;
+}
 
-        // Prepare Gobi API payload
+CRITICAL FIELD EXTRACTION RULES:
+- type: Must be exactly one of: "Full-time", "Part-time", "Contract", "Remote" (normalize variations like "Full time" → "Full-time")
+- department: Map job functions intelligently (Software Engineer → "Engineering", Support → "Customer Support"). If unclear, use "Other"
+- seniority_level: Extract from titles and job descriptions. Use "Entry-Level" for entry positions, "Mid-Level" for mid positions
+- team_size: Estimate based on company info or descriptions. If unknown, use "1-10" for startups, "11-50" for small companies
+- remote_onsite: Use "Fully Remote" for remote work, "Onsite" for office-based, "Hybrid" for mixed
+- work_hours: Use "Flexible" if flexible hours mentioned, "Fixed" for standard hours, "Async Work" for async-friendly roles
+- equity: CRITICAL - Must return exactly one of: "None", "0.1%-0.5%", "0.5%-1%", "1%+"
+  * If equity is not mentioned, not specified, or not available → use "None"
+  * If equity mentions small percentages (0.1-0.5%) → use "0.1%-0.5%"
+  * If equity mentions medium percentages (0.5-1%) → use "0.5%-1%"
+  * If equity mentions higher percentages (1%+) → use "1%+"
+  * Examples: "equity package available" → "None", "0.25% equity" → "0.1%-0.5%", "up to 2%" → "1%+"
+- salary_range: Estimate based on salary info. If no salary info, use "Negotiable"
+- investment_stage: Research company stage. If unknown, use "Bootstrapped" for small companies
+- revenue_model: Determine from company description. If unclear, use "Other"
+- hiring_urgency: Use "Immediate Hire" for urgent roles, "Within a Month" for standard hiring, "Open to Future Applicants" as default
+- responsibilities/requirements/benefits: Extract from all available sections
+- Look for expandable content sections and extract details where available
+
+VALIDATION REQUIREMENTS:
+- Every field must use EXACTLY the specified values - no variations allowed
+- If unsure about a constrained field value, prefer "Other" where available, otherwise use the most conservative option
+- Every job MUST have title and comprehensive description
+- Extract comprehensive information from whatever source is available (main page or individual pages)
+- Skip navigation elements, headers, footer content
+- Focus on job-specific content only
+
+ADAPTIVE EXTRACTION RULES:
+- Prioritize extracting complete job information over rigid page navigation requirements
+- Use the best available source of information (main page comprehensive listings vs individual pages)
+- Extract detailed information from expandable sections where available
+- Include company culture and growth opportunity details when present
+- Focus on data quality and completeness rather than specific extraction methodology
+
+Return ONLY the JSON structure with comprehensive job data. Extract the most complete information available using the most effective strategy for the specific career page structure.`;
+
+        // Prepare Gobi API payload with updated output schema
         const gobiPayload = {
           prompt: prompt,
           wait: 120, // Wait up to 2 minutes for synchronous response
@@ -165,18 +224,28 @@ Return the data in this exact JSON format:
                   type: "object",
                   properties: {
                     title: { type: "string" },
+                    company: { type: "string" },
                     location: { type: "string" },
-                    type: { type: "string" },
-                    salary: { type: "string" },
                     description: { type: "string" },
-                    requirements: { type: "array", items: { type: "string" } },
                     responsibilities: { type: "array", items: { type: "string" } },
+                    requirements: { type: "array", items: { type: "string" } },
                     benefits: { type: "array", items: { type: "string" } },
-                    application_url: { type: "string" },
-                    department: { type: "string" },
-                    seniority_level: { type: "string" }
+                    url: { type: "string" },
+                    type: { type: "string", enum: ["Full-time", "Part-time", "Contract", "Remote"] },
+                    salary: { type: "string" },
+                    department: { type: "string", enum: ["Engineering", "Sales", "Marketing", "Product", "Design", "Operations", "HR", "Finance", "Legal", "Customer Support", "Other"] },
+                    seniority_level: { type: "string", enum: ["Entry-Level", "Junior", "Mid-Level", "Senior", "Lead", "Principal", "Director", "VP", "C-Level", "Internship", "Who Cares"] },
+                    team_size: { type: "string", enum: ["1-10", "11-50", "51-200", "201-500", "500+"] },
+                    remote_onsite: { type: "string", enum: ["Fully Remote", "Hybrid", "Onsite"] },
+                    work_hours: { type: "string", enum: ["Flexible", "Fixed", "Async Work"] },
+                    visa_sponsorship: { type: "boolean" },
+                    equity: { type: "string", enum: ["None", "0.1%-0.5%", "0.5%-1%", "1%+"] },
+                    salary_range: { type: "string", enum: ["Negotiable", "$40K-$60K", "$60K-$80K", "$80K-$120K", "$120K+"] },
+                    investment_stage: { type: "string", enum: ["Bootstrapped", "Pre-Seed", "Seed", "Series A", "Series B", "Series C+", "Pre-IPO", "Public"] },
+                    revenue_model: { type: "string", enum: ["Subscription", "Marketplace", "SaaS", "Enterprise", "Ads", "E-commerce", "Other"] },
+                    hiring_urgency: { type: "string", enum: ["Immediate Hire", "Within a Month", "Open to Future Applicants"] }
                   },
-                  required: ["title", "location", "type", "description"]
+                  required: ["title", "company", "location", "description", "type", "department", "seniority_level", "team_size", "remote_onsite", "work_hours", "visa_sponsorship", "equity", "salary_range", "investment_stage", "revenue_model", "hiring_urgency"]
                 }
               }
             },
@@ -235,7 +304,7 @@ Return the data in this exact JSON format:
                     .from('job_postings')
                     .insert({
                       title: jobData.title || 'Untitled Position',
-                      company: companyName,
+                      company: jobData.company || companyName,
                       location: jobData.location || 'Location not specified',
                       type: jobData.type || 'Full-time',
                       salary: jobData.salary || 'Salary not specified',
@@ -243,9 +312,18 @@ Return the data in this exact JSON format:
                       requirements: jobData.requirements || [],
                       responsibilities: jobData.responsibilities || [],
                       benefits: jobData.benefits || [],
-                      application_url: jobData.application_url || careersUrl,
-                      department: jobData.department || null,
-                      seniority_level: jobData.seniority_level || null,
+                      application_url: jobData.url || careersUrl,
+                      department: jobData.department || 'Other',
+                      seniority_level: jobData.seniority_level || 'Mid-Level',
+                      team_size: jobData.team_size || '1-10',
+                      remote_onsite: jobData.remote_onsite || 'Onsite',
+                      work_hours: jobData.work_hours || 'Fixed',
+                      visa_sponsorship: jobData.visa_sponsorship || false,
+                      equity: jobData.equity || 'None',
+                      salary_range: jobData.salary_range || 'Negotiable',
+                      investment_stage: jobData.investment_stage || 'Bootstrapped',
+                      revenue_model: jobData.revenue_model || 'Other',
+                      hiring_urgency: jobData.hiring_urgency || 'Open to Future Applicants',
                       source_url: careersUrl,
                       scraping_job_id: job.id,
                       scraped_at: new Date().toISOString(),
