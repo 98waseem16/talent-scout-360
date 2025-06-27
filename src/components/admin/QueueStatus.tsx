@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useQueueMonitoring } from '@/hooks/useQueueMonitoring';
-import { Play, Refresh, Clock, CheckCircle, XCircle, Loader } from 'lucide-react';
+import { Play, RefreshCw, Clock, CheckCircle, XCircle, Loader } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 const QueueStatus: React.FC = () => {
@@ -72,7 +72,7 @@ const QueueStatus: React.FC = () => {
             Queue Status Overview
             <div className="flex gap-2">
               <Button onClick={refresh} variant="outline" size="sm">
-                <Refresh className="w-4 h-4 mr-1" />
+                <RefreshCw className="w-4 h-4 mr-1" />
                 Refresh
               </Button>
               <Button onClick={handleTriggerQueue} size="sm">
