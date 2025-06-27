@@ -283,51 +283,143 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
     let jobs: JobData[] = []
     
     if (initialGobiData.result) {
+      console.log('=== RAW GOBI RESULT ANALYSIS ===');
       console.log('Gobi result type:', typeof initialGobiData.result);
-      console.log('Gobi result structure:', JSON.stringify(initialGobiData.result, null, 2));
+      console.log('Gobi result keys:', Object.keys(initialGobiData.result || {}));
+      console.log('Gobi result structure (first 500 chars):', JSON.stringify(initialGobiData.result, null, 2).substring(0, 500));
 
-      // Try different extraction methods
+      // Enhanced extraction logic to handle various Gobi response formats
+      let extractedData = null;
+
+      // Method 1: Direct array check
       if (Array.isArray(initialGobiData.result)) {
-        console.log('Result is array, using directly');
-        jobs = initialGobiData.result;
-      } else if (initialGobiData.result.jobs && Array.isArray(initialGobiData.result.jobs)) {
-        console.log('Result has jobs array property');
-        jobs = initialGobiData.result.jobs;
-      } else if (typeof initialGobiData.result === 'string') {
-        console.log('Result is string, attempting to parse JSON');
+        console.log('✓ Method 1: Result is direct array');
+        extractedData = initialGobiData.result;
+      }
+      // Method 2: Jobs property check
+      else if (initialGobiData.result.jobs && Array.isArray(initialGobiData.result.jobs)) {
+        console.log('✓ Method 2: Result has jobs array property');
+        extractedData = initialGobiData.result.jobs;
+      }
+      // Method 3: String parsing (most likely for Gobi)
+      else if (typeof initialGobiData.result === 'string') {
+        console.log('✓ Method 3: Result is string, attempting JSON parse');
+        console.log('String content (first 500 chars):', initialGobiData.result.substring(0, 500));
+        
         try {
           const parsed = JSON.parse(initialGobiData.result);
+          console.log('✓ Successfully parsed JSON from string');
+          console.log('Parsed data type:', typeof parsed);
+          console.log('Parsed data keys:', Object.keys(parsed || {}));
+          
           if (Array.isArray(parsed)) {
-            jobs = parsed;
+            console.log('✓ Parsed data is direct array');
+            extractedData = parsed;
           } else if (parsed.jobs && Array.isArray(parsed.jobs)) {
-            jobs = parsed.jobs;
+            console.log('✓ Parsed data has jobs array property');
+            extractedData = parsed.jobs;
+          } else {
+            console.log('❌ Parsed data structure not recognized:', JSON.stringify(parsed, null, 2).substring(0, 200));
           }
         } catch (parseError) {
-          console.error('Failed to parse result string as JSON:', parseError);
+          console.error('❌ Failed to parse result string as JSON:', parseError.message);
+          console.log('Raw string that failed to parse:', initialGobiData.result);
         }
-      } else if (initialGobiData.result.content) {
-        console.log('Result has content property, checking structure');
+      }
+      // Method 4: Content property string parsing
+      else if (initialGobiData.result.content) {
+        console.log('✓ Method 4: Result has content property');
+        console.log('Content type:', typeof initialGobiData.result.content);
+        
         try {
           const content = typeof initialGobiData.result.content === 'string' 
             ? JSON.parse(initialGobiData.result.content) 
             : initialGobiData.result.content;
           
+          console.log('✓ Successfully processed content');
+          
           if (Array.isArray(content)) {
-            jobs = content;
+            extractedData = content;
           } else if (content.jobs && Array.isArray(content.jobs)) {
-            jobs = content.jobs;
+            extractedData = content.jobs;
+          } else {
+            console.log('❌ Content structure not recognized:', JSON.stringify(content, null, 2).substring(0, 200));
           }
         } catch (parseError) {
-          console.error('Failed to parse content:', parseError);
+          console.error('❌ Failed to parse content:', parseError.message);
         }
       }
+      // Method 5: Check for nested data structures
+      else if (typeof initialGobiData.result === 'object') {
+        console.log('✓ Method 5: Searching nested object structure');
+        
+        // Look for jobs in various nested locations
+        const possiblePaths = [
+          initialGobiData.result.data,
+          initialGobiData.result.response,
+          initialGobiData.result.output,
+          initialGobiData.result.result
+        ];
+        
+        for (const path of possiblePaths) {
+          if (path) {
+            console.log('Checking path:', typeof path);
+            
+            if (Array.isArray(path)) {
+              extractedData = path;
+              console.log('✓ Found jobs array in nested path');
+              break;
+            } else if (path.jobs && Array.isArray(path.jobs)) {
+              extractedData = path.jobs;
+              console.log('✓ Found jobs property in nested path');
+              break;
+            } else if (typeof path === 'string') {
+              try {
+                const parsed = JSON.parse(path);
+                if (Array.isArray(parsed)) {
+                  extractedData = parsed;
+                  console.log('✓ Found jobs array in parsed nested string');
+                  break;
+                } else if (parsed.jobs && Array.isArray(parsed.jobs)) {
+                  extractedData = parsed.jobs;
+                  console.log('✓ Found jobs property in parsed nested string');
+                  break;
+                }
+              } catch (e) {
+                console.log('Could not parse nested string path');
+              }
+            }
+          }
+        }
+      }
+
+      // Final validation and assignment
+      if (extractedData && Array.isArray(extractedData)) {
+        jobs = extractedData;
+        console.log('✅ SUCCESSFULLY EXTRACTED JOBS');
+        console.log('Total jobs extracted:', jobs.length);
+        
+        // Log first job for validation
+        if (jobs.length > 0) {
+          console.log('✅ First job sample:', JSON.stringify(jobs[0], null, 2));
+          
+          // Validate job structure
+          const firstJob = jobs[0];
+          const hasRequiredFields = firstJob.title && (firstJob.company || companyName);
+          console.log('✅ First job has required fields (title & company):', hasRequiredFields);
+        }
+      } else {
+        console.log('❌ NO JOBS EXTRACTED - Final extractedData:', extractedData);
+        console.log('❌ ExtractedData type:', typeof extractedData);
+        console.log('❌ ExtractedData isArray:', Array.isArray(extractedData));
+      }
+    } else {
+      console.log('❌ No result data from Gobi API');
     }
 
-    console.log('=== EXTRACTION COMPLETE ===');
-    console.log('Total jobs found:', jobs.length);
-    if (jobs.length > 0) {
-      console.log('First job sample:', JSON.stringify(jobs[0], null, 2));
-    }
+    console.log('=== EXTRACTION SUMMARY ===');
+    console.log('Final jobs array length:', jobs.length);
+    console.log('Jobs extraction successful:', jobs.length > 0);
 
     // Process and save jobs to Supabase
     let jobsCreated = 0
