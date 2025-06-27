@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface ScrapingBatch {
   id: string;
@@ -14,6 +15,7 @@ interface ScrapingBatch {
 }
 
 export const useScrapingBatches = () => {
+  const { user } = useAuth();
   const [batches, setBatches] = useState<ScrapingBatch[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,7 +28,7 @@ export const useScrapingBatches = () => {
         .limit(20);
 
       if (error) throw error;
-      setBatches(data || []);
+      setBatches((data || []) as ScrapingBatch[]);
     } catch (error) {
       console.error('Error fetching scraping batches:', error);
     } finally {
@@ -35,13 +37,18 @@ export const useScrapingBatches = () => {
   };
 
   const createBatch = async (urls: string[]) => {
+    if (!user) {
+      return { success: false, error: 'User not authenticated' };
+    }
+
     try {
       // Create batch record
       const { data: batch, error: batchError } = await supabase
         .from('scraping_batches')
         .insert({
           total_urls: urls.length,
-          status: 'pending'
+          status: 'pending',
+          created_by: user.id
         })
         .select()
         .single();
@@ -58,7 +65,8 @@ export const useScrapingBatches = () => {
             .from('career_page_sources')
             .upsert({
               url: url.trim(),
-              updated_at: new Date().toISOString()
+              updated_at: new Date().toISOString(),
+              added_by: user.id
             }, {
               onConflict: 'url'
             })
@@ -71,7 +79,8 @@ export const useScrapingBatches = () => {
           scrapingJobs.push({
             source_id: source.id,
             batch_id: batch.id,
-            status: 'pending'
+            status: 'pending',
+            created_by: user.id
           });
         } catch (error) {
           console.error(`Error processing URL ${url}:`, error);
