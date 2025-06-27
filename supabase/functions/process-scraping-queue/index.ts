@@ -112,37 +112,85 @@ serve(async (req) => {
           })
           .eq('id', job.id);
 
-        // Prepare webhook URL - using current domain
-        const webhookUrl = `${Deno.env.get('SUPABASE_URL')}/functions/v1/gobi-webhook`;
+        // Create detailed prompt for Gobi API
+        const companyName = job.career_page_sources.company_name || 'Unknown Company';
+        const careersUrl = job.career_page_sources.url;
+        
+        const prompt = `Please scrape the career page at ${careersUrl} for ${companyName}. 
 
-        // Submit to Gobi API with enhanced payload
+Extract all job listings and return them as a JSON array. For each job, extract:
+- title: Job title
+- location: Job location (city, state, country or "Remote")
+- type: Employment type (Full-time, Part-time, Contract, Internship)
+- salary: Salary range if available
+- description: Job description
+- requirements: List of requirements/qualifications
+- responsibilities: List of key responsibilities
+- benefits: List of benefits if mentioned
+- application_url: Direct link to apply for the job
+- department: Department or team if specified
+- seniority_level: Experience level (Entry, Mid, Senior, Executive)
+
+Navigate through pagination if there are multiple pages of jobs. Click on individual job listings to get detailed information when needed.
+
+Return the data in this exact JSON format:
+{
+  "jobs": [
+    {
+      "title": "Software Engineer",
+      "location": "San Francisco, CA",
+      "type": "Full-time",
+      "salary": "$120,000 - $180,000",
+      "description": "Job description here...",
+      "requirements": ["Requirement 1", "Requirement 2"],
+      "responsibilities": ["Responsibility 1", "Responsibility 2"],
+      "benefits": ["Benefit 1", "Benefit 2"],
+      "application_url": "https://...",
+      "department": "Engineering",
+      "seniority_level": "Mid"
+    }
+  ]
+}`;
+
+        // Prepare Gobi API payload
         const gobiPayload = {
-          input: {
-            url: job.career_page_sources.url,
-            company_name: job.career_page_sources.company_name || 'Unknown Company'
-          },
-          webhook_url: webhookUrl,
-          max_pages: 20,
-          timeout: 300000, // 5 minutes
-          extract_detailed_info: true,
-          click_job_links: true,
-          priority: job.priority || 0,
-          metadata: {
-            job_id: job.id,
-            batch_id: job.batch_id
+          prompt: prompt,
+          wait: 120, // Wait up to 2 minutes for synchronous response
+          output_schema: {
+            type: "object",
+            properties: {
+              jobs: {
+                type: "array",
+                items: {
+                  type: "object",
+                  properties: {
+                    title: { type: "string" },
+                    location: { type: "string" },
+                    type: { type: "string" },
+                    salary: { type: "string" },
+                    description: { type: "string" },
+                    requirements: { type: "array", items: { type: "string" } },
+                    responsibilities: { type: "array", items: { type: "string" } },
+                    benefits: { type: "array", items: { type: "string" } },
+                    application_url: { type: "string" },
+                    department: { type: "string" },
+                    seniority_level: { type: "string" }
+                  },
+                  required: ["title", "location", "type", "description"]
+                }
+              }
+            },
+            required: ["jobs"],
+            additionalProperties: false
           }
         };
 
-        console.log('Submitting to Gobi with payload:', { 
-          url: gobiPayload.input.url, 
-          webhook_url: gobiPayload.webhook_url,
-          priority: gobiPayload.priority 
-        });
+        console.log('Submitting to Gobi with URL:', careersUrl);
 
-        const gobiResponse = await fetch('https://api.gobi.ai/v1/jobs', {
+        const gobiResponse = await fetch('https://gobii.ai/api/v1/tasks/browser-use/', {
           method: 'POST',
           headers: {
-            'Authorization': `Bearer ${gobiApiKey}`,
+            'X-Api-Key': gobiApiKey,
             'Content-Type': 'application/json',
             'User-Agent': 'Supabase-Function/1.0'
           },
@@ -164,21 +212,100 @@ serve(async (req) => {
           throw new Error(`Invalid JSON response from Gobi: ${responseText}`);
         }
 
-        console.log(`Gobi task created for job ${job.id}:`, gobiResult.id || gobiResult.task_id);
+        console.log(`Gobi task created for job ${job.id}:`, gobiResult.id);
 
-        // Update job with Gobi task ID
-        await supabaseClient
-          .from('scraping_jobs')
-          .update({
-            gobi_task_id: gobiResult.id || gobiResult.task_id,
-            webhook_url: webhookUrl,
-            task_data: gobiResult,
-            retry_count: 0 // Reset retry count on successful submission
-          })
-          .eq('id', job.id);
+        // Handle both synchronous and asynchronous responses
+        if (gobiResult.status === 'completed') {
+          // Synchronous completion - process the results immediately
+          console.log(`Job ${job.id} completed synchronously`);
+          
+          let jobsData = [];
+          let jobsFound = 0;
+          let jobsCreated = 0;
+
+          try {
+            if (gobiResult.result && gobiResult.result.jobs) {
+              jobsData = gobiResult.result.jobs;
+              jobsFound = jobsData.length;
+              
+              // Create job postings from the scraped data
+              for (const jobData of jobsData) {
+                try {
+                  const { error: insertError } = await supabaseClient
+                    .from('job_postings')
+                    .insert({
+                      title: jobData.title || 'Untitled Position',
+                      company: companyName,
+                      location: jobData.location || 'Location not specified',
+                      type: jobData.type || 'Full-time',
+                      salary: jobData.salary || 'Salary not specified',
+                      description: jobData.description || 'No description available',
+                      requirements: jobData.requirements || [],
+                      responsibilities: jobData.responsibilities || [],
+                      benefits: jobData.benefits || [],
+                      application_url: jobData.application_url || careersUrl,
+                      department: jobData.department || null,
+                      seniority_level: jobData.seniority_level || null,
+                      source_url: careersUrl,
+                      scraping_job_id: job.id,
+                      scraped_at: new Date().toISOString(),
+                      is_draft: true, // Mark as draft for review
+                      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+                      logo: '' // Will be filled later
+                    });
+
+                  if (!insertError) {
+                    jobsCreated++;
+                  } else {
+                    console.error(`Error inserting job ${jobData.title}:`, insertError);
+                  }
+                } catch (jobError) {
+                  console.error(`Error processing job ${jobData.title}:`, jobError);
+                }
+              }
+            }
+          } catch (parseError) {
+            console.error(`Error parsing Gobi result for job ${job.id}:`, parseError);
+          }
+
+          // Update job as completed
+          await supabaseClient
+            .from('scraping_jobs')
+            .update({
+              status: 'completed',
+              gobi_task_id: gobiResult.id,
+              task_data: gobiResult,
+              jobs_found: jobsFound,
+              jobs_created: jobsCreated,
+              completed_at: new Date().toISOString(),
+              retry_count: 0
+            })
+            .eq('id', job.id);
+
+          console.log(`Job ${job.id} completed: ${jobsCreated}/${jobsFound} jobs created`);
+          
+        } else if (gobiResult.status === 'in_progress') {
+          // Asynchronous processing - store task ID for later polling
+          console.log(`Job ${job.id} is processing asynchronously`);
+          
+          await supabaseClient
+            .from('scraping_jobs')
+            .update({
+              gobi_task_id: gobiResult.id,
+              task_data: gobiResult,
+              retry_count: 0
+            })
+            .eq('id', job.id);
+            
+          // Note: We'll need a separate function to poll for completion
+          // For now, we'll leave the job in 'running' status
+          
+        } else {
+          throw new Error(`Unexpected Gobi status: ${gobiResult.status}`);
+        }
 
         processed++;
-        console.log(`Successfully submitted job ${job.id} to Gobi`);
+        console.log(`Successfully processed job ${job.id}`);
 
       } catch (error) {
         console.error(`Error processing job ${job.id}:`, error);
