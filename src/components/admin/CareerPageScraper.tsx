@@ -21,6 +21,8 @@ interface ScrapingJob {
   completed_at?: string | null;
   source_url: string;
   company_name?: string | null;
+  gobi_task_id?: string | null;
+  retry_count?: number | null;
 }
 
 const CareerPageScraper: React.FC = () => {
@@ -28,7 +30,6 @@ const CareerPageScraper: React.FC = () => {
   const [url, setUrl] = useState('');
   const [companyName, setCompanyName] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [previewResults, setPreviewResults] = useState<any[]>([]);
   const [recentJobs, setRecentJobs] = useState<ScrapingJob[]>([]);
   const [isCleaningUp, setIsCleaningUp] = useState(false);
   const [runningJobsCount, setRunningJobsCount] = useState(0);
@@ -47,14 +48,14 @@ const CareerPageScraper: React.FC = () => {
     try {
       console.log('Cleaning up stuck jobs...');
       
-      // Find jobs that have been running for more than 8 minutes (allowing for 5-minute processing + buffer)
-      const eightMinutesAgo = new Date(Date.now() - 8 * 60 * 1000).toISOString();
+      // Find jobs that have been running for more than 10 minutes
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
       
       const { data: stuckJobs, error: fetchError } = await supabase
         .from('scraping_jobs')
         .select('id, started_at')
         .eq('status', 'running')
-        .lt('started_at', eightMinutesAgo);
+        .lt('started_at', tenMinutesAgo);
 
       if (fetchError) {
         console.error('Error fetching stuck jobs:', fetchError);
@@ -68,7 +69,7 @@ const CareerPageScraper: React.FC = () => {
           .from('scraping_jobs')
           .update({
             status: 'failed',
-            error_message: 'Job timed out after 8 minutes and was automatically cleaned up',
+            error_message: 'Job timed out after 10 minutes and was automatically cleaned up',
             completed_at: new Date().toISOString()
           })
           .in('id', stuckJobs.map(job => job.id));
@@ -83,7 +84,6 @@ const CareerPageScraper: React.FC = () => {
         toast.info('No stuck jobs found to clean up');
       }
       
-      // Refresh the recent jobs list
       fetchRecentJobs();
     } catch (error: any) {
       console.error('Error cleaning up stuck jobs:', error);
@@ -105,12 +105,11 @@ const CareerPageScraper: React.FC = () => {
     }
 
     setIsSubmitting(true);
-    setPreviewResults([]);
 
     try {
       console.log('Starting scrape process for:', url);
 
-      // First, save the career page source
+      // Save the career page source
       const { data: sourceData, error: sourceError } = await supabase
         .from('career_page_sources')
         .upsert({
@@ -131,13 +130,15 @@ const CareerPageScraper: React.FC = () => {
 
       console.log('Career page source saved:', sourceData.id);
 
-      // Create a scraping job record
+      // Create a scraping job record with high priority for immediate processing
       const { data: jobData, error: jobError } = await supabase
         .from('scraping_jobs')
         .insert({
           source_id: sourceData.id,
           status: 'pending',
-          created_by: user?.id
+          created_by: user?.id,
+          priority: 10, // High priority for immediate processing
+          max_retries: 3
         })
         .select()
         .single();
@@ -147,44 +148,9 @@ const CareerPageScraper: React.FC = () => {
         throw jobError;
       }
 
-      console.log('Scraping job created:', jobData.id);
+      console.log('Scraping job created and queued:', jobData.id);
 
-      // Call the scraping edge function
-      console.log('Invoking comprehensive scraping edge function...');
-      const { data, error } = await supabase.functions.invoke('scrape-career-page', {
-        body: {
-          url: url.trim(),
-          companyName: companyName.trim() || null,
-          scrapingJobId: jobData.id
-        }
-      });
-
-      console.log('Edge function response:', data);
-
-      if (error) {
-        console.error('Edge function error:', error);
-        throw error;
-      }
-
-      // Reset isSubmitting immediately after successful edge function call
-      setIsSubmitting(false);
-
-      // Handle different response types
-      if (data?.success) {
-        setPreviewResults(data.jobs || []);
-        toast.success(data.message || `Found ${data.jobsFound || 0} job postings with comprehensive data!`);
-        console.log('Comprehensive scraping completed successfully:', {
-          jobsFound: data.jobsFound,
-          jobsCreated: data.jobsCreated
-        });
-      } else if (data?.status === 'in_progress') {
-        toast.success('Comprehensive scraping job queued successfully! Check the recent jobs list for updates.');
-        console.log('Comprehensive scraping in progress, will need to check back later');
-      } else {
-        const errorMessage = data?.message || data?.error || 'Comprehensive scraping failed';
-        console.error('Comprehensive scraping failed:', errorMessage);
-        throw new Error(errorMessage);
-      }
+      toast.success('Scraping job queued successfully! It will be processed shortly by the background queue.');
       
       // Clear form and refresh recent jobs
       setUrl('');
@@ -192,8 +158,9 @@ const CareerPageScraper: React.FC = () => {
       fetchRecentJobs();
 
     } catch (error: any) {
-      console.error('Comprehensive scraping process error:', error);
-      toast.error(`Comprehensive scraping failed: ${error.message}`);
+      console.error('Scraping process error:', error);
+      toast.error(`Failed to queue scraping job: ${error.message}`);
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -224,7 +191,9 @@ const CareerPageScraper: React.FC = () => {
         started_at: job.started_at,
         completed_at: job.completed_at,
         source_url: job.career_page_sources.url,
-        company_name: job.career_page_sources.company_name
+        company_name: job.career_page_sources.company_name,
+        gobi_task_id: job.gobi_task_id,
+        retry_count: job.retry_count
       }));
 
       console.log('Recent jobs fetched:', jobs.length);
@@ -255,7 +224,6 @@ const CareerPageScraper: React.FC = () => {
         },
         (payload) => {
           console.log('Real-time scraping job update:', payload);
-          // Refresh the jobs list when any scraping job changes
           fetchRecentJobs();
         }
       )
@@ -306,111 +274,82 @@ const CareerPageScraper: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Enhanced Scraper Form */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Globe className="w-5 h-5" />
-            Enhanced Career Page Scraper
-            {runningJobsCount > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {runningJobsCount} running
-              </Badge>
+      {/* Single URL Scraper Form */}
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label htmlFor="career-url">Career Page URL *</Label>
+            <Input
+              id="career-url"
+              type="url"
+              placeholder="https://jobs.lever.co/company or https://company.com/careers"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              disabled={isSubmitting}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="company-name">Company Name (Optional)</Label>
+            <Input
+              id="company-name"
+              type="text"
+              placeholder="Company Name"
+              value={companyName}
+              onChange={(e) => setCompanyName(e.target.value)}
+              disabled={isSubmitting}
+            />
+          </div>
+        </div>
+
+        <Alert>
+          <CheckCircle className="h-4 w-4" />
+          <AlertDescription>
+            Jobs are now processed through an async queue system. Your request will be handled by the background processor.
+            Jobs are saved as drafts for review once completed.
+          </AlertDescription>
+        </Alert>
+
+        <div className="flex gap-3">
+          <Button 
+            onClick={handleScrapeNow} 
+            disabled={isSubmitting || !url.trim()}
+            className="flex items-center gap-2"
+          >
+            {isSubmitting ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Queuing Job...
+              </>
+            ) : (
+              <>
+                <Play className="h-4 w-4" />
+                Queue Scraping Job
+              </>
             )}
-          </CardTitle>
-          <CardDescription>
-            Add a company's career page URL for comprehensive AI-powered job extraction (5-minute deep analysis).
-            Multiple requests can run simultaneously.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="career-url">Career Page URL *</Label>
-              <Input
-                id="career-url"
-                type="url"
-                placeholder="https://jobs.lever.co/company or https://company.com/careers"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="company-name">Company Name (Optional)</Label>
-              <Input
-                id="company-name"
-                type="text"
-                placeholder="Company Name"
-                value={companyName}
-                onChange={(e) => setCompanyName(e.target.value)}
-                disabled={isSubmitting}
-              />
-            </div>
-          </div>
+          </Button>
 
-          <Alert>
-            <CheckCircle className="h-4 w-4" />
-            <AlertDescription>
-              Enhanced scraping with 5-minute comprehensive analysis per request. 
-              AI intelligently clicks through individual job pages for detailed extraction.
-              Multiple requests can run concurrently. Jobs are saved as drafts for review.
-            </AlertDescription>
-          </Alert>
+          <Button 
+            variant="outline" 
+            onClick={cleanupStuckJobs} 
+            disabled={isCleaningUp}
+            title="Clean up jobs that have been running for more than 10 minutes"
+          >
+            {isCleaningUp ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Cleaning...
+              </>
+            ) : (
+              <>
+                <RefreshCw className="mr-2 h-4 w-4" />
+                Cleanup Stuck Jobs
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
 
-          <div className="flex gap-3">
-            <Button 
-              onClick={handleScrapeNow} 
-              disabled={isSubmitting || !url.trim()}
-              className="flex items-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Queuing Job...
-                </>
-              ) : (
-                <>
-                  <Play className="h-4 w-4" />
-                  Start Comprehensive Scrape
-                </>
-              )}
-            </Button>
-
-            <Button 
-              variant="outline" 
-              onClick={cleanupStuckJobs} 
-              disabled={isCleaningUp}
-              title="Clean up jobs that have been running for more than 8 minutes"
-            >
-              {isCleaningUp ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Cleaning...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="mr-2 h-4 w-4" />
-                  Cleanup Stuck Jobs
-                </>
-              )}
-            </Button>
-          </div>
-
-          {/* Preview Results */}
-          {previewResults.length > 0 && (
-            <Alert>
-              <CheckCircle className="h-4 w-4" />
-              <AlertDescription>
-                Successfully extracted {previewResults.length} job postings with comprehensive data. 
-                They have been saved as drafts for review in the Job Drafts section.
-              </AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Enhanced Recent Scraping Jobs */}
+      {/* Recent Scraping Jobs */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -423,7 +362,7 @@ const CareerPageScraper: React.FC = () => {
             )}
           </CardTitle>
           <CardDescription>
-            Track comprehensive AI-powered scraping operations. Updates automatically in real-time.
+            Track scraping operations processed through the async queue system.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -451,6 +390,9 @@ const CareerPageScraper: React.FC = () => {
                       </p>
                       <p className="text-xs text-muted-foreground">
                         Duration: {getJobDuration(job.started_at, job.completed_at)}
+                        {job.gobi_task_id && (
+                          <span className="ml-2">Task: {job.gobi_task_id.substring(0, 8)}...</span>
+                        )}
                       </p>
                     </div>
                   </div>
@@ -467,12 +409,15 @@ const CareerPageScraper: React.FC = () => {
                             ? `${job.error_message.substring(0, 50)}...` 
                             : job.error_message
                           }
+                          {job.retry_count && job.retry_count > 0 && (
+                            <span className="block">Retries: {job.retry_count}</span>
+                          )}
                         </p>
                       )}
                       {job.status === 'running' && (
                         <p className="text-blue-500 flex items-center gap-1 font-medium">
                           <Loader2 className="w-3 h-3 animate-spin" />
-                          Comprehensive Analysis...
+                          Processing...
                         </p>
                       )}
                       {job.status === 'pending' && (

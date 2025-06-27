@@ -248,39 +248,96 @@ export type Database = {
         }
         Relationships: []
       }
-      scraping_jobs: {
+      scraping_batches: {
         Row: {
           completed_at: string | null
+          completed_urls: number
+          created_at: string
           created_by: string
-          error_message: string | null
+          failed_urls: number
           id: string
-          jobs_created: number | null
-          jobs_found: number | null
-          source_id: string
-          started_at: string
           status: string
+          total_urls: number
+          updated_at: string
         }
         Insert: {
           completed_at?: string | null
+          completed_urls?: number
+          created_at?: string
           created_by: string
-          error_message?: string | null
+          failed_urls?: number
           id?: string
-          jobs_created?: number | null
-          jobs_found?: number | null
-          source_id: string
-          started_at?: string
           status?: string
+          total_urls?: number
+          updated_at?: string
         }
         Update: {
           completed_at?: string | null
+          completed_urls?: number
+          created_at?: string
           created_by?: string
+          failed_urls?: number
+          id?: string
+          status?: string
+          total_urls?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      scraping_jobs: {
+        Row: {
+          batch_id: string | null
+          completed_at: string | null
+          created_by: string
+          error_message: string | null
+          gobi_task_id: string | null
+          id: string
+          jobs_created: number | null
+          jobs_found: number | null
+          max_retries: number | null
+          priority: number | null
+          retry_count: number | null
+          source_id: string
+          started_at: string
+          status: string
+          task_data: Json | null
+          webhook_url: string | null
+        }
+        Insert: {
+          batch_id?: string | null
+          completed_at?: string | null
+          created_by: string
           error_message?: string | null
+          gobi_task_id?: string | null
           id?: string
           jobs_created?: number | null
           jobs_found?: number | null
+          max_retries?: number | null
+          priority?: number | null
+          retry_count?: number | null
+          source_id: string
+          started_at?: string
+          status?: string
+          task_data?: Json | null
+          webhook_url?: string | null
+        }
+        Update: {
+          batch_id?: string | null
+          completed_at?: string | null
+          created_by?: string
+          error_message?: string | null
+          gobi_task_id?: string | null
+          id?: string
+          jobs_created?: number | null
+          jobs_found?: number | null
+          max_retries?: number | null
+          priority?: number | null
+          retry_count?: number | null
           source_id?: string
           started_at?: string
           status?: string
+          task_data?: Json | null
+          webhook_url?: string | null
         }
         Relationships: [
           {

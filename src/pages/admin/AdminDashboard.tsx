@@ -6,15 +6,18 @@ import Footer from '@/components/Footer';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Globe, Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { FileText, Globe, Plus, Upload } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import DraftJobsList from '@/components/admin/DraftJobsList';
 import CareerPageScraper from '@/components/admin/CareerPageScraper';
+import BulkScrapingUpload from '@/components/admin/BulkScrapingUpload';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
   const [draftJobsCount, setDraftJobsCount] = useState<number | null>(null);
   const [recentScrapingCount, setRecentScrapingCount] = useState<number | null>(null);
+  const [activeBatchesCount, setActiveBatchesCount] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -42,6 +45,18 @@ const AdminDashboard: React.FC = () => {
           console.error('Error fetching scraping jobs count:', scrapingError);
         } else {
           setRecentScrapingCount(scrapingCount);
+        }
+
+        // Fetch active batches count
+        const { count: batchesCount, error: batchesError } = await supabase
+          .from('scraping_batches')
+          .select('*', { count: 'exact', head: true })
+          .in('status', ['pending', 'processing']);
+          
+        if (batchesError) {
+          console.error('Error fetching active batches count:', batchesError);
+        } else {
+          setActiveBatchesCount(batchesCount);
         }
       } catch (error) {
         console.error('Error fetching stats:', error);
@@ -78,12 +93,10 @@ const AdminDashboard: React.FC = () => {
                 <div className="text-sm text-muted-foreground">Recent Scrapes</div>
               </div>
               <div className="bg-white border rounded-lg p-4">
-                <div className="text-2xl font-bold text-green-600">
-                  {draftJobsCount !== null && recentScrapingCount !== null ? 
-                    draftJobsCount + recentScrapingCount : '...'
-                  }
+                <div className="text-2xl font-bold text-blue-600">
+                  {activeBatchesCount !== null ? activeBatchesCount : '...'}
                 </div>
-                <div className="text-sm text-muted-foreground">Total Activity</div>
+                <div className="text-sm text-muted-foreground">Active Batches</div>
               </div>
               <div className="bg-white border rounded-lg p-4 flex items-center">
                 <Button asChild size="sm" className="w-full">
@@ -96,10 +109,39 @@ const AdminDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Content - Two Column Layout */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left Column - Draft Jobs Management */}
-            <div className="space-y-6">
+          {/* Main Content - Tabbed Interface */}
+          <Tabs defaultValue="drafts" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="drafts" className="flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Draft Jobs
+                {draftJobsCount !== null && draftJobsCount > 0 && (
+                  <span className="bg-orange-100 text-orange-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
+                    {draftJobsCount}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="single" className="flex items-center gap-2">
+                <Globe className="w-4 w-4" />
+                Single Scraper
+                {recentScrapingCount !== null && recentScrapingCount > 0 && (
+                  <span className="bg-purple-100 text-purple-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
+                    {recentScrapingCount}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="bulk" className="flex items-center gap-2">
+                <Upload className="w-4 h-4" />
+                Bulk Upload
+                {activeBatchesCount !== null && activeBatchesCount > 0 && (
+                  <span className="bg-blue-100 text-blue-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
+                    {activeBatchesCount}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="drafts">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -107,11 +149,6 @@ const AdminDashboard: React.FC = () => {
                       <FileText className="w-5 h-5 text-orange-500" />
                     </div>
                     Draft Jobs Management
-                    {draftJobsCount !== null && draftJobsCount > 0 && (
-                      <span className="bg-orange-100 text-orange-800 rounded-full px-2 py-1 text-xs font-medium">
-                        {draftJobsCount}
-                      </span>
-                    )}
                   </CardTitle>
                   <CardDescription>
                     Review and approve scraped job postings before they go live
@@ -121,33 +158,31 @@ const AdminDashboard: React.FC = () => {
                   <DraftJobsList />
                 </CardContent>
               </Card>
-            </div>
+            </TabsContent>
 
-            {/* Right Column - Career Page Scraper */}
-            <div className="space-y-6">
+            <TabsContent value="single">
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <div className="p-2 rounded-lg bg-purple-500/10">
                       <Globe className="w-5 h-5 text-purple-500" />
                     </div>
-                    Career Page Scraper
-                    {recentScrapingCount !== null && recentScrapingCount > 0 && (
-                      <span className="bg-purple-100 text-purple-800 rounded-full px-2 py-1 text-xs font-medium">
-                        {recentScrapingCount} this week
-                      </span>
-                    )}
+                    Single Career Page Scraper
                   </CardTitle>
                   <CardDescription>
-                    Add and manage career page URLs for automatic job scraping
+                    Add individual career page URLs for immediate scraping
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <CareerPageScraper />
                 </CardContent>
               </Card>
-            </div>
-          </div>
+            </TabsContent>
+
+            <TabsContent value="bulk">
+              <BulkScrapingUpload />
+            </TabsContent>
+          </Tabs>
         </div>
       </main>
       <Footer />
