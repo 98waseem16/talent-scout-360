@@ -36,6 +36,15 @@ serve(async (req) => {
       throw new Error('GOBI_API_KEY not configured');
     }
 
+    // Get configuration values
+    const { data: config } = await supabaseClient
+      .from('scraping_config')
+      .select('key, value')
+      .in('key', ['task_timeout_minutes', 'max_retries', 'circuit_breaker_threshold']);
+
+    const defaultTimeoutMinutes = config?.find(c => c.key === 'task_timeout_minutes')?.value || 30;
+    const maxRetries = config?.find(c => c.key === 'max_retries')?.value || 3;
+
     // Get total queue size for monitoring
     const { count: totalPending } = await supabaseClient
       .from('scraping_jobs')
@@ -53,7 +62,7 @@ serve(async (req) => {
         career_page_sources!inner(url, company_name)
       `)
       .eq('status', 'pending')
-      .or(`retry_count.is.null,retry_count.lt.${3}`) // Only jobs that haven't exceeded max retries
+      .or(`retry_count.is.null,retry_count.lt.${maxRetries}`) // Use dynamic max retries
       .order('priority', { ascending: false })
       .order('started_at', { ascending: true })
       .limit(3); // Reduced batch size for better reliability
@@ -102,12 +111,17 @@ serve(async (req) => {
           }
         }
 
-        // Mark job as running with retry count
+        // Calculate timeout for this task
+        const taskTimeoutMinutes = job.task_timeout_minutes || defaultTimeoutMinutes;
+        const timeoutAt = new Date(Date.now() + taskTimeoutMinutes * 60 * 1000).toISOString();
+
+        // Mark job as running with retry count and timeout
         await supabaseClient
           .from('scraping_jobs')
           .update({ 
             status: 'running',
-            started_at: new Date().toISOString()
+            started_at: new Date().toISOString(),
+            timeout_at: timeoutAt
           })
           .eq('id', job.id);
 
@@ -375,8 +389,7 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
             })
             .eq('id', job.id);
             
-          // Note: We'll need a separate function to poll for completion
-          // For now, we'll leave the job in 'running' status
+          // Note: The polling function will handle completion checking
           
         } else {
           throw new Error(`Unexpected Gobi status: ${gobiResult.status}`);
@@ -391,7 +404,6 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
         
         // Enhanced retry logic with exponential backoff
         const newRetryCount = (job.retry_count || 0) + 1;
-        const maxRetries = job.max_retries || 3;
         const shouldFail = newRetryCount >= maxRetries;
         
         await supabaseClient

@@ -7,12 +7,13 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Globe, Plus, Upload, Activity } from 'lucide-react';
+import { FileText, Globe, Plus, Upload, Activity, AlertTriangle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import DraftJobsList from '@/components/admin/DraftJobsList';
 import CareerPageScraper from '@/components/admin/CareerPageScraper';
 import BulkScrapingUpload from '@/components/admin/BulkScrapingUpload';
 import QueueStatus from '@/components/admin/QueueStatus';
+import StuckJobsManager from '@/components/admin/StuckJobsManager';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -20,6 +21,7 @@ const AdminDashboard: React.FC = () => {
   const [recentScrapingCount, setRecentScrapingCount] = useState<number | null>(null);
   const [activeBatchesCount, setActiveBatchesCount] = useState<number | null>(null);
   const [queuePendingCount, setQueuePendingCount] = useState<number | null>(null);
+  const [stuckJobsCount, setStuckJobsCount] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -72,6 +74,20 @@ const AdminDashboard: React.FC = () => {
         } else {
           setQueuePendingCount(pendingCount);
         }
+
+        // Fetch stuck jobs count (running for more than 15 minutes)
+        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+        const { count: stuckCount, error: stuckError } = await supabase
+          .from('scraping_jobs')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'running')
+          .lt('started_at', fifteenMinutesAgo);
+          
+        if (stuckError) {
+          console.error('Error fetching stuck jobs count:', stuckError);
+        } else {
+          setStuckJobsCount(stuckCount);
+        }
       } catch (error) {
         console.error('Error fetching stats:', error);
       }
@@ -93,7 +109,7 @@ const AdminDashboard: React.FC = () => {
             </p>
             
             {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
+            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
               <div className="bg-white border rounded-lg p-4">
                 <div className="text-2xl font-bold text-orange-600">
                   {draftJobsCount !== null ? draftJobsCount : '...'}
@@ -118,6 +134,12 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="text-sm text-muted-foreground">Queue Pending</div>
               </div>
+              <div className="bg-white border rounded-lg p-4">
+                <div className="text-2xl font-bold text-red-600">
+                  {stuckJobsCount !== null ? stuckJobsCount : '...'}
+                </div>
+                <div className="text-sm text-muted-foreground">Stuck Jobs</div>
+              </div>
               <div className="bg-white border rounded-lg p-4 flex items-center">
                 <Button asChild size="sm" className="w-full">
                   <Link to="/post-job">
@@ -131,7 +153,7 @@ const AdminDashboard: React.FC = () => {
 
           {/* Main Content - Tabbed Interface */}
           <Tabs defaultValue="drafts" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="drafts" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Draft Jobs
@@ -165,6 +187,15 @@ const AdminDashboard: React.FC = () => {
                 {queuePendingCount !== null && queuePendingCount > 0 && (
                   <span className="bg-yellow-100 text-yellow-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
                     {queuePendingCount}
+                  </span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="stuck" className="flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                Stuck Jobs
+                {stuckJobsCount !== null && stuckJobsCount > 0 && (
+                  <span className="bg-red-100 text-red-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
+                    {stuckJobsCount}
                   </span>
                 )}
               </TabsTrigger>
@@ -214,6 +245,10 @@ const AdminDashboard: React.FC = () => {
 
             <TabsContent value="queue">
               <QueueStatus />
+            </TabsContent>
+
+            <TabsContent value="stuck">
+              <StuckJobsManager />
             </TabsContent>
           </Tabs>
         </div>

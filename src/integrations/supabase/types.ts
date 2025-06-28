@@ -314,16 +314,39 @@ export type Database = {
         }
         Relationships: []
       }
+      scraping_config: {
+        Row: {
+          description: string | null
+          key: string
+          updated_at: string | null
+          value: Json
+        }
+        Insert: {
+          description?: string | null
+          key: string
+          updated_at?: string | null
+          value: Json
+        }
+        Update: {
+          description?: string | null
+          key?: string
+          updated_at?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       scraping_jobs: {
         Row: {
           batch_id: string | null
           completed_at: string | null
           created_by: string
           error_message: string | null
+          gobi_status_checked_at: string | null
           gobi_task_id: string | null
           id: string
           jobs_created: number | null
           jobs_found: number | null
+          last_polled_at: string | null
           max_retries: number | null
           priority: number | null
           retry_count: number | null
@@ -331,6 +354,8 @@ export type Database = {
           started_at: string
           status: string
           task_data: Json | null
+          task_timeout_minutes: number | null
+          timeout_at: string | null
           webhook_url: string | null
         }
         Insert: {
@@ -338,10 +363,12 @@ export type Database = {
           completed_at?: string | null
           created_by: string
           error_message?: string | null
+          gobi_status_checked_at?: string | null
           gobi_task_id?: string | null
           id?: string
           jobs_created?: number | null
           jobs_found?: number | null
+          last_polled_at?: string | null
           max_retries?: number | null
           priority?: number | null
           retry_count?: number | null
@@ -349,6 +376,8 @@ export type Database = {
           started_at?: string
           status?: string
           task_data?: Json | null
+          task_timeout_minutes?: number | null
+          timeout_at?: string | null
           webhook_url?: string | null
         }
         Update: {
@@ -356,10 +385,12 @@ export type Database = {
           completed_at?: string | null
           created_by?: string
           error_message?: string | null
+          gobi_status_checked_at?: string | null
           gobi_task_id?: string | null
           id?: string
           jobs_created?: number | null
           jobs_found?: number | null
+          last_polled_at?: string | null
           max_retries?: number | null
           priority?: number | null
           retry_count?: number | null
@@ -367,6 +398,8 @@ export type Database = {
           started_at?: string
           status?: string
           task_data?: Json | null
+          task_timeout_minutes?: number | null
+          timeout_at?: string | null
           webhook_url?: string | null
         }
         Relationships: [
@@ -375,6 +408,41 @@ export type Database = {
             columns: ["source_id"]
             isOneToOne: false
             referencedRelation: "career_page_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_status_history: {
+        Row: {
+          checked_at: string | null
+          gobi_response: Json | null
+          id: string
+          response_time_ms: number | null
+          scraping_job_id: string | null
+          status: string
+        }
+        Insert: {
+          checked_at?: string | null
+          gobi_response?: Json | null
+          id?: string
+          response_time_ms?: number | null
+          scraping_job_id?: string | null
+          status: string
+        }
+        Update: {
+          checked_at?: string | null
+          gobi_response?: Json | null
+          id?: string
+          response_time_ms?: number | null
+          scraping_job_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_status_history_scraping_job_id_fkey"
+            columns: ["scraping_job_id"]
+            isOneToOne: false
+            referencedRelation: "scraping_jobs"
             referencedColumns: ["id"]
           },
         ]

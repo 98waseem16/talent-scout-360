@@ -32,3 +32,12 @@ port = 54327
 [functions]
 [functions.scrape-job]
 verify_jwt = true
+
+[functions.process-scraping-queue]
+verify_jwt = false
+
+[functions.poll-gobi-tasks]
+verify_jwt = false
+
+[functions.handle-task-timeouts]
+verify_jwt = false
