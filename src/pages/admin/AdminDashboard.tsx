@@ -7,13 +7,14 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Globe, Plus, Upload, Activity, AlertTriangle } from 'lucide-react';
+import { FileText, Globe, Plus, Upload, Activity, AlertTriangle, FileInput } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import DraftJobsList from '@/components/admin/DraftJobsList';
 import CareerPageScraper from '@/components/admin/CareerPageScraper';
 import BulkScrapingUpload from '@/components/admin/BulkScrapingUpload';
 import QueueStatus from '@/components/admin/QueueStatus';
 import StuckJobsManager from '@/components/admin/StuckJobsManager';
+import ManualGobiProcessor from '@/components/admin/ManualGobiProcessor';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -153,7 +154,7 @@ const AdminDashboard: React.FC = () => {
 
           {/* Main Content - Tabbed Interface */}
           <Tabs defaultValue="drafts" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="drafts" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Draft Jobs
@@ -180,6 +181,10 @@ const AdminDashboard: React.FC = () => {
                     {activeBatchesCount}
                   </span>
                 )}
+              </TabsTrigger>
+              <TabsTrigger value="manual" className="flex items-center gap-2">
+                <FileInput className="w-4 h-4" />
+                Manual Import
               </TabsTrigger>
               <TabsTrigger value="queue" className="flex items-center gap-2">
                 <Activity className="w-4 h-4" />
@@ -241,6 +246,10 @@ const AdminDashboard: React.FC = () => {
 
             <TabsContent value="bulk">
               <BulkScrapingUpload />
+            </TabsContent>
+
+            <TabsContent value="manual">
+              <ManualGobiProcessor />
             </TabsContent>
 
             <TabsContent value="queue">
