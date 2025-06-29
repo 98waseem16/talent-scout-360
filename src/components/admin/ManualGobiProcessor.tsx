@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,7 +7,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
-import { AlertCircle, CheckCircle, Upload, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, CheckCircle, Upload, Eye, EyeOff, Info } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createJob } from '@/lib/jobs/operations/manageJobs';
 import { useAuth } from '@/contexts/AuthContext';
@@ -42,6 +41,8 @@ interface ProcessedJob extends GobiJob {
   errors: string[];
 }
 
+type InputFormat = 'json' | 'python' | 'unknown';
+
 const ManualGobiProcessor: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -51,30 +52,95 @@ const ManualGobiProcessor: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [detectedFormat, setDetectedFormat] = useState<InputFormat>('unknown');
+  const [conversionPreview, setConversionPreview] = useState<string>('');
+
+  const detectInputFormat = (input: string): InputFormat => {
+    const trimmed = input.trim();
+    
+    // Check for Python dictionary format indicators
+    if (trimmed.startsWith('{') && (
+      trimmed.includes("'jobs'") || 
+      trimmed.includes('True') || 
+      trimmed.includes('False') || 
+      trimmed.includes('None') ||
+      /'\w+':/.test(trimmed) // Single quotes around keys
+    )) {
+      return 'python';
+    }
+    
+    // Check for JSON format
+    if (trimmed.startsWith('{') && trimmed.includes('"jobs"')) {
+      return 'json';
+    }
+    
+    return 'unknown';
+  };
+
+  const convertPythonToJson = (pythonStr: string): string => {
+    try {
+      let converted = pythonStr;
+      
+      // Convert Python booleans to JSON
+      converted = converted.replace(/\bTrue\b/g, 'true');
+      converted = converted.replace(/\bFalse\b/g, 'false');
+      converted = converted.replace(/\bNone\b/g, 'null');
+      
+      // Convert single quotes to double quotes, but be careful with quotes inside strings
+      // This is a simplified approach - for production, you'd want a proper parser
+      converted = converted.replace(/'/g, '"');
+      
+      // Fix any double-double quotes that might have been created
+      converted = converted.replace(/""/g, '"');
+      
+      return converted;
+    } catch (error) {
+      throw new Error('Failed to convert Python format to JSON');
+    }
+  };
 
   const validateAndParseJson = (input: string): GobiOutput | null => {
     try {
-      const parsed = JSON.parse(input);
+      const format = detectInputFormat(input);
+      setDetectedFormat(format);
+      
+      let jsonString = input;
+      
+      if (format === 'python') {
+        console.log('Detected Python dictionary format, converting to JSON...');
+        jsonString = convertPythonToJson(input);
+        setConversionPreview(jsonString.substring(0, 500) + '...');
+      } else {
+        setConversionPreview('');
+      }
+      
+      const parsed = JSON.parse(jsonString);
       
       if (!parsed || typeof parsed !== 'object') {
-        setValidationError('Invalid JSON format');
+        setValidationError('Invalid format: Expected an object with jobs array');
         return null;
       }
 
       if (!Array.isArray(parsed.jobs)) {
-        setValidationError('JSON must contain a "jobs" array');
+        setValidationError('Invalid format: Must contain a "jobs" array');
         return null;
       }
 
       if (parsed.jobs.length === 0) {
-        setValidationError('No jobs found in the JSON');
+        setValidationError('No jobs found in the input');
         return null;
       }
 
       setValidationError(null);
       return parsed as GobiOutput;
     } catch (error) {
-      setValidationError('Invalid JSON syntax: ' + (error as Error).message);
+      const errorMessage = (error as Error).message;
+      
+      if (errorMessage.includes('Unexpected token')) {
+        setValidationError(`JSON parsing error: ${errorMessage}. Try pasting the raw output from Gobi (Python format is supported).`);
+      } else {
+        setValidationError(`Parsing error: ${errorMessage}`);
+      }
       return null;
     }
   };
@@ -224,6 +290,8 @@ const ManualGobiProcessor: React.FC = () => {
       setJsonInput('');
       setProcessedJobs([]);
       setShowPreview(false);
+      setDetectedFormat('unknown');
+      setConversionPreview('');
     }
   };
 
@@ -240,7 +308,8 @@ const ManualGobiProcessor: React.FC = () => {
           Manual Gobi Output Import
         </CardTitle>
         <CardDescription>
-          Paste Gobi's JSON output to manually create draft jobs when automated processing fails
+          Paste Gobi's output to manually create draft jobs when automated processing fails. 
+          Supports both JSON and Python dictionary formats.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -248,16 +317,41 @@ const ManualGobiProcessor: React.FC = () => {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">
-              Paste Gobi JSON Output
+              Paste Gobi Output (JSON or Python format)
             </label>
             <Textarea
-              placeholder='Paste JSON here, e.g. {"jobs": [{"title": "Software Engineer", "company": "Example Corp", ...}]}'
+              placeholder={`Paste output here. Both formats supported:
+
+JSON: {"jobs": [{"title": "Engineer", "company": "Corp", ...}]}
+
+Python: {'jobs': [{'title': 'Engineer', 'company': 'Corp', ...}]}`}
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
               rows={8}
               className="font-mono text-sm"
             />
           </div>
+          
+          {/* Format Detection */}
+          {jsonInput.trim() && detectedFormat !== 'unknown' && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Detected format: <strong>{detectedFormat === 'python' ? 'Python Dictionary' : 'JSON'}</strong>
+                {detectedFormat === 'python' && ' (will be converted to JSON)'}
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Conversion Preview */}
+          {conversionPreview && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Conversion Preview:</label>
+              <div className="bg-gray-50 p-3 rounded border text-xs font-mono max-h-32 overflow-y-auto">
+                {conversionPreview}
+              </div>
+            </div>
+          )}
           
           {validationError && (
             <Alert variant="destructive">
@@ -271,7 +365,7 @@ const ManualGobiProcessor: React.FC = () => {
               onClick={handleParseJson}
               disabled={!jsonInput.trim() || isProcessing}
             >
-              {showPreview ? <Eye className="w-4 h-4 mr-2" /> : <Eye className="w-4 h-4 mr-2" />}
+              <Eye className="w-4 h-4 mr-2" />
               Parse & Preview Jobs
             </Button>
             
@@ -282,6 +376,8 @@ const ManualGobiProcessor: React.FC = () => {
                   setShowPreview(false);
                   setProcessedJobs([]);
                   setValidationError(null);
+                  setDetectedFormat('unknown');
+                  setConversionPreview('');
                 }}
               >
                 <EyeOff className="w-4 h-4 mr-2" />
