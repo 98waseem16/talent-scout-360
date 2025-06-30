@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -78,14 +77,57 @@ const DuplicateMonitor: React.FC = () => {
     try {
       setCleaning(true);
       
-      const { data, error } = await supabase.rpc('cleanup_duplicate_jobs');
-      
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        const result = data[0];
-        toast.success(`Cleaned up ${result.deleted_count} duplicate jobs. ${result.remaining_count} unique jobs remaining.`);
+      // Get all draft jobs with scraping_job_id to find duplicates
+      const { data: draftJobs, error: fetchError } = await supabase
+        .from('job_postings')
+        .select('id, scraping_job_id, title, company, created_at')
+        .eq('is_draft', true)
+        .not('scraping_job_id', 'is', null)
+        .order('created_at', { ascending: true });
+
+      if (fetchError) throw fetchError;
+
+      if (!draftJobs || draftJobs.length === 0) {
+        toast.info('No draft jobs found to clean up');
+        return;
       }
+
+      // Group by scraping_job_id, title, company to find duplicates
+      const groups = draftJobs.reduce((acc, job) => {
+        const key = `${job.scraping_job_id}-${job.title}-${job.company}`;
+        if (!acc[key]) {
+          acc[key] = [];
+        }
+        acc[key].push(job);
+        return acc;
+      }, {} as Record<string, typeof draftJobs>);
+
+      // Find IDs of duplicate jobs to delete (keep the first one, delete the rest)
+      const idsToDelete: string[] = [];
+      Object.values(groups).forEach(group => {
+        if (group.length > 1) {
+          // Keep the first (earliest created), delete the rest
+          group.slice(1).forEach(job => {
+            idsToDelete.push(job.id);
+          });
+        }
+      });
+
+      if (idsToDelete.length === 0) {
+        toast.info('No duplicate jobs found to clean up');
+        return;
+      }
+
+      // Delete the duplicate jobs
+      const { error: deleteError } = await supabase
+        .from('job_postings')
+        .delete()
+        .in('id', idsToDelete);
+
+      if (deleteError) throw deleteError;
+
+      const remainingJobs = draftJobs.length - idsToDelete.length;
+      toast.success(`Cleaned up ${idsToDelete.length} duplicate jobs. ${remainingJobs} unique jobs remaining.`);
       
       // Refresh stats
       await fetchDuplicateStats();
