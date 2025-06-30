@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -15,6 +14,7 @@ import BulkScrapingUpload from '@/components/admin/BulkScrapingUpload';
 import QueueStatus from '@/components/admin/QueueStatus';
 import StuckJobsManager from '@/components/admin/StuckJobsManager';
 import ManualGobiProcessor from '@/components/admin/ManualGobiProcessor';
+import DuplicateMonitor from '@/components/admin/DuplicateMonitor';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -150,6 +150,9 @@ const AdminDashboard: React.FC = () => {
                 </Button>
               </div>
             </div>
+
+            {/* PHASE 3: Add Duplicate Monitor */}
+            <DuplicateMonitor />
           </div>
 
           {/* Main Content - Tabbed Interface */}
