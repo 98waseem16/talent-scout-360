@@ -7,12 +7,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const { signInWithEmail, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -25,6 +26,10 @@ const Auth: React.FC = () => {
   // Function to handle navigation back to previous page
   const handleGoBack = () => {
     navigate(-1);
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
   };
 
   useEffect(() => {
@@ -105,15 +110,32 @@ const Auth: React.FC = () => {
                   </div>
                   <div>
                     <Label htmlFor="password">Password</Label>
-                    <Input
-                      type="password"
-                      id="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={loading}
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        id="password"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        disabled={loading}
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={togglePasswordVisibility}
+                        disabled={loading}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-gray-500" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-gray-500" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? 'Signing In...' : 'Sign In'}
@@ -136,15 +158,32 @@ const Auth: React.FC = () => {
                   </div>
                   <div>
                     <Label htmlFor="password">Password</Label>
-                    <Input
-                      type="password"
-                      id="password"
-                      placeholder="Enter your password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      disabled={loading}
-                    />
+                    <div className="relative">
+                      <Input
+                        type={showPassword ? "text" : "password"}
+                        id="password"
+                        placeholder="Enter your password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        required
+                        disabled={loading}
+                        className="pr-10"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                        onClick={togglePasswordVisibility}
+                        disabled={loading}
+                      >
+                        {showPassword ? (
+                          <EyeOff className="h-4 w-4 text-gray-500" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-gray-500" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                   <Button type="submit" className="w-full" disabled={loading}>
                     {loading ? 'Creating Account...' : 'Sign Up'}
