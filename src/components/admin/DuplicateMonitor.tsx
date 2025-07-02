@@ -22,10 +22,10 @@ const DuplicateMonitor: React.FC = () => {
     try {
       setLoading(true);
       
-      // Get all draft jobs with scraping_job_id
+      // PHASE 3: Enhanced duplicate detection with better grouping
       const { data: draftJobs, error } = await supabase
         .from('job_postings')
-        .select('id, scraping_job_id, title, company, created_at')
+        .select('id, scraping_job_id, title, company, created_at, source_url')
         .eq('is_draft', true)
         .not('scraping_job_id', 'is', null);
 
@@ -42,9 +42,9 @@ const DuplicateMonitor: React.FC = () => {
         return;
       }
 
-      // Group by scraping_job_id, title, company to find duplicates
+      // Enhanced grouping: title + company + source_url for better accuracy
       const groups = draftJobs.reduce((acc, job) => {
-        const key = `${job.scraping_job_id}-${job.title}-${job.company}`;
+        const key = `${job.title}-${job.company}-${job.source_url || job.scraping_job_id}`;
         if (!acc[key]) {
           acc[key] = [];
         }
@@ -77,10 +77,10 @@ const DuplicateMonitor: React.FC = () => {
     try {
       setCleaning(true);
       
-      // Get all draft jobs with scraping_job_id to find duplicates
+      // PHASE 3: Enhanced cleanup with recovery logging
       const { data: draftJobs, error: fetchError } = await supabase
         .from('job_postings')
-        .select('id, scraping_job_id, title, company, created_at')
+        .select('id, scraping_job_id, title, company, created_at, source_url')
         .eq('is_draft', true)
         .not('scraping_job_id', 'is', null)
         .order('created_at', { ascending: true });
@@ -92,9 +92,9 @@ const DuplicateMonitor: React.FC = () => {
         return;
       }
 
-      // Group by scraping_job_id, title, company to find duplicates
+      // Enhanced grouping for cleanup
       const groups = draftJobs.reduce((acc, job) => {
-        const key = `${job.scraping_job_id}-${job.title}-${job.company}`;
+        const key = `${job.title}-${job.company}-${job.source_url || job.scraping_job_id}`;
         if (!acc[key]) {
           acc[key] = [];
         }
@@ -104,8 +104,11 @@ const DuplicateMonitor: React.FC = () => {
 
       // Find IDs of duplicate jobs to delete (keep the first one, delete the rest)
       const idsToDelete: string[] = [];
+      let groupsProcessed = 0;
+      
       Object.values(groups).forEach(group => {
         if (group.length > 1) {
+          groupsProcessed++;
           // Keep the first (earliest created), delete the rest
           group.slice(1).forEach(job => {
             idsToDelete.push(job.id);
@@ -126,8 +129,23 @@ const DuplicateMonitor: React.FC = () => {
 
       if (deleteError) throw deleteError;
 
+      // Log the cleanup action for monitoring
+      try {
+        await supabase
+          .from('job_recovery_log')
+          .insert({
+            scraping_job_id: null,
+            recovery_action: 'duplicate_cleanup',
+            old_status: 'duplicate',
+            new_status: 'cleaned',
+            recovery_reason: `Removed ${idsToDelete.length} duplicate jobs from ${groupsProcessed} groups`
+          });
+      } catch (logError) {
+        console.warn('Failed to log cleanup action:', logError);
+      }
+
       const remainingJobs = draftJobs.length - idsToDelete.length;
-      toast.success(`Cleaned up ${idsToDelete.length} duplicate jobs. ${remainingJobs} unique jobs remaining.`);
+      toast.success(`Cleaned up ${idsToDelete.length} duplicate jobs from ${groupsProcessed} groups. ${remainingJobs} unique jobs remaining.`);
       
       // Refresh stats
       await fetchDuplicateStats();
@@ -142,6 +160,11 @@ const DuplicateMonitor: React.FC = () => {
 
   useEffect(() => {
     fetchDuplicateStats();
+    
+    // PHASE 2: More frequent monitoring for duplicates
+    const interval = setInterval(fetchDuplicateStats, 60000); // Every minute
+    
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -149,7 +172,7 @@ const DuplicateMonitor: React.FC = () => {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <AlertTriangle className="w-5 h-5 text-orange-500" />
-          Duplicate Job Monitor
+          Duplicate Job Monitor (Enhanced)
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -183,11 +206,11 @@ const DuplicateMonitor: React.FC = () => {
               <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <AlertTriangle className="w-4 h-4 text-orange-600" />
-                  <span className="font-medium text-orange-800">Duplicates Detected</span>
+                  <span className="font-medium text-orange-800">Duplicates Detected (Enhanced Detection)</span>
                 </div>
                 <p className="text-sm text-orange-700 mb-3">
-                  Found {stats.duplicateJobs} duplicate jobs in {stats.duplicateGroups} groups.
-                  This indicates a race condition between webhook and polling functions.
+                  Found {stats.duplicateJobs} duplicate jobs in {stats.duplicateGroups} groups using enhanced detection.
+                  This may indicate race conditions or webhook processing issues.
                 </p>
                 <Button
                   onClick={cleanupDuplicates}
@@ -212,7 +235,7 @@ const DuplicateMonitor: React.FC = () => {
                   <span className="font-medium text-green-800">No Duplicates Found</span>
                 </div>
                 <p className="text-sm text-green-700 mt-1">
-                  All draft jobs are unique. The duplicate prevention system is working correctly.
+                  All draft jobs are unique. The enhanced duplicate prevention system is working correctly.
                 </p>
               </div>
             )}

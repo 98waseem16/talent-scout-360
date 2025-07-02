@@ -176,6 +176,44 @@ export type Database = {
           },
         ]
       }
+      job_recovery_log: {
+        Row: {
+          created_at: string
+          id: string
+          new_status: string | null
+          old_status: string | null
+          recovery_action: string
+          recovery_reason: string | null
+          scraping_job_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          recovery_action: string
+          recovery_reason?: string | null
+          scraping_job_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          new_status?: string | null
+          old_status?: string | null
+          recovery_action?: string
+          recovery_reason?: string | null
+          scraping_job_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_recovery_log_scraping_job_id_fkey"
+            columns: ["scraping_job_id"]
+            isOneToOne: false
+            referencedRelation: "scraping_jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -446,6 +484,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      webhook_health: {
+        Row: {
+          created_at: string
+          failure_count: number | null
+          id: string
+          is_active: boolean | null
+          last_received_at: string | null
+          updated_at: string
+          webhook_type: string
+        }
+        Insert: {
+          created_at?: string
+          failure_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_received_at?: string | null
+          updated_at?: string
+          webhook_type: string
+        }
+        Update: {
+          created_at?: string
+          failure_count?: number | null
+          id?: string
+          is_active?: boolean | null
+          last_received_at?: string | null
+          updated_at?: string
+          webhook_type?: string
+        }
+        Relationships: []
       }
     }
     Views: {

@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Globe, Plus, Upload, Activity, AlertTriangle, FileInput } from 'lucide-react';
+import { FileText, Globe, Plus, Upload, Activity, AlertTriangle, FileInput, Shield, Wifi } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import DraftJobsList from '@/components/admin/DraftJobsList';
 import CareerPageScraper from '@/components/admin/CareerPageScraper';
@@ -15,6 +15,8 @@ import QueueStatus from '@/components/admin/QueueStatus';
 import StuckJobsManager from '@/components/admin/StuckJobsManager';
 import ManualGobiProcessor from '@/components/admin/ManualGobiProcessor';
 import DuplicateMonitor from '@/components/admin/DuplicateMonitor';
+import JobRecoveryMonitor from '@/components/admin/JobRecoveryMonitor';
+import WebhookHealthMonitor from '@/components/admin/WebhookHealthMonitor';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -76,13 +78,13 @@ const AdminDashboard: React.FC = () => {
           setQueuePendingCount(pendingCount);
         }
 
-        // Fetch stuck jobs count (running for more than 15 minutes)
-        const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+        // PHASE 2: Improved stuck detection (reduced from 15 to 10 minutes)
+        const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
         const { count: stuckCount, error: stuckError } = await supabase
           .from('scraping_jobs')
           .select('*', { count: 'exact', head: true })
           .eq('status', 'running')
-          .lt('started_at', fifteenMinutesAgo);
+          .lt('started_at', tenMinutesAgo);
           
         if (stuckError) {
           console.error('Error fetching stuck jobs count:', stuckError);
@@ -104,9 +106,9 @@ const AdminDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto">
           {/* Header Section */}
           <div className="mb-10">
-            <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+            <h1 className="text-3xl font-bold mb-2">Admin Dashboard (Enhanced)</h1>
             <p className="text-muted-foreground mb-6">
-              Welcome back, {user?.email?.split('@')[0] || 'Admin'}. Manage job drafts and scrape career pages.
+              Welcome back, {user?.email?.split('@')[0] || 'Admin'}. Complete scraper management with recovery and monitoring.
             </p>
             
             {/* Quick Stats */}
@@ -151,16 +153,19 @@ const AdminDashboard: React.FC = () => {
               </div>
             </div>
 
-            {/* PHASE 3: Add Duplicate Monitor */}
-            <DuplicateMonitor />
+            {/* PHASE 3: Enhanced monitoring with new components */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <DuplicateMonitor />
+              <WebhookHealthMonitor />
+            </div>
           </div>
 
-          {/* Main Content - Tabbed Interface */}
+          {/* Main Content - Enhanced Tabbed Interface */}
           <Tabs defaultValue="drafts" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-6">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="drafts" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
-                Draft Jobs
+                Drafts
                 {draftJobsCount !== null && draftJobsCount > 0 && (
                   <span className="bg-orange-100 text-orange-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
                     {draftJobsCount}
@@ -169,43 +174,36 @@ const AdminDashboard: React.FC = () => {
               </TabsTrigger>
               <TabsTrigger value="single" className="flex items-center gap-2">
                 <Globe className="w-4 h-4" />
-                Single Scraper
-                {recentScrapingCount !== null && recentScrapingCount > 0 && (
-                  <span className="bg-purple-100 text-purple-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
-                    {recentScrapingCount}
-                  </span>
-                )}
+                Single
               </TabsTrigger>
               <TabsTrigger value="bulk" className="flex items-center gap-2">
                 <Upload className="w-4 h-4" />
-                Bulk Upload
-                {activeBatchesCount !== null && activeBatchesCount > 0 && (
-                  <span className="bg-blue-100 text-blue-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
-                    {activeBatchesCount}
-                  </span>
-                )}
+                Bulk
               </TabsTrigger>
               <TabsTrigger value="manual" className="flex items-center gap-2">
                 <FileInput className="w-4 h-4" />
-                Manual Import
+                Manual
               </TabsTrigger>
               <TabsTrigger value="queue" className="flex items-center gap-2">
                 <Activity className="w-4 h-4" />
-                Queue Status
-                {queuePendingCount !== null && queuePendingCount > 0 && (
-                  <span className="bg-yellow-100 text-yellow-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
-                    {queuePendingCount}
-                  </span>
-                )}
+                Queue
               </TabsTrigger>
               <TabsTrigger value="stuck" className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4" />
-                Stuck Jobs
+                Stuck
                 {stuckJobsCount !== null && stuckJobsCount > 0 && (
                   <span className="bg-red-100 text-red-800 rounded-full px-2 py-1 text-xs font-medium ml-1">
                     {stuckJobsCount}
                   </span>
                 )}
+              </TabsTrigger>
+              <TabsTrigger value="recovery" className="flex items-center gap-2">
+                <Shield className="w-4 h-4" />
+                Recovery
+              </TabsTrigger>
+              <TabsTrigger value="webhook" className="flex items-center gap-2">
+                <Wifi className="w-4 h-4" />
+                Webhook
               </TabsTrigger>
             </TabsList>
 
@@ -261,6 +259,15 @@ const AdminDashboard: React.FC = () => {
 
             <TabsContent value="stuck">
               <StuckJobsManager />
+            </TabsContent>
+
+            {/* PHASE 3: New recovery and webhook monitoring tabs */}
+            <TabsContent value="recovery">
+              <JobRecoveryMonitor />
+            </TabsContent>
+
+            <TabsContent value="webhook">
+              <WebhookHealthMonitor />
             </TabsContent>
           </Tabs>
         </div>

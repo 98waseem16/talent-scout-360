@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, Clock, X, RefreshCw, Play } from 'lucide-react';
+import { AlertTriangle, Clock, X, RefreshCw, Play, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
@@ -20,6 +20,7 @@ interface StuckJob {
   };
   retry_count: number | null;
   error_message: string | null;
+  last_polled_at: string | null;
 }
 
 const StuckJobsManager: React.FC = () => {
@@ -30,8 +31,8 @@ const StuckJobsManager: React.FC = () => {
 
   const fetchStuckJobs = async () => {
     try {
-      // Find jobs running for more than 15 minutes
-      const fifteenMinutesAgo = new Date(Date.now() - 15 * 60 * 1000).toISOString();
+      // PHASE 2: Improved stuck detection - find jobs running for more than 10 minutes
+      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
       
       const { data, error } = await supabase
         .from('scraping_jobs')
@@ -40,7 +41,7 @@ const StuckJobsManager: React.FC = () => {
           career_page_sources!inner(url, company_name)
         `)
         .eq('status', 'running')
-        .lt('started_at', fifteenMinutesAgo)
+        .lt('started_at', tenMinutesAgo)
         .order('started_at', { ascending: true });
 
       if (error) throw error;
@@ -71,6 +72,17 @@ const StuckJobsManager: React.FC = () => {
         .eq('id', jobId);
 
       if (error) throw error;
+
+      // PHASE 3: Log recovery action
+      await supabase
+        .from('job_recovery_log')
+        .insert({
+          scraping_job_id: jobId,
+          recovery_action: 'manual_cancellation',
+          old_status: 'running',
+          new_status: 'failed',
+          recovery_reason: 'Manually cancelled by admin from stuck jobs manager'
+        });
 
       toast({
         title: "Job Cancelled",
@@ -106,6 +118,17 @@ const StuckJobsManager: React.FC = () => {
 
       if (error) throw error;
 
+      // PHASE 3: Log recovery action
+      await supabase
+        .from('job_recovery_log')
+        .insert({
+          scraping_job_id: jobId,
+          recovery_action: 'manual_retry',
+          old_status: 'running',
+          new_status: 'pending',
+          recovery_reason: 'Manually reset for retry by admin'
+        });
+
       toast({
         title: "Job Reset",
         description: "The job has been reset to pending status.",
@@ -124,28 +147,63 @@ const StuckJobsManager: React.FC = () => {
     }
   };
 
+  // PHASE 1: Fixed manual check to use specific_job_id parameter
   const refreshJobStatus = async (jobId: string, gobiTaskId: string) => {
     setActionLoading(jobId);
     try {
-      // Trigger the poll function for this specific job
       const { error } = await supabase.functions.invoke('poll-gobi-tasks', {
-        body: { specific_job_id: jobId }
+        body: { 
+          specific_job_id: jobId,
+          trigger: 'manual_check'
+        }
       });
 
       if (error) throw error;
 
       toast({
-        title: "Status Refresh Triggered",
+        title: "Status Check Triggered",
         description: "Job status refresh has been triggered.",
       });
 
       // Refresh the list after a short delay
-      setTimeout(fetchStuckJobs, 2000);
+      setTimeout(fetchStuckJobs, 3000);
     } catch (error) {
       console.error('Error refreshing job status:', error);
       toast({
         title: "Error",
         description: "Failed to refresh job status",
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  // PHASE 1: Force sync action for immediate status check
+  const forceSyncJob = async (jobId: string) => {
+    setActionLoading(jobId);
+    try {
+      // Directly call the polling function with force flag
+      const { error } = await supabase.functions.invoke('poll-gobi-tasks', {
+        body: { 
+          specific_job_id: jobId,
+          trigger: 'force_sync'
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Force Sync Triggered",
+        description: "Forcing immediate status synchronization with Gobi API.",
+      });
+
+      setTimeout(fetchStuckJobs, 2000);
+    } catch (error) {
+      console.error('Error force syncing job:', error);
+      toast({
+        title: "Error",
+        description: "Failed to force sync job status",
         variant: "destructive",
       });
     } finally {
@@ -169,11 +227,26 @@ const StuckJobsManager: React.FC = () => {
     return `${diffHours}hr ${remainingMinutes}min`;
   };
 
+  const getSeverityBadge = (startTime: string) => {
+    const start = new Date(startTime);
+    const diffHours = (Date.now() - start.getTime()) / (1000 * 60 * 60);
+    
+    if (diffHours > 24) {
+      return <Badge variant="destructive">CRITICAL</Badge>;
+    } else if (diffHours > 2) {
+      return <Badge variant="destructive">HIGH</Badge>;
+    } else if (diffHours > 1) {
+      return <Badge className="bg-orange-500">MEDIUM</Badge>;
+    } else {
+      return <Badge variant="secondary">LOW</Badge>;
+    }
+  };
+
   useEffect(() => {
     fetchStuckJobs();
     
-    // Refresh every 30 seconds
-    const interval = setInterval(fetchStuckJobs, 30000);
+    // PHASE 2: More frequent refresh for better monitoring
+    const interval = setInterval(fetchStuckJobs, 20000); // Every 20 seconds
     
     return () => clearInterval(interval);
   }, []);
@@ -208,7 +281,7 @@ const StuckJobsManager: React.FC = () => {
           </Button>
         </CardTitle>
         <CardDescription>
-          Jobs running for more than 15 minutes that may be stuck
+          Jobs running for more than 10 minutes that may be stuck (improved detection)
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -224,8 +297,8 @@ const StuckJobsManager: React.FC = () => {
               <TableRow>
                 <TableHead>Company</TableHead>
                 <TableHead>Duration</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Retries</TableHead>
+                <TableHead>Severity</TableHead>
+                <TableHead>Last Check</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -248,23 +321,40 @@ const StuckJobsManager: React.FC = () => {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant="secondary">{job.status}</Badge>
+                    {getSeverityBadge(job.started_at)}
                   </TableCell>
                   <TableCell>
-                    <span className="text-sm">{job.retry_count || 0}</span>
+                    <span className="text-sm">
+                      {job.last_polled_at 
+                        ? formatDuration(job.last_polled_at) + ' ago'
+                        : 'Never'
+                      }
+                    </span>
                   </TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       {job.gobi_task_id && (
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => refreshJobStatus(job.id, job.gobi_task_id!)}
-                          disabled={actionLoading === job.id}
-                        >
-                          <RefreshCw className={`w-3 h-3 mr-1 ${actionLoading === job.id ? 'animate-spin' : ''}`} />
-                          Check
-                        </Button>
+                        <>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => refreshJobStatus(job.id, job.gobi_task_id!)}
+                            disabled={actionLoading === job.id}
+                          >
+                            <RefreshCw className={`w-3 h-3 mr-1 ${actionLoading === job.id ? 'animate-spin' : ''}`} />
+                            Check
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="default"
+                            onClick={() => forceSyncJob(job.id)}
+                            disabled={actionLoading === job.id}
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <Zap className="w-3 h-3 mr-1" />
+                            Force
+                          </Button>
+                        </>
                       )}
                       <Button
                         size="sm"
