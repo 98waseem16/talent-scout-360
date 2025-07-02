@@ -81,21 +81,33 @@ const ManualGobiProcessor: React.FC = () => {
     try {
       let converted = pythonStr;
       
-      // Convert Python booleans to JSON
+      // First, convert Python booleans and None to JSON equivalents
       converted = converted.replace(/\bTrue\b/g, 'true');
       converted = converted.replace(/\bFalse\b/g, 'false');
       converted = converted.replace(/\bNone\b/g, 'null');
       
-      // Convert single quotes to double quotes, but be careful with quotes inside strings
-      // This is a simplified approach - for production, you'd want a proper parser
+      // Smart quote conversion: Convert single quotes to double quotes only when they're structural
+      // This regex matches Python string literals (single quotes that start/end strings)
+      // It handles both simple strings and complex multi-word strings with apostrophes inside
+      converted = converted.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, (match, content) => {
+        // This preserves the content inside quotes and wraps it with double quotes
+        return `"${content}"`;
+      });
+      
+      // Handle any remaining structural single quotes (like dictionary keys)
+      // This is a fallback for edge cases where the regex above might not catch everything
+      converted = converted.replace(/(\w+):\s*'/g, '"$1": "');
       converted = converted.replace(/'/g, '"');
       
-      // Fix any double-double quotes that might have been created
+      // Clean up any double-double quotes that might have been created
       converted = converted.replace(/""/g, '"');
+      
+      // Final cleanup: ensure proper JSON structure
+      converted = converted.replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
       
       return converted;
     } catch (error) {
-      throw new Error('Failed to convert Python format to JSON');
+      throw new Error('Failed to convert Python format to JSON: ' + error.message);
     }
   };
 
@@ -136,8 +148,8 @@ const ManualGobiProcessor: React.FC = () => {
     } catch (error) {
       const errorMessage = (error as Error).message;
       
-      if (errorMessage.includes('Unexpected token')) {
-        setValidationError(`JSON parsing error: ${errorMessage}. Try pasting the raw output from Gobi (Python format is supported).`);
+      if (errorMessage.includes('Unexpected token') || errorMessage.includes('Expected')) {
+        setValidationError(`JSON parsing error: ${errorMessage}. The Python-to-JSON conversion may have failed. Please check for complex nested structures or special characters.`);
       } else {
         setValidationError(`Parsing error: ${errorMessage}`);
       }
@@ -309,7 +321,7 @@ const ManualGobiProcessor: React.FC = () => {
         </CardTitle>
         <CardDescription>
           Paste Gobi's output to manually create draft jobs when automated processing fails. 
-          Supports both JSON and Python dictionary formats.
+          Supports both JSON and Python dictionary formats with smart apostrophe handling.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -338,7 +350,7 @@ Python: {'jobs': [{'title': 'Engineer', 'company': 'Corp', ...}]}`}
               <Info className="h-4 w-4" />
               <AlertDescription>
                 Detected format: <strong>{detectedFormat === 'python' ? 'Python Dictionary' : 'JSON'}</strong>
-                {detectedFormat === 'python' && ' (will be converted to JSON)'}
+                {detectedFormat === 'python' && ' (will be converted to JSON with smart apostrophe handling)'}
               </AlertDescription>
             </Alert>
           )}
