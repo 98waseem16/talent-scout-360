@@ -141,40 +141,75 @@ const ManualGobiProcessor: React.FC = () => {
 
   const validateAndParseJson = (input: string): GobiOutput | null => {
     try {
-      const format = detectInputFormat(input);
-      setDetectedFormat(format);
+      // STEP 1: Try direct JSON parsing first (like the working edge function)
+      console.log('=== PARSING ATTEMPT 1: Direct JSON Parse ===');
+      console.log('Input (first 200 chars):', input.substring(0, 200));
       
-      let jsonString = input;
-      
-      if (format === 'python') {
-        console.log('Detected Python dictionary format, converting to JSON...');
-        jsonString = convertPythonToJson(input);
-        setConversionPreview(jsonString.substring(0, 500) + '...');
-        console.log('Converted JSON (first 500 chars):', jsonString.substring(0, 500));
-      } else {
+      try {
+        const directParsed = JSON.parse(input);
+        console.log('✅ SUCCESS: Direct JSON parsing worked!');
+        setDetectedFormat('json');
         setConversionPreview('');
-      }
-      
-      const parsed = JSON.parse(jsonString);
-      
-      if (!parsed || typeof parsed !== 'object') {
-        setValidationError('Invalid format: Expected an object with jobs array');
-        return null;
-      }
+        
+        if (!directParsed || typeof directParsed !== 'object') {
+          setValidationError('Invalid format: Expected an object with jobs array');
+          return null;
+        }
 
-      if (!Array.isArray(parsed.jobs)) {
-        setValidationError('Invalid format: Must contain a "jobs" array');
-        return null;
-      }
+        if (!Array.isArray(directParsed.jobs)) {
+          setValidationError('Invalid format: Must contain a "jobs" array');
+          return null;
+        }
 
-      if (parsed.jobs.length === 0) {
-        setValidationError('No jobs found in the input');
-        return null;
-      }
+        if (directParsed.jobs.length === 0) {
+          setValidationError('No jobs found in the input');
+          return null;
+        }
 
-      setValidationError(null);
-      return parsed as GobiOutput;
+        setValidationError(null);
+        return directParsed as GobiOutput;
+        
+      } catch (directParseError) {
+        console.log('❌ Direct JSON parsing failed:', (directParseError as Error).message);
+        console.log('=== PARSING ATTEMPT 2: Python-to-JSON Conversion ===');
+        
+        // STEP 2: Try Python format detection and conversion
+        const format = detectInputFormat(input);
+        setDetectedFormat(format);
+        
+        if (format === 'python') {
+          console.log('Detected Python dictionary format, attempting conversion...');
+          const jsonString = convertPythonToJson(input);
+          setConversionPreview(jsonString.substring(0, 500) + '...');
+          console.log('Converted JSON (first 500 chars):', jsonString.substring(0, 500));
+          
+          const parsed = JSON.parse(jsonString);
+          console.log('✅ SUCCESS: Python-to-JSON conversion worked!');
+          
+          if (!parsed || typeof parsed !== 'object') {
+            setValidationError('Invalid format: Expected an object with jobs array');
+            return null;
+          }
+
+          if (!Array.isArray(parsed.jobs)) {
+            setValidationError('Invalid format: Must contain a "jobs" array');
+            return null;
+          }
+
+          if (parsed.jobs.length === 0) {
+            setValidationError('No jobs found in the input');
+            return null;
+          }
+
+          setValidationError(null);
+          return parsed as GobiOutput;
+        } else {
+          // Re-throw the original JSON parsing error with more context
+          throw new Error(`JSON parsing failed: ${(directParseError as Error).message}. Input doesn't appear to be Python format either.`);
+        }
+      }
     } catch (error) {
+      console.error('❌ ALL PARSING ATTEMPTS FAILED:', error);
       const errorMessage = (error as Error).message;
       
       if (errorMessage.includes('Unexpected token') || errorMessage.includes('Expected')) {
@@ -350,7 +385,7 @@ const ManualGobiProcessor: React.FC = () => {
         </CardTitle>
         <CardDescription>
           Paste Gobi's output to manually create draft jobs when automated processing fails. 
-          Supports both JSON and Python dictionary formats with advanced parsing.
+          Supports both JSON and Python dictionary formats with intelligent parsing.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -379,7 +414,7 @@ Python: {'jobs': [{'title': 'Engineer', 'company': 'Corp', ...}]}`}
               <Info className="h-4 w-4" />
               <AlertDescription>
                 Detected format: <strong>{detectedFormat === 'python' ? 'Python Dictionary' : 'JSON'}</strong>
-                {detectedFormat === 'python' && ' (will be converted to JSON with advanced parsing)'}
+                {detectedFormat === 'python' && ' (will be converted to JSON with intelligent parsing)'}
               </AlertDescription>
             </Alert>
           )}
