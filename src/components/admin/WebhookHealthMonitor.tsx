@@ -69,11 +69,11 @@ const WebhookHealthMonitor: React.FC = () => {
       : Infinity;
 
     if (!webhook.is_active || webhook.failure_count > 10) {
-      return { status: 'critical', color: 'destructive', icon: WifiOff };
+      return { status: 'critical', color: 'destructive' as const, icon: WifiOff };
     } else if (webhook.failure_count > 5 || minutesSinceLastReceived > 60) {
-      return { status: 'warning', color: 'default', icon: AlertCircle };
+      return { status: 'warning', color: 'secondary' as const, icon: AlertCircle };
     } else {
-      return { status: 'healthy', color: 'default', icon: CheckCircle };
+      return { status: 'healthy', color: 'default' as const, icon: CheckCircle };
     }
   };
 
