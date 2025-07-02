@@ -81,33 +81,61 @@ const ManualGobiProcessor: React.FC = () => {
     try {
       let converted = pythonStr;
       
-      // First, convert Python booleans and None to JSON equivalents
+      // Step 1: Convert Python literals to JSON equivalents
       converted = converted.replace(/\bTrue\b/g, 'true');
       converted = converted.replace(/\bFalse\b/g, 'false');
       converted = converted.replace(/\bNone\b/g, 'null');
       
-      // Smart quote conversion: Convert single quotes to double quotes only when they're structural
-      // This regex matches Python string literals (single quotes that start/end strings)
-      // It handles both simple strings and complex multi-word strings with apostrophes inside
-      converted = converted.replace(/'([^'\\]*(\\.[^'\\]*)*)'/g, (match, content) => {
-        // This preserves the content inside quotes and wraps it with double quotes
-        return `"${content}"`;
-      });
+      // Step 2: Use a more sophisticated approach to handle quotes
+      // We'll use a state machine approach to properly parse Python strings
       
-      // Handle any remaining structural single quotes (like dictionary keys)
-      // This is a fallback for edge cases where the regex above might not catch everything
-      converted = converted.replace(/(\w+):\s*'/g, '"$1": "');
-      converted = converted.replace(/'/g, '"');
+      let result = '';
+      let i = 0;
+      let inString = false;
+      let stringChar = '';
       
-      // Clean up any double-double quotes that might have been created
-      converted = converted.replace(/""/g, '"');
+      while (i < converted.length) {
+        const char = converted[i];
+        const nextChar = converted[i + 1];
+        
+        if (!inString) {
+          if (char === "'") {
+            // Start of a string
+            inString = true;
+            stringChar = "'";
+            result += '"'; // Convert to double quote
+          } else {
+            result += char;
+          }
+        } else {
+          // We're inside a string
+          if (char === stringChar && converted[i - 1] !== '\\') {
+            // End of string (not escaped)
+            inString = false;
+            stringChar = '';
+            result += '"'; // Convert to double quote
+          } else if (char === '"') {
+            // Escape existing double quotes inside the string
+            result += '\\"';
+          } else {
+            result += char;
+          }
+        }
+        
+        i++;
+      }
       
-      // Final cleanup: ensure proper JSON structure
-      converted = converted.replace(/,(\s*[}\]])/g, '$1'); // Remove trailing commas
+      // Step 3: Clean up any remaining issues
+      // Remove trailing commas before closing brackets/braces
+      result = result.replace(/,(\s*[}\]])/g, '$1');
       
-      return converted;
+      // Handle any edge cases with multiple quotes
+      result = result.replace(/"{2,}/g, '"');
+      
+      return result;
     } catch (error) {
-      throw new Error('Failed to convert Python format to JSON: ' + error.message);
+      console.error('Python to JSON conversion error:', error);
+      throw new Error('Failed to convert Python format to JSON: ' + (error as Error).message);
     }
   };
 
@@ -122,6 +150,7 @@ const ManualGobiProcessor: React.FC = () => {
         console.log('Detected Python dictionary format, converting to JSON...');
         jsonString = convertPythonToJson(input);
         setConversionPreview(jsonString.substring(0, 500) + '...');
+        console.log('Converted JSON (first 500 chars):', jsonString.substring(0, 500));
       } else {
         setConversionPreview('');
       }
@@ -321,7 +350,7 @@ const ManualGobiProcessor: React.FC = () => {
         </CardTitle>
         <CardDescription>
           Paste Gobi's output to manually create draft jobs when automated processing fails. 
-          Supports both JSON and Python dictionary formats with smart apostrophe handling.
+          Supports both JSON and Python dictionary formats with advanced parsing.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -350,7 +379,7 @@ Python: {'jobs': [{'title': 'Engineer', 'company': 'Corp', ...}]}`}
               <Info className="h-4 w-4" />
               <AlertDescription>
                 Detected format: <strong>{detectedFormat === 'python' ? 'Python Dictionary' : 'JSON'}</strong>
-                {detectedFormat === 'python' && ' (will be converted to JSON with smart apostrophe handling)'}
+                {detectedFormat === 'python' && ' (will be converted to JSON with advanced parsing)'}
               </AlertDescription>
             </Alert>
           )}
