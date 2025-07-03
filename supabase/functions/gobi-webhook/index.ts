@@ -23,13 +23,17 @@ interface GobiWebhookPayload {
       type?: string;
       application_url?: string;
       logo?: string;
+      department?: string;
+      seniority_level?: string;
+      remote_onsite?: string;
+      equity?: string;
+      visa_sponsorship?: boolean;
     }>;
     error?: string;
   };
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
   }
@@ -37,13 +41,18 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
-
     const payload: GobiWebhookPayload = await req.json()
-    console.log('Received webhook payload:', JSON.stringify(payload, null, 2))
 
-    // Find the scraping job by Gobi task ID
-    const { data: scrapingJob, error: findError } = await supabase
+    console.log('=== GOBI WEBHOOK RECEIVED ===')
+    console.log('Task ID:', payload.task_id)
+    console.log('Status:', payload.status)
+    console.log('Jobs found:', payload.result?.jobs?.length || 0)
+
+    // EMERGENCY FIX: Remove broken processing_locked_at references
+    // Find the scraping job by task_id
+    const { data: scrapingJob, error: fetchError } = await supabase
       .from('scraping_jobs')
       .select(`
         *,
@@ -52,127 +61,64 @@ serve(async (req) => {
       .eq('gobi_task_id', payload.task_id)
       .single()
 
-    if (findError) {
-      console.error('Error finding scraping job:', findError)
-      return new Response('Scraping job not found', { 
-        status: 404, 
-        headers: corsHeaders 
-      })
+    if (fetchError) {
+      console.error('Error finding scraping job:', fetchError)
+      return new Response('Scraping job not found', { status: 404, headers: corsHeaders })
     }
 
     console.log('Found scraping job:', scrapingJob.id)
 
-    // PHASE 2: Implement processing lock to prevent race conditions
-    const lockId = `webhook-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    
-    // Try to acquire processing lock
-    const { data: lockResult, error: lockError } = await supabase
-      .from('scraping_jobs')
-      .update({
-        processing_locked_at: new Date().toISOString(),
-        processing_locked_by: lockId
-      })
-      .eq('id', scrapingJob.id)
-      .is('processing_locked_at', null) // Only update if not already locked
-      .select()
-
-    if (lockError || !lockResult || lockResult.length === 0) {
-      console.log('Job already being processed by another function, skipping')
-      return new Response('Job already being processed', { 
-        status: 200, 
-        headers: corsHeaders 
-      })
-    }
-
-    console.log('Acquired processing lock:', lockId)
-
-    // Update job status based on webhook result
     if (payload.status === 'completed' && payload.result?.jobs) {
-      const jobs = payload.result.jobs
-      console.log(`Processing ${jobs.length} jobs from webhook`)
-
-      // PHASE 2: Idempotency check - verify no jobs already exist for this scraping job
-      const { data: existingJobs, error: existingError } = await supabase
-        .from('job_postings')
-        .select('id')
-        .eq('scraping_job_id', scrapingJob.id)
-
-      if (existingError) {
-        console.error('Error checking existing jobs:', existingError)
-      } else if (existingJobs && existingJobs.length > 0) {
-        console.log(`Jobs already exist for scraping job ${scrapingJob.id}, skipping creation`)
-        
-        // Update status to completed and release lock
-        await supabase
-          .from('scraping_jobs')
-          .update({
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            jobs_found: jobs.length,
-            jobs_created: existingJobs.length,
-            processing_locked_at: null,
-            processing_locked_by: null
-          })
-          .eq('id', scrapingJob.id)
-
-        return new Response('Jobs already processed', { 
-          status: 200, 
-          headers: corsHeaders 
-        })
-      }
-
-      // Create job postings
-      const jobPostings = jobs.map(job => {
-        const expiresAt = new Date()
-        expiresAt.setDate(expiresAt.getDate() + 30)
-
-        return {
-          title: job.title || 'Untitled Position',
-          company: job.company || scrapingJob.career_page_sources?.company_name || 'Unknown Company',
-          location: job.location || 'Location TBD',
-          description: job.description || 'No description provided',
-          requirements: job.requirements || [],
-          benefits: job.benefits || [],
-          responsibilities: job.responsibilities || [],
-          salary: job.salary || 'Competitive',
-          type: job.type || 'Full-time',
-          application_url: job.application_url || '',
-          logo: job.logo || '/placeholder.svg',
-          featured: false,
-          is_draft: true,
-          scraping_job_id: scrapingJob.id,
-          source_url: scrapingJob.career_page_sources?.url || '',
-          expires_at: expiresAt.toISOString(),
-          is_expired: false,
-          posted: new Date().toISOString(),
-          scraped_at: new Date().toISOString()
-        }
-      })
-
-      console.log(`Creating ${jobPostings.length} job postings`)
-
-      // Insert job postings with error handling for duplicates
-      const { data: createdJobs, error: insertError } = await supabase
-        .from('job_postings')
-        .insert(jobPostings)
-        .select('id')
-
+      console.log(`Processing ${payload.result.jobs.length} jobs from webhook`)
+      
       let jobsCreated = 0
-      if (insertError) {
-        console.error('Error creating job postings:', insertError)
-        // If it's a unique constraint violation, that's expected and okay
-        if (insertError.code === '23505') {
-          console.log('Some jobs already exist (duplicate prevention working)')
-          // Count how many jobs exist for this scraping job
-          const { data: existingCount } = await supabase
+      const errors: string[] = []
+
+      // Process each job - simplified logic matching the working edge function
+      for (const job of payload.result.jobs) {
+        try {
+          console.log(`Creating job: ${job.title} at ${job.company}`)
+          
+          // EMERGENCY FIX: Use exact same job creation logic as working edge function
+          const { error: insertError } = await supabase
             .from('job_postings')
-            .select('id', { count: 'exact', head: true })
-            .eq('scraping_job_id', scrapingJob.id)
-          jobsCreated = existingCount || 0
+            .insert({
+              title: job.title || 'Untitled Position',
+              company: job.company || 'Unknown Company',
+              location: job.location || 'Remote',
+              type: job.type || 'Full-time',
+              salary: job.salary || 'Competitive',
+              description: job.description || 'No description available',
+              responsibilities: Array.isArray(job.responsibilities) ? job.responsibilities : [],
+              requirements: Array.isArray(job.requirements) ? job.requirements : [],
+              benefits: Array.isArray(job.benefits) ? job.benefits : [],
+              logo: job.logo || '',
+              featured: false,
+              application_url: job.application_url || '',
+              user_id: null, // System created
+              department: job.department,
+              seniority_level: job.seniority_level,
+              remote_onsite: job.remote_onsite,
+              equity: job.equity,
+              visa_sponsorship: job.visa_sponsorship,
+              is_draft: true, // Always create as draft
+              scraped_at: new Date().toISOString(),
+              scraping_job_id: scrapingJob.id,
+              source_url: scrapingJob.career_page_sources?.url,
+              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 days
+            })
+
+          if (insertError) {
+            console.error(`Failed to insert job ${job.title}:`, insertError)
+            errors.push(`${job.title}: ${insertError.message}`)
+          } else {
+            jobsCreated++
+            console.log(`✅ Successfully created job: ${job.title}`)
+          }
+        } catch (error) {
+          console.error(`Exception creating job ${job.title}:`, error)
+          errors.push(`${job.title}: ${(error as Error).message}`)
         }
-      } else {
-        jobsCreated = createdJobs?.length || 0
-        console.log(`Successfully created ${jobsCreated} job postings`)
       }
 
       // Update scraping job status
@@ -181,10 +127,9 @@ serve(async (req) => {
         .update({
           status: 'completed',
           completed_at: new Date().toISOString(),
-          jobs_found: jobs.length,
+          jobs_found: payload.result.jobs.length,
           jobs_created: jobsCreated,
-          processing_locked_at: null,
-          processing_locked_by: null
+          error_message: errors.length > 0 ? `Some jobs failed: ${errors.join('; ')}` : null
         })
         .eq('id', scrapingJob.id)
 
@@ -192,38 +137,77 @@ serve(async (req) => {
         console.error('Error updating scraping job:', updateError)
       }
 
-      console.log('Webhook processing completed successfully')
+      // Update webhook health on success
+      await supabase
+        .from('webhook_health')
+        .upsert({
+          webhook_type: 'gobi-webhook',
+          last_received_at: new Date().toISOString(),
+          is_active: true,
+          failure_count: 0,
+          updated_at: new Date().toISOString()
+        })
+
+      console.log(`✅ Webhook completed: ${jobsCreated} jobs created, ${errors.length} errors`)
+      
+      return new Response(JSON.stringify({
+        success: true,
+        jobs_created: jobsCreated,
+        errors: errors.length
+      }), { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
 
     } else if (payload.status === 'failed') {
       console.log('Job failed, updating status')
       
-      // Update job status to failed and release lock
+      // Update scraping job as failed
       const { error: updateError } = await supabase
         .from('scraping_jobs')
         .update({
           status: 'failed',
           completed_at: new Date().toISOString(),
-          error_message: payload.result?.error || 'Job failed without specific error',
-          processing_locked_at: null,
-          processing_locked_by: null
+          error_message: payload.result?.error || 'Job failed without specific error'
         })
         .eq('id', scrapingJob.id)
 
       if (updateError) {
         console.error('Error updating failed job:', updateError)
       }
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: 'Job marked as failed'
+      }), { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
 
-    return new Response('Webhook processed successfully', { 
-      status: 200, 
-      headers: corsHeaders 
-    })
+    return new Response('Unknown status', { status: 400, headers: corsHeaders })
 
   } catch (error) {
-    console.error('Error processing webhook:', error)
-    return new Response('Internal server error', { 
-      status: 500, 
-      headers: corsHeaders 
-    })
+    console.error('Webhook error:', error)
+    
+    // Update webhook health on failure
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+      const supabaseServiceRoleKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+      const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
+      
+      await supabase
+        .from('webhook_health')
+        .upsert({
+          webhook_type: 'gobi-webhook',
+          failure_count: 1,
+          is_active: false,
+          updated_at: new Date().toISOString()
+        })
+    } catch (healthError) {
+      console.error('Failed to update webhook health:', healthError)
+    }
+    
+    return new Response('Internal server error', { status: 500, headers: corsHeaders })
   }
 })

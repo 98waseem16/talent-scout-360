@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,8 +42,6 @@ interface ProcessedJob extends GobiJob {
   errors: string[];
 }
 
-type InputFormat = 'json' | 'python' | 'unknown';
-
 const ManualGobiProcessor: React.FC = () => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -52,171 +51,39 @@ const ManualGobiProcessor: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [detectedFormat, setDetectedFormat] = useState<InputFormat>('unknown');
-  const [conversionPreview, setConversionPreview] = useState<string>('');
 
-  const detectInputFormat = (input: string): InputFormat => {
-    const trimmed = input.trim();
-    
-    // Check for Python dictionary format indicators
-    if (trimmed.startsWith('{') && (
-      trimmed.includes("'jobs'") || 
-      trimmed.includes('True') || 
-      trimmed.includes('False') || 
-      trimmed.includes('None') ||
-      /'\w+':/.test(trimmed) // Single quotes around keys
-    )) {
-      return 'python';
-    }
-    
-    // Check for JSON format
-    if (trimmed.startsWith('{') && trimmed.includes('"jobs"')) {
-      return 'json';
-    }
-    
-    return 'unknown';
-  };
-
-  const convertPythonToJson = (pythonStr: string): string => {
+  // EMERGENCY FIX: Simplified JSON parsing - use exact same logic as working edge function
+  const parseGobiOutput = (input: string): GobiOutput | null => {
     try {
-      let converted = pythonStr;
+      console.log('=== PARSING GOBI OUTPUT ===');
+      console.log('Raw input length:', input.length);
+      console.log('Input preview:', input.substring(0, 200));
       
-      // Step 1: Convert Python literals to JSON equivalents
-      converted = converted.replace(/\bTrue\b/g, 'true');
-      converted = converted.replace(/\bFalse\b/g, 'false');
-      converted = converted.replace(/\bNone\b/g, 'null');
+      // Direct JSON parsing - same as edge function
+      const parsed = JSON.parse(input);
+      console.log('✅ JSON parsing successful');
+      console.log('Parsed structure:', typeof parsed, Object.keys(parsed || {}));
       
-      // Step 2: Use a more sophisticated approach to handle quotes
-      // We'll use a state machine approach to properly parse Python strings
-      
-      let result = '';
-      let i = 0;
-      let inString = false;
-      let stringChar = '';
-      
-      while (i < converted.length) {
-        const char = converted[i];
-        const nextChar = converted[i + 1];
-        
-        if (!inString) {
-          if (char === "'") {
-            // Start of a string
-            inString = true;
-            stringChar = "'";
-            result += '"'; // Convert to double quote
-          } else {
-            result += char;
-          }
-        } else {
-          // We're inside a string
-          if (char === stringChar && converted[i - 1] !== '\\') {
-            // End of string (not escaped)
-            inString = false;
-            stringChar = '';
-            result += '"'; // Convert to double quote
-          } else if (char === '"') {
-            // Escape existing double quotes inside the string
-            result += '\\"';
-          } else {
-            result += char;
-          }
-        }
-        
-        i++;
+      if (!parsed || typeof parsed !== 'object') {
+        throw new Error('Invalid format: Expected an object');
       }
-      
-      // Step 3: Clean up any remaining issues
-      // Remove trailing commas before closing brackets/braces
-      result = result.replace(/,(\s*[}\]])/g, '$1');
-      
-      // Handle any edge cases with multiple quotes
-      result = result.replace(/"{2,}/g, '"');
-      
-      return result;
-    } catch (error) {
-      console.error('Python to JSON conversion error:', error);
-      throw new Error('Failed to convert Python format to JSON: ' + (error as Error).message);
-    }
-  };
 
-  const validateAndParseJson = (input: string): GobiOutput | null => {
-    try {
-      // STEP 1: Try direct JSON parsing first (like the working edge function)
-      console.log('=== PARSING ATTEMPT 1: Direct JSON Parse ===');
-      console.log('Input (first 200 chars):', input.substring(0, 200));
-      
-      try {
-        const directParsed = JSON.parse(input);
-        console.log('✅ SUCCESS: Direct JSON parsing worked!');
-        setDetectedFormat('json');
-        setConversionPreview('');
-        
-        if (!directParsed || typeof directParsed !== 'object') {
-          setValidationError('Invalid format: Expected an object with jobs array');
-          return null;
-        }
-
-        if (!Array.isArray(directParsed.jobs)) {
-          setValidationError('Invalid format: Must contain a "jobs" array');
-          return null;
-        }
-
-        if (directParsed.jobs.length === 0) {
-          setValidationError('No jobs found in the input');
-          return null;
-        }
-
-        setValidationError(null);
-        return directParsed as GobiOutput;
-        
-      } catch (directParseError) {
-        console.log('❌ Direct JSON parsing failed:', (directParseError as Error).message);
-        console.log('=== PARSING ATTEMPT 2: Python-to-JSON Conversion ===');
-        
-        // STEP 2: Try Python format detection and conversion
-        const format = detectInputFormat(input);
-        setDetectedFormat(format);
-        
-        if (format === 'python') {
-          console.log('Detected Python dictionary format, attempting conversion...');
-          const jsonString = convertPythonToJson(input);
-          setConversionPreview(jsonString.substring(0, 500) + '...');
-          console.log('Converted JSON (first 500 chars):', jsonString.substring(0, 500));
-          
-          const parsed = JSON.parse(jsonString);
-          console.log('✅ SUCCESS: Python-to-JSON conversion worked!');
-          
-          if (!parsed || typeof parsed !== 'object') {
-            setValidationError('Invalid format: Expected an object with jobs array');
-            return null;
-          }
-
-          if (!Array.isArray(parsed.jobs)) {
-            setValidationError('Invalid format: Must contain a "jobs" array');
-            return null;
-          }
-
-          if (parsed.jobs.length === 0) {
-            setValidationError('No jobs found in the input');
-            return null;
-          }
-
-          setValidationError(null);
-          return parsed as GobiOutput;
-        } else {
-          // Re-throw the original JSON parsing error with more context
-          throw new Error(`JSON parsing failed: ${(directParseError as Error).message}. Input doesn't appear to be Python format either.`);
-        }
+      if (!Array.isArray(parsed.jobs)) {
+        throw new Error('Invalid format: Must contain a "jobs" array');
       }
+
+      if (parsed.jobs.length === 0) {
+        throw new Error('No jobs found in the output');
+      }
+
+      console.log(`✅ Found ${parsed.jobs.length} jobs`);
+      setValidationError(null);
+      return parsed as GobiOutput;
+      
     } catch (error) {
-      console.error('❌ ALL PARSING ATTEMPTS FAILED:', error);
+      console.error('❌ JSON parsing failed:', error);
       const errorMessage = (error as Error).message;
-      
-      if (errorMessage.includes('Unexpected token') || errorMessage.includes('Expected')) {
-        setValidationError(`JSON parsing error: ${errorMessage}. The Python-to-JSON conversion may have failed. Please check for complex nested structures or special characters.`);
-      } else {
-        setValidationError(`Parsing error: ${errorMessage}`);
-      }
+      setValidationError(`JSON parsing error: ${errorMessage}. Please ensure the input is valid JSON format.`);
       return null;
     }
   };
@@ -266,7 +133,7 @@ const ManualGobiProcessor: React.FC = () => {
   };
 
   const handleParseJson = () => {
-    const parsed = validateAndParseJson(jsonInput);
+    const parsed = parseGobiOutput(jsonInput);
     if (!parsed) return;
 
     const processed: ProcessedJob[] = parsed.jobs.map((job, index) => {
@@ -330,13 +197,16 @@ const ManualGobiProcessor: React.FC = () => {
         
         if (result.success) {
           successCount++;
+          console.log(`✅ Successfully created job: ${job.title} at ${job.company}`);
         } else {
           errorCount++;
           errors.push(`${job.title} at ${job.company}: ${result.error}`);
+          console.error(`❌ Failed to create job: ${job.title}`, result.error);
         }
       } catch (error) {
         errorCount++;
         errors.push(`${job.title} at ${job.company}: ${(error as Error).message}`);
+        console.error(`❌ Exception creating job: ${job.title}`, error);
       }
       
       setProcessingProgress(((i + 1) / selectedJobs.length) * 100);
@@ -366,8 +236,6 @@ const ManualGobiProcessor: React.FC = () => {
       setJsonInput('');
       setProcessedJobs([]);
       setShowPreview(false);
-      setDetectedFormat('unknown');
-      setConversionPreview('');
     }
   };
 
@@ -381,11 +249,10 @@ const ManualGobiProcessor: React.FC = () => {
           <div className="p-2 rounded-lg bg-green-500/10">
             <Upload className="w-5 h-5 text-green-500" />
           </div>
-          Manual Gobi Output Import
+          Manual Gobi Output Import (Fixed)
         </CardTitle>
         <CardDescription>
-          Paste Gobi's output to manually create draft jobs when automated processing fails. 
-          Supports both JSON and Python dictionary formats with intelligent parsing.
+          Paste Gobi's JSON output to manually create draft jobs. Now using simplified parsing that matches the working edge function.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -393,41 +260,18 @@ const ManualGobiProcessor: React.FC = () => {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">
-              Paste Gobi Output (JSON or Python format)
+              Paste Gobi JSON Output
             </label>
             <Textarea
-              placeholder={`Paste output here. Both formats supported:
+              placeholder={`Paste your Gobi JSON output here, example:
 
-JSON: {"jobs": [{"title": "Engineer", "company": "Corp", ...}]}
-
-Python: {'jobs': [{'title': 'Engineer', 'company': 'Corp', ...}]}`}
+{"jobs": [{"title": "Software Engineer", "company": "Tech Corp", "description": "...", ...}]}`}
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
               rows={8}
               className="font-mono text-sm"
             />
           </div>
-          
-          {/* Format Detection */}
-          {jsonInput.trim() && detectedFormat !== 'unknown' && (
-            <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription>
-                Detected format: <strong>{detectedFormat === 'python' ? 'Python Dictionary' : 'JSON'}</strong>
-                {detectedFormat === 'python' && ' (will be converted to JSON with intelligent parsing)'}
-              </AlertDescription>
-            </Alert>
-          )}
-
-          {/* Conversion Preview */}
-          {conversionPreview && (
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Conversion Preview:</label>
-              <div className="bg-gray-50 p-3 rounded border text-xs font-mono max-h-32 overflow-y-auto">
-                {conversionPreview}
-              </div>
-            </div>
-          )}
           
           {validationError && (
             <Alert variant="destructive">
@@ -452,8 +296,6 @@ Python: {'jobs': [{'title': 'Engineer', 'company': 'Corp', ...}]}`}
                   setShowPreview(false);
                   setProcessedJobs([]);
                   setValidationError(null);
-                  setDetectedFormat('unknown');
-                  setConversionPreview('');
                 }}
               >
                 <EyeOff className="w-4 h-4 mr-2" />

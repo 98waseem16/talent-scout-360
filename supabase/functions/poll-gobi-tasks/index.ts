@@ -40,11 +40,11 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceRoleKey)
     const requestBody = await req.json().catch(() => ({}))
     const specificJobId = requestBody.specific_job_id
-    const triggerSource = requestBody.trigger || 'manual'
+    const triggerSource = requestBody.trigger || 'automatic'
 
-    console.log('Starting Gobi task polling...', { specificJobId, triggerSource })
+    console.log('=== GOBI POLLING STARTED ===', { specificJobId, triggerSource })
 
-    // PHASE 1: Handle specific job polling (for manual checks)
+    // EMERGENCY FIX: Simplified job querying without broken references
     let jobsQuery = supabase
       .from('scraping_jobs')
       .select(`
@@ -55,11 +55,11 @@ serve(async (req) => {
       .not('gobi_task_id', 'is', null)
 
     if (specificJobId) {
-      // Manual check for specific job
       jobsQuery = jobsQuery.eq('id', specificJobId)
     } else {
-      // Automatic polling - only poll jobs that haven't been checked recently
-      jobsQuery = jobsQuery.or('last_polled_at.is.null,last_polled_at.lt.' + new Date(Date.now() - 2 * 60 * 1000).toISOString())
+      // Only poll jobs that haven't been checked recently (2 minutes)
+      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString()
+      jobsQuery = jobsQuery.or(`last_polled_at.is.null,last_polled_at.lt.${twoMinutesAgo}`)
     }
 
     const { data: runningJobs, error: fetchError } = await jobsQuery
@@ -71,25 +71,27 @@ serve(async (req) => {
 
     if (!runningJobs || runningJobs.length === 0) {
       console.log('No jobs to poll')
-      return new Response('No jobs to poll', { status: 200, headers: corsHeaders })
+      return new Response(JSON.stringify({ success: true, processed: 0 }), { 
+        status: 200, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      })
     }
 
-    console.log(`Polling ${runningJobs.length} jobs`)
+    console.log(`Found ${runningJobs.length} jobs to poll`)
     let processedJobs = 0
     let recoveredJobs = 0
 
     for (const job of runningJobs) {
-      console.log(`Polling job ${job.id} with Gobi task ${job.gobi_task_id}`)
+      console.log(`Polling job ${job.id} with task ${job.gobi_task_id}`)
       
       try {
-        const startTime = Date.now()
+        // Check Gobi API status
         const response = await fetch(`https://api.gobi.ai/v1/task/${job.gobi_task_id}/status`, {
           headers: {
             'Authorization': `Bearer ${gobiApiKey}`,
             'Content-Type': 'application/json'
           }
         })
-        const responseTime = Date.now() - startTime
 
         if (!response.ok) {
           console.log(`Failed to get status for task ${job.gobi_task_id}: ${response.status}`)
@@ -97,7 +99,7 @@ serve(async (req) => {
         }
 
         const statusData: GobiStatusResponse = await response.json()
-        console.log(`Task ${job.gobi_task_id} status:`, statusData.status)
+        console.log(`Task ${job.gobi_task_id} status: ${statusData.status}`)
 
         // Update last polled time
         await supabase
@@ -108,54 +110,44 @@ serve(async (req) => {
           })
           .eq('id', job.id)
 
-        // PHASE 2: Enhanced logging with response time
-        await supabase
-          .from('task_status_history')
-          .insert({
-            scraping_job_id: job.id,
-            status: statusData.status,
-            gobi_response: statusData,
-            checked_at: new Date().toISOString(),
-            response_time_ms: responseTime
-          })
-
-        // PHASE 2: Improved stuck detection with force recovery for very old jobs
+        // Enhanced timeout detection
         const startedAt = new Date(job.started_at)
         const hoursRunning = (Date.now() - startedAt.getTime()) / (1000 * 60 * 60)
-        
-        if (statusData.status === 'running') {
-          const timeoutMinutes = job.task_timeout_minutes || 15 // Reduced from 30 to 15 minutes
-          const isStuck = Date.now() - startedAt.getTime() > timeoutMinutes * 60 * 1000
-          const isVeryOld = hoursRunning > 2 // Force recover jobs older than 2 hours
+        const timeoutMinutes = job.task_timeout_minutes || 15
+        const isTimedOut = Date.now() - startedAt.getTime() > timeoutMinutes * 60 * 1000
+        const isVeryOld = hoursRunning > 2
 
-          if (isStuck || isVeryOld) {
-            const reason = isVeryOld ? `Job running for ${hoursRunning.toFixed(1)} hours - force recovery` : `Task timed out after ${timeoutMinutes} minutes`
-            console.log(`Task ${job.gobi_task_id} recovery needed: ${reason}`)
-            
-            await supabase
-              .from('scraping_jobs')
-              .update({
-                status: 'failed',
-                completed_at: new Date().toISOString(),
-                error_message: reason
-              })
-              .eq('id', job.id)
+        if (statusData.status === 'running' && (isTimedOut || isVeryOld)) {
+          const reason = isVeryOld ? 
+            `Job running for ${hoursRunning.toFixed(1)} hours - force recovery` : 
+            `Task timed out after ${timeoutMinutes} minutes`
+          
+          console.log(`Recovering stuck job: ${reason}`)
+          
+          await supabase
+            .from('scraping_jobs')
+            .update({
+              status: 'failed',
+              completed_at: new Date().toISOString(),
+              error_message: reason
+            })
+            .eq('id', job.id)
 
-            // PHASE 3: Log recovery action
-            await supabase
-              .from('job_recovery_log')
-              .insert({
-                scraping_job_id: job.id,
-                recovery_action: 'timeout_recovery',
-                old_status: 'running',
-                new_status: 'failed',
-                recovery_reason: reason
-              })
+          // Log recovery
+          await supabase
+            .from('job_recovery_log')
+            .insert({
+              scraping_job_id: job.id,
+              recovery_action: 'timeout_recovery',
+              old_status: 'running',
+              new_status: 'failed',
+              recovery_reason: reason
+            })
 
-            recoveredJobs++
-          }
+          recoveredJobs++
+          
         } else if (statusData.status === 'completed') {
-          console.log(`Task ${job.gobi_task_id} completed - processing results`)
+          console.log(`Task ${job.gobi_task_id} completed - checking for jobs`)
           
           // Check if webhook already processed this
           const { data: existingJobs } = await supabase
@@ -164,18 +156,9 @@ serve(async (req) => {
             .eq('scraping_job_id', job.id)
 
           if (!existingJobs || existingJobs.length === 0) {
-            console.log(`No jobs found for completed task ${job.gobi_task_id} - webhook missed it, triggering backup processing`)
+            console.log('Webhook missed completion - triggering backup processing')
             
-            // PHASE 2: Webhook health monitoring
-            await supabase
-              .from('webhook_health')
-              .update({
-                failure_count: supabase.sql`failure_count + 1`,
-                updated_at: new Date().toISOString()
-              })
-              .eq('webhook_type', 'gobi-webhook')
-
-            // Trigger webhook processing as backup
+            // Trigger webhook as backup
             try {
               await fetch(`${supabaseUrl}/functions/v1/gobi-webhook`, {
                 method: 'POST',
@@ -189,9 +172,11 @@ serve(async (req) => {
                   result: statusData.result
                 })
               })
-              console.log('Triggered webhook processing as backup')
               
-              // PHASE 3: Log recovery action
+              console.log('✅ Triggered webhook backup processing')
+              recoveredJobs++
+              
+              // Log recovery
               await supabase
                 .from('job_recovery_log')
                 .insert({
@@ -201,24 +186,14 @@ serve(async (req) => {
                   new_status: 'completed',
                   recovery_reason: 'Webhook missed completion, triggered backup processing'
                 })
-
-              recoveredJobs++
+              
             } catch (webhookError) {
               console.error('Failed to trigger webhook backup:', webhookError)
             }
           } else {
-            console.log(`Jobs already exist for task ${job.gobi_task_id} - webhook processed correctly`)
-            
-            // Update webhook health on success
-            await supabase
-              .from('webhook_health')
-              .update({
-                last_received_at: new Date().toISOString(),
-                is_active: true,
-                updated_at: new Date().toISOString()
-              })
-              .eq('webhook_type', 'gobi-webhook')
+            console.log('Jobs already exist - webhook processed correctly')
           }
+          
         } else if (statusData.status === 'failed') {
           console.log(`Task ${job.gobi_task_id} failed`)
           
@@ -230,17 +205,6 @@ serve(async (req) => {
               error_message: statusData.result?.error || 'Task failed without specific error'
             })
             .eq('id', job.id)
-
-          // PHASE 3: Log failure
-          await supabase
-            .from('job_recovery_log')
-            .insert({
-              scraping_job_id: job.id,
-              recovery_action: 'status_sync',
-              old_status: 'running',
-              new_status: 'failed',
-              recovery_reason: 'Synced failed status from Gobi API'
-            })
         }
 
         processedJobs++
@@ -250,32 +214,7 @@ serve(async (req) => {
       }
     }
 
-    // PHASE 2: Enhanced health monitoring
-    const { data: healthStats } = await supabase
-      .from('scraping_jobs')
-      .select('status')
-      
-    if (healthStats) {
-      const stats = healthStats.reduce((acc, job) => {
-        acc[job.status] = (acc[job.status] || 0) + 1
-        return acc
-      }, {} as Record<string, number>)
-      
-      console.log('Job processing health stats:', stats)
-      
-      // Log monitoring data with enhanced metrics
-      await supabase
-        .from('queue_monitoring')
-        .insert({
-          queue_size: stats.pending || 0,
-          processed_jobs: stats.completed || 0,
-          failed_jobs: stats.failed || 0,
-          processing_time_ms: Date.now() - (req as any).startTime || 0,
-          trigger_source: `polling_${triggerSource}`
-        })
-    }
-
-    console.log(`Polling completed: processed ${processedJobs} jobs, recovered ${recoveredJobs} jobs`)
+    console.log(`✅ Polling completed: processed ${processedJobs}, recovered ${recoveredJobs}`)
     
     return new Response(JSON.stringify({
       success: true,
@@ -288,7 +227,7 @@ serve(async (req) => {
     })
 
   } catch (error) {
-    console.error('Error in polling function:', error)
+    console.error('Polling function error:', error)
     return new Response('Internal server error', { status: 500, headers: corsHeaders })
   }
 })
