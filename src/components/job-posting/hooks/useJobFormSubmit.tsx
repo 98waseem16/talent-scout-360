@@ -73,57 +73,32 @@ export const useJobFormSubmit = (id?: string) => {
           toast.success('Logo uploaded successfully');
         } catch (uploadError: any) {
           console.error('Error uploading logo:', uploadError);
-          // Log the full error object for debugging
           console.log('Full upload error:', JSON.stringify(uploadError, null, 2));
           
           const errorMessage = typeof uploadError === 'object' ? uploadError.message || 'Unknown upload error' : String(uploadError);
           toast.error(`Logo upload failed: ${errorMessage}`);
           
-          // If logo upload fails but we're in edit mode and there's an existing logo, 
-          // we can continue with the existing logo
-          if (!isEditMode || !formData.logo) {
-            setIsSubmitting(false);
-            return;
-          }
-          
-          toast.warning('Continuing with existing logo due to upload error.');
+          // Always reset loading state on logo upload failure
+          setIsSubmitting(false);
+          return;
         }
       }
       
       console.log('Final job data to submit:', jobDataToSubmit);
       
       if (isEditMode && id) {
-        try {
-          await updateJobListing(id, jobDataToSubmit);
-          toast.success('Job listing updated successfully!');
-          // Redirect to dashboard
-          navigate('/dashboard');
-        } catch (updateError: any) {
-          console.error('Error updating job:', updateError);
-          const errorMessage = typeof updateError === 'object' ? updateError.message || 'Unknown error' : String(updateError);
-          toast.error(`Failed to update job listing: ${errorMessage}`);
-          setIsSubmitting(false);
-          return;
-        }
+        await updateJobListing(id, jobDataToSubmit);
+        toast.success('Job listing updated successfully!');
+        navigate('/dashboard');
       } else {
-        try {
-          await createJobListing(jobDataToSubmit);
-          toast.success('Job listing created successfully!');
-          // Redirect to dashboard
-          navigate('/dashboard');
-        } catch (createError: any) {
-          console.error('Error creating job:', createError);
-          const errorMessage = typeof createError === 'object' ? createError.message || 'Unknown error' : String(createError);
-          toast.error(`Failed to create job listing: ${errorMessage}`);
-          setIsSubmitting(false);
-          return;
-        }
+        await createJobListing(jobDataToSubmit);
+        toast.success('Job listing created successfully!');
+        navigate('/dashboard');
       }
     } catch (error: any) {
       console.error('Error saving job:', error);
       const errorMessage = typeof error === 'object' ? error.message || 'Unknown error' : String(error);
       toast.error(`Failed to save job listing: ${errorMessage}`);
-      setIsSubmitting(false);
     } finally {
       setIsSubmitting(false);
     }
