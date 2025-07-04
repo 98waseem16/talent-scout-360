@@ -52,48 +52,71 @@ const ManualGobiProcessor: React.FC = () => {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [detectedFormat, setDetectedFormat] = useState<string | null>(null);
 
-  // Advanced Python dictionary to JSON converter with string concatenation handling
+  // Enhanced Advanced Python dictionary to JSON converter with mixed quote concatenation support
   const convertPythonDictToJson = (input: string): string => {
-    console.log('=== CONVERTING PYTHON DICT TO JSON (ADVANCED v3) ===');
+    console.log('=== CONVERTING PYTHON DICT TO JSON (ENHANCED v4) ===');
     console.log('Input length:', input.length);
     console.log('Input preview:', input.substring(0, 300));
     
     let converted = input;
     
     try {
-      // Step 1: Handle Python's implicit string concatenation
-      // This is the key fix for your error - Python allows 'string1' 'string2' to be concatenated
-      console.log('Step 1: Handling Python string concatenation...');
+      // Step 1: Handle Python's implicit string concatenation (including mixed quotes)
+      console.log('Step 1: Handling Python string concatenation (all combinations)...');
       
-      // Pattern to match concatenated strings like 'string1' 'string2' or "string1" "string2"
-      // This handles the specific pattern in your input where strings are split across lines
-      const stringConcatPattern = /('(?:[^'\\]|\\.)*')\s+('(?:[^'\\]|\\.)*')/g;
-      const doubleStringConcatPattern = /("(?:[^"\\]|\\.)*")\s+("(?:[^"\\]|\\.)*")/g;
+      // Define all possible string concatenation patterns
+      const concatenationPatterns = [
+        // Same quote concatenations
+        { pattern: /('(?:[^'\\]|\\.)*')\s+('(?:[^'\\]|\\.)*')/g, type: 'single-single' },
+        { pattern: /("(?:[^"\\]|\\.)*")\s+("(?:[^"\\]|\\.)*")/g, type: 'double-double' },
+        // Mixed quote concatenations (the key fix)
+        { pattern: /('(?:[^'\\]|\\.)*')\s+("(?:[^"\\]|\\.)*")/g, type: 'single-double' },
+        { pattern: /("(?:[^"\\]|\\.)*")\s+('(?:[^'\\]|\\.)*')/g, type: 'double-single' }
+      ];
       
-      // Keep applying the pattern until no more matches are found
-      let prevConverted = '';
-      while (prevConverted !== converted) {
-        prevConverted = converted;
+      // Keep applying patterns until no more matches are found
+      let maxIterations = 50; // Prevent infinite loops
+      let iteration = 0;
+      let foundMatch = true;
+      
+      while (foundMatch && iteration < maxIterations) {
+        foundMatch = false;
+        iteration++;
+        console.log(`Concatenation iteration ${iteration}...`);
         
-        // Handle single-quoted concatenated strings
-        converted = converted.replace(stringConcatPattern, (match, str1, str2) => {
-          console.log('Found single-quote concatenation:', match.substring(0, 50) + '...');
-          // Remove quotes, combine content, and re-quote
-          const content1 = str1.slice(1, -1); // Remove outer quotes
-          const content2 = str2.slice(1, -1); // Remove outer quotes
-          return `'${content1}${content2}'`;
-        });
-        
-        // Handle double-quoted concatenated strings
-        converted = converted.replace(doubleStringConcatPattern, (match, str1, str2) => {
-          console.log('Found double-quote concatenation:', match.substring(0, 50) + '...');
-          const content1 = str1.slice(1, -1);
-          const content2 = str2.slice(1, -1);
-          return `"${content1}${content2}"`;
-        });
+        for (const { pattern, type } of concatenationPatterns) {
+          const beforeLength = converted.length;
+          
+          converted = converted.replace(pattern, (match, str1, str2) => {
+            console.log(`Found ${type} concatenation:`, match.substring(0, 100) + '...');
+            
+            // Extract content from both strings
+            const content1 = str1.slice(1, -1); // Remove outer quotes
+            const content2 = str2.slice(1, -1); // Remove outer quotes
+            
+            // Combine content and always use double quotes for JSON
+            const combinedContent = content1 + content2;
+            
+            // Properly escape quotes in the combined content
+            const escapedContent = combinedContent
+              .replace(/\\/g, '\\\\')  // Escape backslashes first
+              .replace(/"/g, '\\"');   // Escape double quotes
+            
+            return `"${escapedContent}"`;
+          });
+          
+          if (converted.length !== beforeLength) {
+            foundMatch = true;
+            console.log(`${type} concatenations processed, new length:`, converted.length);
+          }
+        }
       }
       
-      console.log('String concatenation complete. New length:', converted.length);
+      if (iteration >= maxIterations) {
+        console.warn('Maximum concatenation iterations reached - possible infinite loop detected');
+      }
+      
+      console.log('String concatenation complete. Final length:', converted.length);
       
       // Step 2: Convert Python booleans and None
       console.log('Step 2: Converting Python literals...');
@@ -113,8 +136,8 @@ const ManualGobiProcessor: React.FC = () => {
         return `"${singleLine}"`;
       });
       
-      // Step 4: Convert single quotes to double quotes (but preserve apostrophes)
-      console.log('Step 4: Converting quotes...');
+      // Step 4: Convert remaining single quotes to double quotes (smart conversion)
+      console.log('Step 4: Smart quote conversion...');
       const chars = converted.split('');
       const result = [];
       let inString = false;
@@ -160,36 +183,59 @@ const ManualGobiProcessor: React.FC = () => {
       // Remove trailing commas before closing brackets/braces
       converted = converted.replace(/,(\s*[}\]])/g, '$1');
       
-      // Fix any double escaping
+      // Fix any double escaping that might have occurred
       converted = converted.replace(/\\\\n/g, '\\n');
       converted = converted.replace(/\\\\'/g, "\\'");
       converted = converted.replace(/\\\\"/g, '\\"');
       
+      // Fix any triple escaping
+      converted = converted.replace(/\\\\\\"/g, '\\"');
+      
       console.log('Conversion complete. Testing JSON validity...');
+      console.log('Converted preview:', converted.substring(0, 500));
       
       // Step 6: Validate the result
       try {
-        JSON.parse(converted);
-        console.log('✅ Advanced conversion successful!');
+        const parsed = JSON.parse(converted);
+        console.log('✅ Enhanced conversion successful!');
+        console.log('Parsed object keys:', Object.keys(parsed));
+        if (parsed.jobs && Array.isArray(parsed.jobs)) {
+          console.log(`✅ Found ${parsed.jobs.length} jobs in parsed output`);
+        }
         return converted;
       } catch (parseError) {
-        console.error('❌ Advanced conversion produced invalid JSON:', parseError);
-        console.log('Problematic JSON preview:', converted.substring(0, 500));
+        console.error('❌ Enhanced conversion produced invalid JSON:', parseError);
+        console.log('Final converted JSON preview:', converted.substring(0, 1000));
         
         // Try to identify the exact location of the error
-        const errorMatch = (parseError as Error).message.match(/position (\d+)/);
-        if (errorMatch) {
-          const position = parseInt(errorMatch[1]);
-          const errorContext = converted.substring(Math.max(0, position - 50), position + 50);
-          console.log('Error context:', errorContext);
-          console.log('Error at character:', converted[position]);
+        const errorMessage = (parseError as Error).message;
+        const positionMatch = errorMessage.match(/position (\d+)/);
+        const lineMatch = errorMessage.match(/line (\d+)/);
+        const columnMatch = errorMessage.match(/column (\d+)/);
+        
+        if (positionMatch) {
+          const position = parseInt(positionMatch[1]);
+          const errorContext = converted.substring(Math.max(0, position - 100), position + 100);
+          console.log('Error context (±100 chars):', errorContext);
+          console.log('Error character at position:', `"${converted[position]}" (${converted.charCodeAt(position)})`);
+          
+          // Highlight the exact error position
+          const beforeError = converted.substring(Math.max(0, position - 50), position);
+          const errorChar = converted[position] || 'EOF';
+          const afterError = converted.substring(position + 1, Math.min(converted.length, position + 50));
+          console.log('Error location:', { beforeError, errorChar, afterError });
         }
         
-        throw new Error(`JSON parsing failed: ${(parseError as Error).message}. Check the conversion logic.`);
+        let errorLocationInfo = '';
+        if (lineMatch && columnMatch) {
+          errorLocationInfo = ` at line ${lineMatch[1]}, column ${columnMatch[1]}`;
+        }
+        
+        throw new Error(`JSON parsing failed${errorLocationInfo}: ${errorMessage}. The enhanced converter handled string concatenations but there may be other syntax issues. Check the console for detailed error context.`);
       }
       
     } catch (error) {
-      console.error('❌ Advanced conversion failed:', error);
+      console.error('❌ Enhanced conversion failed:', error);
       throw error;
     }
   };
@@ -479,10 +525,10 @@ const ManualGobiProcessor: React.FC = () => {
           <div className="p-2 rounded-lg bg-green-500/10">
             <Upload className="w-5 h-5 text-green-500" />
           </div>
-          Manual Gobi Output Import (Advanced v3)
+          Manual Gobi Output Import (Enhanced v4)
         </CardTitle>
         <CardDescription>
-          Paste Gobi's output directly - supports Python dictionaries with string concatenation and complex formatting. Advanced parser handles multi-line strings, apostrophes, and concatenated string literals.
+          Advanced parser with mixed quote concatenation support. Handles Python dictionaries with complex string formatting including 'single' "double" quote combinations, multi-line strings, and apostrophes.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -493,19 +539,16 @@ const ManualGobiProcessor: React.FC = () => {
               Paste Gobi Output (Python Dict or JSON)
             </label>
             <Textarea
-              placeholder={`Paste your Gobi output here. Advanced parser now handles:
+              placeholder={`Enhanced parser now handles all string concatenation patterns:
 
-Python Dict with string concatenation:
-{'jobs': [{'title': 'Software Engineer', 
-           'description': 'We are looking for an experienced '
-                         'developer to join our team...'}]}
+✅ Same quotes: 'string1' 'string2' → "string1string2"
+✅ Mixed quotes: 'string1' "string2" → "string1string2"  
+✅ Mixed quotes: "string1" 'string2' → "string1string2"
+✅ Preserves apostrophes: "don't" 'worry' → "don'tworry"
+✅ Multi-line strings and complex formatting
+✅ Better error reporting with exact location info
 
-✅ Handles implicit string concatenation (adjacent strings)
-✅ Preserves apostrophes in content (bachelor's, don't, etc.)
-✅ Converts multi-line strings automatically
-✅ Better error reporting with line/column info
-
-JSON: {"jobs": [{"title": "Software Engineer", "company": "Tech Corp"}]}`}
+Paste your Python dict or JSON here...`}
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
               rows={8}
@@ -522,7 +565,7 @@ JSON: {"jobs": [{"title": "Software Engineer", "company": "Tech Corp"}]}`}
                   {detectedFormat === 'python' ? 'Python Dictionary' : 
                    detectedFormat === 'json' ? 'JSON' : 'Unknown'}
                 </strong>
-                {detectedFormat === 'python' && ' (advanced parser will handle string concatenation and complex formatting)'}
+                {detectedFormat === 'python' && ' (enhanced parser will handle mixed quote concatenations and complex formatting)'}
               </AlertDescription>
             </Alert>
           )}
