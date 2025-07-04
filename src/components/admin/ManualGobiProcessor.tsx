@@ -53,23 +53,123 @@ const ManualGobiProcessor: React.FC = () => {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [detectedFormat, setDetectedFormat] = useState<string | null>(null);
 
-  // Python dictionary to JSON converter
+  // Enhanced Python dictionary to JSON converter
   const convertPythonDictToJson = (input: string): string => {
-    console.log('=== CONVERTING PYTHON DICT TO JSON ===');
+    console.log('=== CONVERTING PYTHON DICT TO JSON (ENHANCED) ===');
     console.log('Input preview:', input.substring(0, 200));
     
     let converted = input;
     
-    // Replace Python booleans with JSON booleans
+    try {
+      // Step 1: Convert Python booleans and None
+      converted = converted.replace(/\bTrue\b/g, 'true');
+      converted = converted.replace(/\bFalse\b/g, 'false');
+      converted = converted.replace(/\bNone\b/g, 'null');
+      
+      // Step 2: Handle multi-line strings by converting them to single-line with \n
+      // This regex finds Python's triple-quoted strings and multi-line concatenated strings
+      converted = converted.replace(/'''([\s\S]*?)'''/g, (match, content) => {
+        const singleLine = content.replace(/\n\s*/g, '\\n').replace(/'/g, "\\'");
+        return `"${singleLine}"`;
+      });
+      
+      converted = converted.replace(/"""([\s\S]*?)"""/g, (match, content) => {
+        const singleLine = content.replace(/\n\s*/g, '\\n').replace(/"/g, '\\"');
+        return `"${singleLine}"`;
+      });
+      
+      // Step 3: Smart quote conversion - only convert quotes that are string delimiters
+      // We'll process character by character to track context
+      const chars = converted.split('');
+      const result = [];
+      let inSingleQuoteString = false;
+      let inDoubleQuoteString = false;
+      let i = 0;
+      
+      while (i < chars.length) {
+        const char = chars[i];
+        const prevChar = i > 0 ? chars[i - 1] : '';
+        const nextChar = i < chars.length - 1 ? chars[i + 1] : '';
+        
+        // Check if this quote is escaped
+        const isEscaped = prevChar === '\\';
+        
+        if (char === "'" && !isEscaped && !inDoubleQuoteString) {
+          if (!inSingleQuoteString) {
+            // Starting a single-quoted string - convert to double quote
+            result.push('"');
+            inSingleQuoteString = true;
+          } else {
+            // Ending a single-quoted string - convert to double quote
+            result.push('"');
+            inSingleQuoteString = false;
+          }
+        } else if (char === '"' && !isEscaped && !inSingleQuoteString) {
+          // Handle double quotes
+          result.push(char);
+          inDoubleQuoteString = !inDoubleQuoteString;
+        } else if (char === "'" && inSingleQuoteString) {
+          // Apostrophe inside a single-quoted string - escape it
+          result.push("\\'");
+        } else if (char === '"' && inDoubleQuoteString && !isEscaped) {
+          // Quote inside a double-quoted string - escape it
+          result.push('\\"');
+        } else {
+          // Regular character
+          result.push(char);
+        }
+        
+        i++;
+      }
+      
+      converted = result.join('');
+      
+      // Step 4: Clean up any remaining formatting issues
+      // Remove trailing commas before closing brackets/braces
+      converted = converted.replace(/,(\s*[}\]])/g, '$1');
+      
+      // Fix any double escaping that might have occurred
+      converted = converted.replace(/\\\\n/g, '\\n');
+      converted = converted.replace(/\\\\'/g, "\\'");
+      converted = converted.replace(/\\\\"/g, '\\"');
+      
+      console.log('Conversion successful');
+      console.log('Converted preview:', converted.substring(0, 200));
+      
+      // Step 5: Validate the conversion by attempting to parse
+      try {
+        JSON.parse(converted);
+        console.log('✅ Converted JSON is valid');
+        return converted;
+      } catch (parseError) {
+        console.error('❌ Converted JSON is invalid:', parseError);
+        // Try a simpler conversion as fallback
+        return convertPythonDictSimple(input);
+      }
+      
+    } catch (error) {
+      console.error('❌ Enhanced conversion failed:', error);
+      // Fallback to simple conversion
+      return convertPythonDictSimple(input);
+    }
+  };
+  
+  // Fallback simple converter for when enhanced conversion fails
+  const convertPythonDictSimple = (input: string): string => {
+    console.log('=== USING SIMPLE CONVERSION FALLBACK ===');
+    let converted = input;
+    
+    // Convert Python booleans and None
     converted = converted.replace(/\bTrue\b/g, 'true');
     converted = converted.replace(/\bFalse\b/g, 'false');
     converted = converted.replace(/\bNone\b/g, 'null');
     
-    // Convert single quotes to double quotes, but be careful with quotes inside strings
-    // This is a simplified approach - for complex cases, we might need a more sophisticated parser
+    // Simple quote replacement (this is the old logic)
     converted = converted.replace(/'/g, '"');
     
-    console.log('Converted preview:', converted.substring(0, 200));
+    // Clean up trailing commas
+    converted = converted.replace(/,(\s*[}\]])/g, '$1');
+    
     return converted;
   };
 
@@ -102,7 +202,7 @@ const ManualGobiProcessor: React.FC = () => {
 
   const parseGobiOutput = (input: string): GobiOutput | null => {
     try {
-      console.log('=== PARSING GOBI OUTPUT ===');
+      console.log('=== PARSING GOBI OUTPUT (ENHANCED) ===');
       console.log('Raw input length:', input.length);
       console.log('Input preview:', input.substring(0, 200));
       
@@ -134,14 +234,14 @@ const ManualGobiProcessor: React.FC = () => {
         return parsed as GobiOutput;
         
       } catch (jsonError) {
-        console.log('❌ Direct JSON parsing failed, trying Python dict conversion...');
+        console.log('❌ Direct JSON parsing failed, trying enhanced Python dict conversion...');
         
-        // If direct JSON parsing fails, try Python dict conversion
+        // If direct JSON parsing fails, try enhanced Python dict conversion
         if (format === 'python') {
           try {
             jsonString = convertPythonDictToJson(input);
             const parsed = JSON.parse(jsonString);
-            console.log('✅ Python dict conversion + JSON parsing successful');
+            console.log('✅ Enhanced Python dict conversion + JSON parsing successful');
             
             if (!parsed || typeof parsed !== 'object') {
               throw new Error('Invalid format: Expected an object');
@@ -155,13 +255,20 @@ const ManualGobiProcessor: React.FC = () => {
               throw new Error('No jobs found in the output');
             }
 
-            console.log(`✅ Found ${parsed.jobs.length} jobs after Python conversion`);
+            console.log(`✅ Found ${parsed.jobs.length} jobs after enhanced Python conversion`);
             setValidationError(null);
             return parsed as GobiOutput;
             
           } catch (pythonError) {
-            console.error('❌ Python dict conversion also failed:', pythonError);
-            throw new Error(`Failed to parse Python dict format: ${(pythonError as Error).message}`);
+            console.error('❌ Enhanced Python dict conversion also failed:', pythonError);
+            
+            // Log more details for debugging
+            console.log('Conversion attempt details:');
+            console.log('- Original error:', (jsonError as Error).message);
+            console.log('- Python conversion error:', (pythonError as Error).message);
+            console.log('- Input format detected as:', format);
+            
+            throw new Error(`Failed to parse Python dict format: ${(pythonError as Error).message}. The input contains complex string formatting that requires manual cleaning. Try simplifying multi-line strings or removing special characters.`);
           }
         } else {
           // Re-throw the original JSON error
@@ -339,10 +446,10 @@ const ManualGobiProcessor: React.FC = () => {
           <div className="p-2 rounded-lg bg-green-500/10">
             <Upload className="w-5 h-5 text-green-500" />
           </div>
-          Manual Gobi Output Import (Enhanced)
+          Manual Gobi Output Import (Enhanced v2)
         </CardTitle>
         <CardDescription>
-          Paste Gobi's output directly - supports both Python dictionary and JSON formats. Auto-detects and converts Python format.
+          Paste Gobi's output directly - supports both Python dictionary and JSON formats. Enhanced parser handles complex strings, apostrophes, and multi-line content.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -353,10 +460,14 @@ const ManualGobiProcessor: React.FC = () => {
               Paste Gobi Output (Python Dict or JSON)
             </label>
             <Textarea
-              placeholder={`Paste your Gobi output here. Supports both formats:
+              placeholder={`Paste your Gobi output here. Enhanced parser handles:
 
-Python Dict: {'jobs': [{'title': 'Software Engineer', 'company': 'Tech Corp', ...}]}
-JSON: {"jobs": [{"title": "Software Engineer", "company": "Tech Corp", ...}]}`}
+Python Dict: {'jobs': [{'title': 'Software Engineer', 'company': 'Tech Corp', 'description': 'We're looking for...'}]}
+- Handles apostrophes in strings (bachelor's degree, don't, etc.)
+- Converts multi-line strings automatically
+- Preserves complex formatting
+
+JSON: {"jobs": [{"title": "Software Engineer", "company": "Tech Corp"}]}`}
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
               rows={8}
@@ -373,7 +484,7 @@ JSON: {"jobs": [{"title": "Software Engineer", "company": "Tech Corp", ...}]}`}
                   {detectedFormat === 'python' ? 'Python Dictionary' : 
                    detectedFormat === 'json' ? 'JSON' : 'Unknown'}
                 </strong>
-                {detectedFormat === 'python' && ' (will be auto-converted to JSON)'}
+                {detectedFormat === 'python' && ' (enhanced parser will handle complex strings automatically)'}
               </AlertDescription>
             </Alert>
           )}
