@@ -51,39 +51,128 @@ const ManualGobiProcessor: React.FC = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingProgress, setProcessingProgress] = useState(0);
   const [validationError, setValidationError] = useState<string | null>(null);
+  const [detectedFormat, setDetectedFormat] = useState<string | null>(null);
 
-  // EMERGENCY FIX: Simplified JSON parsing - use exact same logic as working edge function
+  // Python dictionary to JSON converter
+  const convertPythonDictToJson = (input: string): string => {
+    console.log('=== CONVERTING PYTHON DICT TO JSON ===');
+    console.log('Input preview:', input.substring(0, 200));
+    
+    let converted = input;
+    
+    // Replace Python booleans with JSON booleans
+    converted = converted.replace(/\bTrue\b/g, 'true');
+    converted = converted.replace(/\bFalse\b/g, 'false');
+    converted = converted.replace(/\bNone\b/g, 'null');
+    
+    // Convert single quotes to double quotes, but be careful with quotes inside strings
+    // This is a simplified approach - for complex cases, we might need a more sophisticated parser
+    converted = converted.replace(/'/g, '"');
+    
+    console.log('Converted preview:', converted.substring(0, 200));
+    return converted;
+  };
+
+  // Detect input format
+  const detectInputFormat = (input: string): 'json' | 'python' | 'unknown' => {
+    const trimmed = input.trim();
+    
+    // Check if it looks like Python dict format
+    if (trimmed.startsWith('{') && (
+      trimmed.includes("'jobs'") || // Python single quotes
+      trimmed.includes('True') ||   // Python boolean
+      trimmed.includes('False') ||  // Python boolean
+      trimmed.includes('None')      // Python None
+    )) {
+      return 'python';
+    }
+    
+    // Check if it looks like JSON format
+    if (trimmed.startsWith('{') && (
+      trimmed.includes('"jobs"') || // JSON double quotes
+      trimmed.includes('true') ||   // JSON boolean
+      trimmed.includes('false') ||  // JSON boolean
+      !trimmed.includes("'")       // No single quotes
+    )) {
+      return 'json';
+    }
+    
+    return 'unknown';
+  };
+
   const parseGobiOutput = (input: string): GobiOutput | null => {
     try {
       console.log('=== PARSING GOBI OUTPUT ===');
       console.log('Raw input length:', input.length);
       console.log('Input preview:', input.substring(0, 200));
       
-      // Direct JSON parsing - same as edge function
-      const parsed = JSON.parse(input);
-      console.log('✅ JSON parsing successful');
-      console.log('Parsed structure:', typeof parsed, Object.keys(parsed || {}));
+      const format = detectInputFormat(input);
+      setDetectedFormat(format);
+      console.log('Detected format:', format);
       
-      if (!parsed || typeof parsed !== 'object') {
-        throw new Error('Invalid format: Expected an object');
-      }
+      let jsonString = input;
+      
+      // Try direct JSON parsing first
+      try {
+        const parsed = JSON.parse(jsonString);
+        console.log('✅ Direct JSON parsing successful');
+        
+        if (!parsed || typeof parsed !== 'object') {
+          throw new Error('Invalid format: Expected an object');
+        }
 
-      if (!Array.isArray(parsed.jobs)) {
-        throw new Error('Invalid format: Must contain a "jobs" array');
-      }
+        if (!Array.isArray(parsed.jobs)) {
+          throw new Error('Invalid format: Must contain a "jobs" array');
+        }
 
-      if (parsed.jobs.length === 0) {
-        throw new Error('No jobs found in the output');
-      }
+        if (parsed.jobs.length === 0) {
+          throw new Error('No jobs found in the output');
+        }
 
-      console.log(`✅ Found ${parsed.jobs.length} jobs`);
-      setValidationError(null);
-      return parsed as GobiOutput;
+        console.log(`✅ Found ${parsed.jobs.length} jobs`);
+        setValidationError(null);
+        return parsed as GobiOutput;
+        
+      } catch (jsonError) {
+        console.log('❌ Direct JSON parsing failed, trying Python dict conversion...');
+        
+        // If direct JSON parsing fails, try Python dict conversion
+        if (format === 'python') {
+          try {
+            jsonString = convertPythonDictToJson(input);
+            const parsed = JSON.parse(jsonString);
+            console.log('✅ Python dict conversion + JSON parsing successful');
+            
+            if (!parsed || typeof parsed !== 'object') {
+              throw new Error('Invalid format: Expected an object');
+            }
+
+            if (!Array.isArray(parsed.jobs)) {
+              throw new Error('Invalid format: Must contain a "jobs" array');
+            }
+
+            if (parsed.jobs.length === 0) {
+              throw new Error('No jobs found in the output');
+            }
+
+            console.log(`✅ Found ${parsed.jobs.length} jobs after Python conversion`);
+            setValidationError(null);
+            return parsed as GobiOutput;
+            
+          } catch (pythonError) {
+            console.error('❌ Python dict conversion also failed:', pythonError);
+            throw new Error(`Failed to parse Python dict format: ${(pythonError as Error).message}`);
+          }
+        } else {
+          // Re-throw the original JSON error
+          throw jsonError;
+        }
+      }
       
     } catch (error) {
-      console.error('❌ JSON parsing failed:', error);
+      console.error('❌ All parsing attempts failed:', error);
       const errorMessage = (error as Error).message;
-      setValidationError(`JSON parsing error: ${errorMessage}. Please ensure the input is valid JSON format.`);
+      setValidationError(`Parsing error: ${errorMessage}. Please ensure the input is either valid JSON or Python dictionary format.`);
       return null;
     }
   };
@@ -236,6 +325,7 @@ const ManualGobiProcessor: React.FC = () => {
       setJsonInput('');
       setProcessedJobs([]);
       setShowPreview(false);
+      setDetectedFormat(null);
     }
   };
 
@@ -249,10 +339,10 @@ const ManualGobiProcessor: React.FC = () => {
           <div className="p-2 rounded-lg bg-green-500/10">
             <Upload className="w-5 h-5 text-green-500" />
           </div>
-          Manual Gobi Output Import (Fixed)
+          Manual Gobi Output Import (Enhanced)
         </CardTitle>
         <CardDescription>
-          Paste Gobi's JSON output to manually create draft jobs. Now using simplified parsing that matches the working edge function.
+          Paste Gobi's output directly - supports both Python dictionary and JSON formats. Auto-detects and converts Python format.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -260,18 +350,33 @@ const ManualGobiProcessor: React.FC = () => {
         <div className="space-y-4">
           <div>
             <label className="text-sm font-medium mb-2 block">
-              Paste Gobi JSON Output
+              Paste Gobi Output (Python Dict or JSON)
             </label>
             <Textarea
-              placeholder={`Paste your Gobi JSON output here, example:
+              placeholder={`Paste your Gobi output here. Supports both formats:
 
-{"jobs": [{"title": "Software Engineer", "company": "Tech Corp", "description": "...", ...}]}`}
+Python Dict: {'jobs': [{'title': 'Software Engineer', 'company': 'Tech Corp', ...}]}
+JSON: {"jobs": [{"title": "Software Engineer", "company": "Tech Corp", ...}]}`}
               value={jsonInput}
               onChange={(e) => setJsonInput(e.target.value)}
               rows={8}
               className="font-mono text-sm"
             />
           </div>
+          
+          {/* Format Detection Display */}
+          {jsonInput.trim() && detectedFormat && (
+            <Alert>
+              <Info className="h-4 w-4" />
+              <AlertDescription>
+                Detected format: <strong>
+                  {detectedFormat === 'python' ? 'Python Dictionary' : 
+                   detectedFormat === 'json' ? 'JSON' : 'Unknown'}
+                </strong>
+                {detectedFormat === 'python' && ' (will be auto-converted to JSON)'}
+              </AlertDescription>
+            </Alert>
+          )}
           
           {validationError && (
             <Alert variant="destructive">
@@ -296,6 +401,7 @@ const ManualGobiProcessor: React.FC = () => {
                   setShowPreview(false);
                   setProcessedJobs([]);
                   setValidationError(null);
+                  setDetectedFormat(null);
                 }}
               >
                 <EyeOff className="w-4 h-4 mr-2" />
