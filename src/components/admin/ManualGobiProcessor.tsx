@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,21 +52,57 @@ const ManualGobiProcessor: React.FC = () => {
   const [validationError, setValidationError] = useState<string | null>(null);
   const [detectedFormat, setDetectedFormat] = useState<string | null>(null);
 
-  // Enhanced Python dictionary to JSON converter
+  // Advanced Python dictionary to JSON converter with string concatenation handling
   const convertPythonDictToJson = (input: string): string => {
-    console.log('=== CONVERTING PYTHON DICT TO JSON (ENHANCED) ===');
-    console.log('Input preview:', input.substring(0, 200));
+    console.log('=== CONVERTING PYTHON DICT TO JSON (ADVANCED v3) ===');
+    console.log('Input length:', input.length);
+    console.log('Input preview:', input.substring(0, 300));
     
     let converted = input;
     
     try {
-      // Step 1: Convert Python booleans and None
+      // Step 1: Handle Python's implicit string concatenation
+      // This is the key fix for your error - Python allows 'string1' 'string2' to be concatenated
+      console.log('Step 1: Handling Python string concatenation...');
+      
+      // Pattern to match concatenated strings like 'string1' 'string2' or "string1" "string2"
+      // This handles the specific pattern in your input where strings are split across lines
+      const stringConcatPattern = /('(?:[^'\\]|\\.)*')\s+('(?:[^'\\]|\\.)*')/g;
+      const doubleStringConcatPattern = /("(?:[^"\\]|\\.)*")\s+("(?:[^"\\]|\\.)*")/g;
+      
+      // Keep applying the pattern until no more matches are found
+      let prevConverted = '';
+      while (prevConverted !== converted) {
+        prevConverted = converted;
+        
+        // Handle single-quoted concatenated strings
+        converted = converted.replace(stringConcatPattern, (match, str1, str2) => {
+          console.log('Found single-quote concatenation:', match.substring(0, 50) + '...');
+          // Remove quotes, combine content, and re-quote
+          const content1 = str1.slice(1, -1); // Remove outer quotes
+          const content2 = str2.slice(1, -1); // Remove outer quotes
+          return `'${content1}${content2}'`;
+        });
+        
+        // Handle double-quoted concatenated strings
+        converted = converted.replace(doubleStringConcatPattern, (match, str1, str2) => {
+          console.log('Found double-quote concatenation:', match.substring(0, 50) + '...');
+          const content1 = str1.slice(1, -1);
+          const content2 = str2.slice(1, -1);
+          return `"${content1}${content2}"`;
+        });
+      }
+      
+      console.log('String concatenation complete. New length:', converted.length);
+      
+      // Step 2: Convert Python booleans and None
+      console.log('Step 2: Converting Python literals...');
       converted = converted.replace(/\bTrue\b/g, 'true');
       converted = converted.replace(/\bFalse\b/g, 'false');
       converted = converted.replace(/\bNone\b/g, 'null');
       
-      // Step 2: Handle multi-line strings by converting them to single-line with \n
-      // This regex finds Python's triple-quoted strings and multi-line concatenated strings
+      // Step 3: Handle any remaining multi-line string patterns
+      console.log('Step 3: Handling multi-line strings...');
       converted = converted.replace(/'''([\s\S]*?)'''/g, (match, content) => {
         const singleLine = content.replace(/\n\s*/g, '\\n').replace(/'/g, "\\'");
         return `"${singleLine}"`;
@@ -78,99 +113,85 @@ const ManualGobiProcessor: React.FC = () => {
         return `"${singleLine}"`;
       });
       
-      // Step 3: Smart quote conversion - only convert quotes that are string delimiters
-      // We'll process character by character to track context
+      // Step 4: Convert single quotes to double quotes (but preserve apostrophes)
+      console.log('Step 4: Converting quotes...');
       const chars = converted.split('');
       const result = [];
-      let inSingleQuoteString = false;
-      let inDoubleQuoteString = false;
-      let i = 0;
+      let inString = false;
+      let stringChar = '';
       
-      while (i < chars.length) {
+      for (let i = 0; i < chars.length; i++) {
         const char = chars[i];
         const prevChar = i > 0 ? chars[i - 1] : '';
-        const nextChar = i < chars.length - 1 ? chars[i + 1] : '';
         
-        // Check if this quote is escaped
+        // Check if this is an escaped character
         const isEscaped = prevChar === '\\';
         
-        if (char === "'" && !isEscaped && !inDoubleQuoteString) {
-          if (!inSingleQuoteString) {
-            // Starting a single-quoted string - convert to double quote
+        if ((char === "'" || char === '"') && !isEscaped) {
+          if (!inString) {
+            // Starting a string
+            inString = true;
+            stringChar = char;
+            result.push('"'); // Always use double quotes in JSON
+          } else if (char === stringChar) {
+            // Ending the same type of string
+            inString = false;
+            stringChar = '';
             result.push('"');
-            inSingleQuoteString = true;
           } else {
-            // Ending a single-quoted string - convert to double quote
-            result.push('"');
-            inSingleQuoteString = false;
+            // Different quote type inside string - escape it
+            result.push('\\' + char);
           }
-        } else if (char === '"' && !isEscaped && !inSingleQuoteString) {
-          // Handle double quotes
+        } else if (char === "'" && inString && stringChar === '"') {
+          // Apostrophe inside double-quoted string - keep as is
           result.push(char);
-          inDoubleQuoteString = !inDoubleQuoteString;
-        } else if (char === "'" && inSingleQuoteString) {
-          // Apostrophe inside a single-quoted string - escape it
-          result.push("\\'");
-        } else if (char === '"' && inDoubleQuoteString && !isEscaped) {
-          // Quote inside a double-quoted string - escape it
+        } else if (char === '"' && inString && stringChar === "'") {
+          // Double quote inside single-quoted string - escape it
           result.push('\\"');
         } else {
-          // Regular character
           result.push(char);
         }
-        
-        i++;
       }
       
       converted = result.join('');
       
-      // Step 4: Clean up any remaining formatting issues
+      // Step 5: Clean up formatting
+      console.log('Step 5: Final cleanup...');
       // Remove trailing commas before closing brackets/braces
       converted = converted.replace(/,(\s*[}\]])/g, '$1');
       
-      // Fix any double escaping that might have occurred
+      // Fix any double escaping
       converted = converted.replace(/\\\\n/g, '\\n');
       converted = converted.replace(/\\\\'/g, "\\'");
       converted = converted.replace(/\\\\"/g, '\\"');
       
-      console.log('Conversion successful');
-      console.log('Converted preview:', converted.substring(0, 200));
+      console.log('Conversion complete. Testing JSON validity...');
       
-      // Step 5: Validate the conversion by attempting to parse
+      // Step 6: Validate the result
       try {
         JSON.parse(converted);
-        console.log('✅ Converted JSON is valid');
+        console.log('✅ Advanced conversion successful!');
         return converted;
       } catch (parseError) {
-        console.error('❌ Converted JSON is invalid:', parseError);
-        // Try a simpler conversion as fallback
-        return convertPythonDictSimple(input);
+        console.error('❌ Advanced conversion produced invalid JSON:', parseError);
+        console.log('Problematic JSON preview:', converted.substring(0, 500));
+        
+        // Try to identify the exact location of the error
+        const errorMatch = (parseError as Error).message.match(/position (\d+)/);
+        if (errorMatch) {
+          const position = parseInt(errorMatch[1]);
+          const errorContext = converted.substring(Math.max(0, position - 50), position + 50);
+          console.log('Error context:', errorContext);
+          console.log('Error at character:', converted[position]);
+        }
+        
+        throw new Error(`JSON parsing failed: ${(parseError as Error).message}. Check the conversion logic.`);
       }
       
     } catch (error) {
-      console.error('❌ Enhanced conversion failed:', error);
-      // Fallback to simple conversion
-      return convertPythonDictSimple(input);
+      console.error('❌ Advanced conversion failed:', error);
+      throw error;
     }
-  };
-  
-  // Fallback simple converter for when enhanced conversion fails
-  const convertPythonDictSimple = (input: string): string => {
-    console.log('=== USING SIMPLE CONVERSION FALLBACK ===');
-    let converted = input;
-    
-    // Convert Python booleans and None
-    converted = converted.replace(/\bTrue\b/g, 'true');
-    converted = converted.replace(/\bFalse\b/g, 'false');
-    converted = converted.replace(/\bNone\b/g, 'null');
-    
-    // Simple quote replacement (this is the old logic)
-    converted = converted.replace(/'/g, '"');
-    
-    // Clean up trailing commas
-    converted = converted.replace(/,(\s*[}\]])/g, '$1');
-    
-    return converted;
   };
 
   // Detect input format
@@ -202,7 +223,7 @@ const ManualGobiProcessor: React.FC = () => {
 
   const parseGobiOutput = (input: string): GobiOutput | null => {
     try {
-      console.log('=== PARSING GOBI OUTPUT (ENHANCED) ===');
+      console.log('=== PARSING GOBI OUTPUT (ADVANCED v3) ===');
       console.log('Raw input length:', input.length);
       console.log('Input preview:', input.substring(0, 200));
       
@@ -234,14 +255,15 @@ const ManualGobiProcessor: React.FC = () => {
         return parsed as GobiOutput;
         
       } catch (jsonError) {
-        console.log('❌ Direct JSON parsing failed, trying enhanced Python dict conversion...');
+        console.log('❌ Direct JSON parsing failed, trying advanced Python dict conversion...');
+        console.log('JSON error:', (jsonError as Error).message);
         
-        // If direct JSON parsing fails, try enhanced Python dict conversion
+        // If direct JSON parsing fails, try advanced Python dict conversion
         if (format === 'python') {
           try {
             jsonString = convertPythonDictToJson(input);
             const parsed = JSON.parse(jsonString);
-            console.log('✅ Enhanced Python dict conversion + JSON parsing successful');
+            console.log('✅ Advanced Python dict conversion + JSON parsing successful');
             
             if (!parsed || typeof parsed !== 'object') {
               throw new Error('Invalid format: Expected an object');
@@ -255,20 +277,31 @@ const ManualGobiProcessor: React.FC = () => {
               throw new Error('No jobs found in the output');
             }
 
-            console.log(`✅ Found ${parsed.jobs.length} jobs after enhanced Python conversion`);
+            console.log(`✅ Found ${parsed.jobs.length} jobs after advanced Python conversion`);
             setValidationError(null);
             return parsed as GobiOutput;
             
           } catch (pythonError) {
-            console.error('❌ Enhanced Python dict conversion also failed:', pythonError);
+            console.error('❌ Advanced Python dict conversion also failed:', pythonError);
             
-            // Log more details for debugging
-            console.log('Conversion attempt details:');
-            console.log('- Original error:', (jsonError as Error).message);
-            console.log('- Python conversion error:', (pythonError as Error).message);
+            // Provide detailed error information
+            const originalError = (jsonError as Error).message;
+            const conversionError = (pythonError as Error).message;
+            
+            console.log('Detailed error information:');
+            console.log('- Original JSON parse error:', originalError);
+            console.log('- Advanced conversion error:', conversionError);
             console.log('- Input format detected as:', format);
+            console.log('- Input length:', input.length);
             
-            throw new Error(`Failed to parse Python dict format: ${(pythonError as Error).message}. The input contains complex string formatting that requires manual cleaning. Try simplifying multi-line strings or removing special characters.`);
+            // Try to extract line and column information
+            const positionMatch = originalError.match(/position (\d+).*line (\d+).*column (\d+)/);
+            let errorLocation = '';
+            if (positionMatch) {
+              errorLocation = ` at line ${positionMatch[2]}, column ${positionMatch[3]}`;
+            }
+            
+            throw new Error(`Failed to parse Python dict format${errorLocation}: ${conversionError}. The input contains complex string formatting that requires manual cleaning. Try simplifying multi-line strings or removing special characters.`);
           }
         } else {
           // Re-throw the original JSON error
@@ -446,10 +479,10 @@ const ManualGobiProcessor: React.FC = () => {
           <div className="p-2 rounded-lg bg-green-500/10">
             <Upload className="w-5 h-5 text-green-500" />
           </div>
-          Manual Gobi Output Import (Enhanced v2)
+          Manual Gobi Output Import (Advanced v3)
         </CardTitle>
         <CardDescription>
-          Paste Gobi's output directly - supports both Python dictionary and JSON formats. Enhanced parser handles complex strings, apostrophes, and multi-line content.
+          Paste Gobi's output directly - supports Python dictionaries with string concatenation and complex formatting. Advanced parser handles multi-line strings, apostrophes, and concatenated string literals.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -460,12 +493,17 @@ const ManualGobiProcessor: React.FC = () => {
               Paste Gobi Output (Python Dict or JSON)
             </label>
             <Textarea
-              placeholder={`Paste your Gobi output here. Enhanced parser handles:
+              placeholder={`Paste your Gobi output here. Advanced parser now handles:
 
-Python Dict: {'jobs': [{'title': 'Software Engineer', 'company': 'Tech Corp', 'description': 'We're looking for...'}]}
-- Handles apostrophes in strings (bachelor's degree, don't, etc.)
-- Converts multi-line strings automatically
-- Preserves complex formatting
+Python Dict with string concatenation:
+{'jobs': [{'title': 'Software Engineer', 
+           'description': 'We are looking for an experienced '
+                         'developer to join our team...'}]}
+
+✅ Handles implicit string concatenation (adjacent strings)
+✅ Preserves apostrophes in content (bachelor's, don't, etc.)
+✅ Converts multi-line strings automatically
+✅ Better error reporting with line/column info
 
 JSON: {"jobs": [{"title": "Software Engineer", "company": "Tech Corp"}]}`}
               value={jsonInput}
@@ -484,7 +522,7 @@ JSON: {"jobs": [{"title": "Software Engineer", "company": "Tech Corp"}]}`}
                   {detectedFormat === 'python' ? 'Python Dictionary' : 
                    detectedFormat === 'json' ? 'JSON' : 'Unknown'}
                 </strong>
-                {detectedFormat === 'python' && ' (enhanced parser will handle complex strings automatically)'}
+                {detectedFormat === 'python' && ' (advanced parser will handle string concatenation and complex formatting)'}
               </AlertDescription>
             </Alert>
           )}
