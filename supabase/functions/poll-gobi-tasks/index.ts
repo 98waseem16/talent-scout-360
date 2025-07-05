@@ -44,7 +44,7 @@ serve(async (req) => {
 
     console.log('=== GOBI POLLING STARTED ===', { specificJobId, triggerSource })
 
-    // EMERGENCY FIX: Simplified job querying without broken references
+    // Query jobs that need polling
     let jobsQuery = supabase
       .from('scraping_jobs')
       .select(`
@@ -57,9 +57,9 @@ serve(async (req) => {
     if (specificJobId) {
       jobsQuery = jobsQuery.eq('id', specificJobId)
     } else {
-      // Only poll jobs that haven't been checked recently (2 minutes)
-      const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString()
-      jobsQuery = jobsQuery.or(`last_polled_at.is.null,last_polled_at.lt.${twoMinutesAgo}`)
+      // Reduced timeout from 2 minutes to 1 minute for faster polling
+      const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000).toISOString()
+      jobsQuery = jobsQuery.or(`last_polled_at.is.null,last_polled_at.lt.${oneMinuteAgo}`)
     }
 
     const { data: runningJobs, error: fetchError } = await jobsQuery
@@ -85,21 +85,47 @@ serve(async (req) => {
       console.log(`Polling job ${job.id} with task ${job.gobi_task_id}`)
       
       try {
-        // Check Gobi API status
-        const response = await fetch(`https://api.gobi.ai/v1/task/${job.gobi_task_id}/status`, {
+        // CRITICAL FIX: Use the correct Gobi API endpoint that matches the submit endpoint
+        const statusUrl = `https://gobii.ai/api/v1/tasks/browser-use/${job.gobi_task_id}`
+        console.log(`Checking status at: ${statusUrl}`)
+        
+        const response = await fetch(statusUrl, {
           headers: {
             'Authorization': `Bearer ${gobiApiKey}`,
             'Content-Type': 'application/json'
           }
         })
 
+        console.log(`Response status: ${response.status}`)
+
         if (!response.ok) {
           console.log(`Failed to get status for task ${job.gobi_task_id}: ${response.status}`)
+          
+          // Log the failed attempt
+          await supabase
+            .from('task_status_history')
+            .insert({
+              scraping_job_id: job.id,
+              status: 'polling_failed',
+              gobi_response: { error: `HTTP ${response.status}`, url: statusUrl },
+              response_time_ms: null
+            })
+          
           continue
         }
 
         const statusData: GobiStatusResponse = await response.json()
-        console.log(`Task ${job.gobi_task_id} status: ${statusData.status}`)
+        console.log(`Task ${job.gobi_task_id} status: ${statusData.status}`, statusData)
+
+        // Log the status check
+        await supabase
+          .from('task_status_history')
+          .insert({
+            scraping_job_id: job.id,
+            status: statusData.status,
+            gobi_response: statusData,
+            response_time_ms: null
+          })
 
         // Update last polled time
         await supabase
@@ -110,12 +136,12 @@ serve(async (req) => {
           })
           .eq('id', job.id)
 
-        // Enhanced timeout detection
+        // Enhanced timeout detection - reduced from 15 to 5 minutes
         const startedAt = new Date(job.started_at)
         const hoursRunning = (Date.now() - startedAt.getTime()) / (1000 * 60 * 60)
-        const timeoutMinutes = job.task_timeout_minutes || 15
+        const timeoutMinutes = job.task_timeout_minutes || 5
         const isTimedOut = Date.now() - startedAt.getTime() > timeoutMinutes * 60 * 1000
-        const isVeryOld = hoursRunning > 2
+        const isVeryOld = hoursRunning > 1
 
         if (statusData.status === 'running' && (isTimedOut || isVeryOld)) {
           const reason = isVeryOld ? 
@@ -147,51 +173,70 @@ serve(async (req) => {
           recoveredJobs++
           
         } else if (statusData.status === 'completed') {
-          console.log(`Task ${job.gobi_task_id} completed - checking for jobs`)
+          console.log(`Task ${job.gobi_task_id} completed - processing results`)
           
-          // Check if webhook already processed this
-          const { data: existingJobs } = await supabase
-            .from('job_postings')
-            .select('id')
-            .eq('scraping_job_id', job.id)
-
-          if (!existingJobs || existingJobs.length === 0) {
-            console.log('Webhook missed completion - triggering backup processing')
+          // Process the completed job directly here instead of relying on webhook
+          if (statusData.result?.jobs && statusData.result.jobs.length > 0) {
+            console.log(`Found ${statusData.result.jobs.length} jobs to import`)
             
-            // Trigger webhook as backup
-            try {
-              await fetch(`${supabaseUrl}/functions/v1/gobi-webhook`, {
-                method: 'POST',
-                headers: {
-                  'Authorization': `Bearer ${supabaseServiceRoleKey}`,
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                  task_id: job.gobi_task_id,
-                  status: 'completed',
-                  result: statusData.result
-                })
-              })
-              
-              console.log('✅ Triggered webhook backup processing')
-              recoveredJobs++
-              
-              // Log recovery
-              await supabase
-                .from('job_recovery_log')
-                .insert({
-                  scraping_job_id: job.id,
-                  recovery_action: 'webhook_backup_trigger',
-                  old_status: 'running',
-                  new_status: 'completed',
-                  recovery_reason: 'Webhook missed completion, triggered backup processing'
-                })
-              
-            } catch (webhookError) {
-              console.error('Failed to trigger webhook backup:', webhookError)
+            // Create job postings as drafts
+            const jobPostings = statusData.result.jobs.map(jobData => ({
+              title: jobData.title,
+              company: jobData.company,
+              location: jobData.location,
+              description: jobData.description || '',
+              requirements: jobData.requirements || [],
+              responsibilities: jobData.responsibilities || [],
+              benefits: jobData.benefits || [],
+              salary: jobData.salary || 'Not specified',
+              type: jobData.type || 'Full-time',
+              application_url: jobData.application_url,
+              logo: jobData.logo || '/placeholder.svg',
+              posted: new Date().toISOString(),
+              expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+              is_draft: true,
+              scraped_at: new Date().toISOString(),
+              scraping_job_id: job.id,
+              source_url: job.career_page_sources.url
+            }))
+
+            const { data: insertedJobs, error: insertError } = await supabase
+              .from('job_postings')
+              .insert(jobPostings)
+              .select()
+
+            if (insertError) {
+              console.error('Error inserting job postings:', insertError)
+              throw insertError
             }
+
+            console.log(`Successfully imported ${insertedJobs?.length || 0} jobs`)
+
+            // Update scraping job status
+            await supabase
+              .from('scraping_jobs')
+              .update({
+                status: 'completed',
+                completed_at: new Date().toISOString(),
+                jobs_found: statusData.result.jobs.length,
+                jobs_created: insertedJobs?.length || 0
+              })
+              .eq('id', job.id)
+
+            recoveredJobs++
           } else {
-            console.log('Jobs already exist - webhook processed correctly')
+            console.log('No jobs found in completed task')
+            
+            await supabase
+              .from('scraping_jobs')
+              .update({
+                status: 'completed',
+                completed_at: new Date().toISOString(),
+                jobs_found: 0,
+                jobs_created: 0,
+                error_message: 'No jobs found on the page'
+              })
+              .eq('id', job.id)
           }
           
         } else if (statusData.status === 'failed') {
@@ -211,6 +256,16 @@ serve(async (req) => {
 
       } catch (error) {
         console.error(`Error polling job ${job.id}:`, error)
+        
+        // Log the error
+        await supabase
+          .from('task_status_history')
+          .insert({
+            scraping_job_id: job.id,
+            status: 'polling_error',
+            gobi_response: { error: error.message },
+            response_time_ms: null
+          })
       }
     }
 

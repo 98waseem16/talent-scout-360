@@ -17,6 +17,7 @@ import ManualGobiProcessor from '@/components/admin/ManualGobiProcessor';
 import DuplicateMonitor from '@/components/admin/DuplicateMonitor';
 import JobRecoveryMonitor from '@/components/admin/JobRecoveryMonitor';
 import WebhookHealthMonitor from '@/components/admin/WebhookHealthMonitor';
+import SystemHealthMonitor from '@/components/admin/SystemHealthMonitor';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -155,7 +156,11 @@ const AdminDashboard: React.FC = () => {
 
             {/* PHASE 3: Enhanced monitoring with new components */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              <SystemHealthMonitor />
               <DuplicateMonitor />
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               <WebhookHealthMonitor />
             </div>
           </div>

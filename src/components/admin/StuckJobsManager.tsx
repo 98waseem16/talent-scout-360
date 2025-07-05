@@ -4,7 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { AlertTriangle, Clock, X, RefreshCw, Play, Zap } from 'lucide-react';
+import { AlertTriangle, Clock, X, RefreshCw, Play, Zap, Eye } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useState, useEffect } from 'react';
@@ -27,12 +27,13 @@ const StuckJobsManager: React.FC = () => {
   const [stuckJobs, setStuckJobs] = useState<StuckJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [statusDetails, setStatusDetails] = useState<{[key: string]: any}>({});
   const { toast } = useToast();
 
   const fetchStuckJobs = async () => {
     try {
-      // PHASE 2: Improved stuck detection - find jobs running for more than 10 minutes
-      const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+      // Reduced timeout from 10 to 5 minutes for faster detection
+      const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
       
       const { data, error } = await supabase
         .from('scraping_jobs')
@@ -41,7 +42,7 @@ const StuckJobsManager: React.FC = () => {
           career_page_sources!inner(url, company_name)
         `)
         .eq('status', 'running')
-        .lt('started_at', tenMinutesAgo)
+        .lt('started_at', fiveMinutesAgo)
         .order('started_at', { ascending: true });
 
       if (error) throw error;
@@ -59,6 +60,64 @@ const StuckJobsManager: React.FC = () => {
     }
   };
 
+  const checkGobiStatus = async (jobId: string, gobiTaskId: string) => {
+    setActionLoading(jobId);
+    try {
+      // Use the correct Gobi API endpoint
+      const statusUrl = `https://gobii.ai/api/v1/tasks/browser-use/${gobiTaskId}`;
+      
+      const response = await fetch(statusUrl, {
+        headers: {
+          'Authorization': `Bearer ${process.env.GOBI_API_KEY}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Gobi API returned ${response.status}`);
+      }
+
+      const statusData = await response.json();
+      
+      // Store the status details for display
+      setStatusDetails(prev => ({
+        ...prev,
+        [jobId]: statusData
+      }));
+
+      toast({
+        title: "Status Retrieved",
+        description: `Gobi status: ${statusData.status}`,
+      });
+
+      // If completed, trigger processing
+      if (statusData.status === 'completed') {
+        await supabase.functions.invoke('poll-gobi-tasks', {
+          body: { 
+            specific_job_id: jobId,
+            trigger: 'manual_status_check'
+          }
+        });
+        
+        toast({
+          title: "Processing Triggered",
+          description: "Found completed job, processing results now.",
+        });
+      }
+
+      setTimeout(fetchStuckJobs, 2000);
+    } catch (error) {
+      console.error('Error checking Gobi status:', error);
+      toast({
+        title: "Error",
+        description: `Failed to check Gobi status: ${error.message}`,
+        variant: "destructive",
+      });
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const cancelJob = async (jobId: string) => {
     setActionLoading(jobId);
     try {
@@ -73,7 +132,7 @@ const StuckJobsManager: React.FC = () => {
 
       if (error) throw error;
 
-      // PHASE 3: Log recovery action
+      // Log recovery action
       await supabase
         .from('job_recovery_log')
         .insert({
@@ -118,7 +177,7 @@ const StuckJobsManager: React.FC = () => {
 
       if (error) throw error;
 
-      // PHASE 3: Log recovery action
+      // Log recovery action
       await supabase
         .from('job_recovery_log')
         .insert({
@@ -147,14 +206,13 @@ const StuckJobsManager: React.FC = () => {
     }
   };
 
-  // PHASE 1: Fixed manual check to use specific_job_id parameter
-  const refreshJobStatus = async (jobId: string, gobiTaskId: string) => {
+  const refreshJobStatus = async (jobId: string) => {
     setActionLoading(jobId);
     try {
       const { error } = await supabase.functions.invoke('poll-gobi-tasks', {
         body: { 
           specific_job_id: jobId,
-          trigger: 'manual_check'
+          trigger: 'manual_refresh'
         }
       });
 
@@ -165,7 +223,6 @@ const StuckJobsManager: React.FC = () => {
         description: "Job status refresh has been triggered.",
       });
 
-      // Refresh the list after a short delay
       setTimeout(fetchStuckJobs, 3000);
     } catch (error) {
       console.error('Error refreshing job status:', error);
@@ -179,11 +236,9 @@ const StuckJobsManager: React.FC = () => {
     }
   };
 
-  // PHASE 1: Force sync action for immediate status check
   const forceSyncJob = async (jobId: string) => {
     setActionLoading(jobId);
     try {
-      // Directly call the polling function with force flag
       const { error } = await supabase.functions.invoke('poll-gobi-tasks', {
         body: { 
           specific_job_id: jobId,
@@ -195,7 +250,7 @@ const StuckJobsManager: React.FC = () => {
 
       toast({
         title: "Force Sync Triggered",
-        description: "Forcing immediate status synchronization with Gobi API.",
+        description: "Forcing immediate status synchronization.",
       });
 
       setTimeout(fetchStuckJobs, 2000);
@@ -231,11 +286,11 @@ const StuckJobsManager: React.FC = () => {
     const start = new Date(startTime);
     const diffHours = (Date.now() - start.getTime()) / (1000 * 60 * 60);
     
-    if (diffHours > 24) {
+    if (diffHours > 12) {
       return <Badge variant="destructive">CRITICAL</Badge>;
-    } else if (diffHours > 2) {
-      return <Badge variant="destructive">HIGH</Badge>;
     } else if (diffHours > 1) {
+      return <Badge variant="destructive">HIGH</Badge>;
+    } else if (diffHours > 0.5) {
       return <Badge className="bg-orange-500">MEDIUM</Badge>;
     } else {
       return <Badge variant="secondary">LOW</Badge>;
@@ -245,8 +300,8 @@ const StuckJobsManager: React.FC = () => {
   useEffect(() => {
     fetchStuckJobs();
     
-    // PHASE 2: More frequent refresh for better monitoring
-    const interval = setInterval(fetchStuckJobs, 20000); // Every 20 seconds
+    // More frequent refresh for better monitoring
+    const interval = setInterval(fetchStuckJobs, 15000); // Every 15 seconds
     
     return () => clearInterval(interval);
   }, []);
@@ -270,7 +325,7 @@ const StuckJobsManager: React.FC = () => {
         <CardTitle className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-orange-500" />
-            Stuck Jobs Manager
+            Stuck Jobs Manager (Enhanced)
             {stuckJobs.length > 0 && (
               <Badge variant="destructive">{stuckJobs.length}</Badge>
             )}
@@ -281,7 +336,7 @@ const StuckJobsManager: React.FC = () => {
           </Button>
         </CardTitle>
         <CardDescription>
-          Jobs running for more than 10 minutes that may be stuck (improved detection)
+          Jobs running for more than 5 minutes with enhanced debugging and recovery
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -299,6 +354,7 @@ const StuckJobsManager: React.FC = () => {
                 <TableHead>Duration</TableHead>
                 <TableHead>Severity</TableHead>
                 <TableHead>Last Check</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -313,6 +369,11 @@ const StuckJobsManager: React.FC = () => {
                       <span className="text-sm text-muted-foreground truncate max-w-xs">
                         {job.career_page_sources.url}
                       </span>
+                      {job.gobi_task_id && (
+                        <span className="text-xs text-muted-foreground">
+                          Task: {job.gobi_task_id.substring(0, 12)}...
+                        </span>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -332,17 +393,43 @@ const StuckJobsManager: React.FC = () => {
                     </span>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-2">
+                    {statusDetails[job.id] ? (
+                      <div className="text-xs">
+                        <Badge variant="outline">
+                          {statusDetails[job.id].status}
+                        </Badge>
+                        {statusDetails[job.id].result && (
+                          <div className="mt-1">
+                            Jobs: {statusDetails[job.id].result.jobs?.length || 0}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <Badge variant="secondary">Unknown</Badge>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex gap-1 flex-wrap">
                       {job.gobi_task_id && (
                         <>
                           <Button
                             size="sm"
                             variant="outline"
-                            onClick={() => refreshJobStatus(job.id, job.gobi_task_id!)}
+                            onClick={() => checkGobiStatus(job.id, job.gobi_task_id!)}
+                            disabled={actionLoading === job.id}
+                            title="Check actual Gobi API status"
+                          >
+                            <Eye className={`w-3 h-3 mr-1 ${actionLoading === job.id ? 'animate-spin' : ''}`} />
+                            Gobi
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => refreshJobStatus(job.id)}
                             disabled={actionLoading === job.id}
                           >
                             <RefreshCw className={`w-3 h-3 mr-1 ${actionLoading === job.id ? 'animate-spin' : ''}`} />
-                            Check
+                            Poll
                           </Button>
                           <Button
                             size="sm"
