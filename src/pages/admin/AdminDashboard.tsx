@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -6,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { FileText, Globe, Plus, Upload, Activity, AlertTriangle, FileInput, Shield, Wifi } from 'lucide-react';
+import { FileText, Globe, Plus, Upload, Activity, AlertTriangle, FileInput, Shield, Wifi, BarChart3 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import DraftJobsList from '@/components/admin/DraftJobsList';
 import CareerPageScraper from '@/components/admin/CareerPageScraper';
@@ -105,15 +106,25 @@ const AdminDashboard: React.FC = () => {
       <Header />
       <main className="min-h-screen py-16 px-6">
         <div className="max-w-7xl mx-auto">
-          {/* Header Section */}
+          {/* Header Section - Simplified */}
           <div className="mb-10">
-            <h1 className="text-3xl font-bold mb-2">Admin Dashboard (Enhanced)</h1>
-            <p className="text-muted-foreground mb-6">
-              Welcome back, {user?.email?.split('@')[0] || 'Admin'}. Complete scraper management with recovery and monitoring.
-            </p>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold mb-2">Admin Dashboard</h1>
+                <p className="text-muted-foreground">
+                  Welcome back, {user?.email?.split('@')[0] || 'Admin'}. Manage your job scraping operations.
+                </p>
+              </div>
+              <Button asChild>
+                <Link to="/post-job">
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Job
+                </Link>
+              </Button>
+            </div>
             
-            {/* Quick Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-8">
+            {/* Quick Stats - Condensed */}
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
               <div className="bg-white border rounded-lg p-4">
                 <div className="text-2xl font-bold text-orange-600">
                   {draftJobsCount !== null ? draftJobsCount : '...'}
@@ -144,30 +155,12 @@ const AdminDashboard: React.FC = () => {
                 </div>
                 <div className="text-sm text-muted-foreground">Stuck Jobs</div>
               </div>
-              <div className="bg-white border rounded-lg p-4 flex items-center">
-                <Button asChild size="sm" className="w-full">
-                  <Link to="/post-job">
-                    <Plus className="mr-2 h-4 w-4" />
-                    New Job
-                  </Link>
-                </Button>
-              </div>
-            </div>
-
-            {/* PHASE 3: Enhanced monitoring with new components */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <SystemHealthMonitor />
-              <DuplicateMonitor />
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-              <WebhookHealthMonitor />
             </div>
           </div>
 
           {/* Main Content - Enhanced Tabbed Interface */}
           <Tabs defaultValue="drafts" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-8">
+            <TabsList className="grid w-full grid-cols-9">
               <TabsTrigger value="drafts" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Drafts
@@ -209,6 +202,10 @@ const AdminDashboard: React.FC = () => {
               <TabsTrigger value="webhook" className="flex items-center gap-2">
                 <Wifi className="w-4 h-4" />
                 Webhook
+              </TabsTrigger>
+              <TabsTrigger value="monitoring" className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                Monitoring
               </TabsTrigger>
             </TabsList>
 
@@ -259,20 +256,42 @@ const AdminDashboard: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="queue">
-              <QueueStatus />
+              <div className="space-y-6">
+                {/* System Health Monitor in Queue Tab */}
+                <SystemHealthMonitor />
+                <QueueStatus />
+              </div>
             </TabsContent>
 
             <TabsContent value="stuck">
               <StuckJobsManager />
             </TabsContent>
 
-            {/* PHASE 3: New recovery and webhook monitoring tabs */}
             <TabsContent value="recovery">
-              <JobRecoveryMonitor />
+              <div className="space-y-6">
+                {/* Job Recovery Monitor with Duplicate Monitor */}
+                <JobRecoveryMonitor />
+                <DuplicateMonitor />
+              </div>
             </TabsContent>
 
             <TabsContent value="webhook">
               <WebhookHealthMonitor />
+            </TabsContent>
+
+            {/* New Monitoring Tab */}
+            <TabsContent value="monitoring">
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <SystemHealthMonitor />
+                  <DuplicateMonitor />
+                </div>
+                
+                <div className="grid grid-cols-1 gap-6">
+                  <WebhookHealthMonitor />
+                  <JobRecoveryMonitor />
+                </div>
+              </div>
             </TabsContent>
           </Tabs>
         </div>
