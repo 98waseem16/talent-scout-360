@@ -1,9 +1,9 @@
-
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getJobs } from '@/lib/jobs/operations/fetchJobs';  // Update import path
-import { useJobFilters } from '@/hooks/filters';  // Update import path
+import { getJobs } from '@/lib/jobs/operations/fetchJobs';
+import { useJobFilters } from '@/hooks/filters';
 import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from '@/lib/utils';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import JobSearchBar from '@/components/jobs/JobSearchBar';
