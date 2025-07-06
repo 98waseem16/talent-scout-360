@@ -58,10 +58,14 @@
   html {
     -webkit-tap-highlight-color: transparent;
     scroll-behavior: smooth;
+    /* iOS momentum scrolling */
+    -webkit-overflow-scrolling: touch;
   }
   
   body {
     @apply bg-background text-foreground antialiased;
+    /* Prevent horizontal scroll on mobile */
+    overflow-x: hidden;
   }
   
   /* Improve mobile form elements */
@@ -70,23 +74,30 @@
   textarea,
   button {
     @apply text-base;
+    /* Prevent zoom on iOS */
+    font-size: max(16px, 1rem);
   }
   
-  /* Minimum touch target size */
+  /* Minimum touch target size for accessibility */
   .touch-target {
     @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Mobile text selection */
+  ::selection {
+    @apply bg-primary/20;
   }
 }
 
 @layer components {
   /* Mobile optimized card */
   .mobile-card {
-    @apply p-4 sm:p-6 rounded-xl;
+    @apply p-3 sm:p-4 md:p-6 rounded-lg sm:rounded-xl;
   }
   
   /* Bottom safe area spacing for fixed elements */
   .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
   }
   
   /* Glass effect components */
@@ -98,6 +109,28 @@
   .gradient-button {
     @apply bg-gradient-to-r from-primary to-blue-500 text-white transition-all 
            hover:shadow-lg hover:from-primary/90 hover:to-blue-500/90;
+  }
+
+  /* Mobile-specific line clamp utilities */
+  .line-clamp-1 {
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .line-clamp-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
@@ -164,14 +197,26 @@
     @apply bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent;
   }
   
-  /* Soft box shadows */
+  /* Soft box shadows - mobile optimized */
   .shadow-soft {
-    box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    box-shadow: 0 4px 12px -3px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
   }
   
-  /* Card hover effect */
+  @media (min-width: 768px) {
+    .shadow-soft {
+      box-shadow: 0 10px 25px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+    }
+  }
+  
+  /* Card hover effect - mobile optimized */
   .card-hover {
-    @apply transition-all duration-300 ease-in-out hover:shadow-soft;
+    @apply transition-all duration-300 ease-in-out;
+  }
+  
+  @media (hover: hover) {
+    .card-hover:hover {
+      @apply shadow-soft;
+    }
   }
   
   /* Pulse animation */
@@ -179,17 +224,17 @@
     animation: pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 
-  /* New micro-interaction animations */
+  /* Enhanced micro-interaction animations */
   .animate-glow {
     animation: glow 2s ease-in-out infinite alternate;
   }
   
   @keyframes glow {
     from {
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.1);
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.1);
     }
     to {
-      box-shadow: 0 0 25px rgba(59, 130, 246, 0.2), 0 0 35px rgba(59, 130, 246, 0.1);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.15), 0 0 25px rgba(59, 130, 246, 0.1);
     }
   }
 
@@ -238,9 +283,12 @@
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  .hover-lift-shadow:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1), 0 10px 20px rgba(0, 0, 0, 0.06);
+  /* Only apply hover effects on devices that support hover */
+  @media (hover: hover) {
+    .hover-lift-shadow:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1), 0 6px 12px rgba(0, 0, 0, 0.06);
+    }
   }
 
   .shimmer {
@@ -268,20 +316,60 @@
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   
-  .group:hover .slide-up-on-hover {
-    transform: translateY(0);
+  /* Only apply on hover-capable devices */
+  @media (hover: hover) {
+    .group:hover .slide-up-on-hover {
+      transform: translateY(0);
+    }
   }
 
   .logo-hover-scale {
     transition: transform 0.3s ease;
   }
   
-  .group:hover .logo-hover-scale {
-    transform: scale(1.1);
+  @media (hover: hover) {
+    .group:hover .logo-hover-scale {
+      transform: scale(1.1);
+    }
   }
 
   .stagger-children > * {
     transition: all 0.3s ease;
     transition-delay: calc(var(--stagger) * 50ms);
+  }
+
+  /* Mobile-specific touch interactions */
+  .touch-feedback {
+    -webkit-tap-highlight-color: rgba(59, 130, 246, 0.1);
+    tap-highlight-color: rgba(59, 130, 246, 0.1);
+  }
+
+  /* iOS-style rubber band scrolling */
+  .ios-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Improved active states for mobile */
+  .active-scale {
+    transition: transform 0.1s ease;
+  }
+  
+  .active-scale:active {
+    transform: scale(0.98);
+  }
+}
+
+/* Mobile-specific media queries */
+@media (max-width: 640px) {
+  /* Reduce motion for users who prefer it */
+  @media (prefers-reduced-motion: reduce) {
+    .hover-lift-shadow,
+    .animate-slide-up,
+    .animate-bounce-in,
+    .logo-hover-scale {
+      animation: none;
+      transition: none;
+    }
   }
 }

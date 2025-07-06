@@ -37,15 +37,18 @@ const Jobs: React.FC = () => {
     removeFilter
   } = useJobFilters(jobs as Job[] | undefined);
 
-  // Conditional padding-bottom for mobile to account for filter toggle button
-  const contentPaddingClass = isMobile ? 'pb-24' : 'pb-16';
+  // Mobile-optimized padding with better safe area handling
+  const contentPaddingClass = isMobile ? 'pb-20 safe-bottom' : 'pb-16';
 
   return (
     <>
       <Header />
-      <main className={`min-h-screen pt-20 sm:pt-24 px-4 sm:px-6 ${contentPaddingClass}`}>
+      <main className={cn(
+        "min-h-screen pt-20 sm:pt-24 px-3 sm:px-4 md:px-6",
+        contentPaddingClass
+      )}>
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-start gap-8">
+          <div className="flex flex-col md:flex-row justify-between items-start gap-4 sm:gap-6 md:gap-8">
             {/* Filters Sidebar */}
             <FilterSidebar 
               isFilterOpen={isFilterOpen}
@@ -65,9 +68,9 @@ const Jobs: React.FC = () => {
                 setLocationQuery={setLocationQuery}
               />
               
-              {/* Results Count & Active Filters */}
-              <div className="mb-6">
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              {/* Results Count & Active Filters - Mobile optimized */}
+              <div className="mb-4 sm:mb-6">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
                   <JobsCount count={filteredJobs.length} isLoading={isLoading} />
                   
                   {/* Active Filters */}
