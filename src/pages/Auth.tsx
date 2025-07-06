@@ -7,15 +7,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Eye, EyeOff } from 'lucide-react';
+import { ArrowLeft, Eye, EyeOff, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
+import { cleanupAuthState } from '@/lib/auth-utils';
 
 const Auth: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { signInWithEmail, signUp, user } = useAuth();
+  const { signInWithEmail, signUp, user, recoverSession } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   
@@ -30,6 +31,24 @@ const Auth: React.FC = () => {
 
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
+  };
+
+  const handleSessionRecovery = async () => {
+    setLoading(true);
+    try {
+      const recovered = await recoverSession();
+      if (recovered) {
+        toast.success('Session recovered successfully');
+        navigate(returnTo, { replace: true });
+      } else {
+        toast.error('Session recovery failed. Please sign in again.');
+      }
+    } catch (error) {
+      console.error('Session recovery error:', error);
+      toast.error('Session recovery failed. Please sign in again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -68,6 +87,12 @@ const Auth: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClearSession = () => {
+    cleanupAuthState();
+    toast.success('Session cleared. You can now try signing in fresh.');
+    window.location.reload();
   };
 
   return (
@@ -192,6 +217,32 @@ const Auth: React.FC = () => {
               </TabsContent>
             </Tabs>
           </CardContent>
+          <CardFooter className="flex flex-col gap-2">
+            <div className="text-sm text-center text-muted-foreground">
+              Having session issues?
+            </div>
+            <div className="flex gap-2 w-full">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSessionRecovery}
+                disabled={loading}
+                className="flex-1"
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Recover Session
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleClearSession}
+                disabled={loading}
+                className="flex-1"
+              >
+                Clear Session
+              </Button>
+            </div>
+          </CardFooter>
         </Card>
       </div>
     </div>
