@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Header from '@/components/Header';
@@ -14,7 +13,7 @@ import CareerPageScraper from '@/components/admin/CareerPageScraper';
 import BulkScrapingUpload from '@/components/admin/BulkScrapingUpload';
 import QueueStatus from '@/components/admin/QueueStatus';
 import StuckJobsManager from '@/components/admin/StuckJobsManager';
-import ManualGobiProcessor from '@/components/admin/ManualGobiProcessor';
+import EnhancedManualImport from '@/components/admin/EnhancedManualImport';
 import DuplicateMonitor from '@/components/admin/DuplicateMonitor';
 import JobRecoveryMonitor from '@/components/admin/JobRecoveryMonitor';
 import WebhookHealthMonitor from '@/components/admin/WebhookHealthMonitor';
@@ -252,7 +251,7 @@ const AdminDashboard: React.FC = () => {
             </TabsContent>
 
             <TabsContent value="manual">
-              <ManualGobiProcessor />
+              <EnhancedManualImport />
             </TabsContent>
 
             <TabsContent value="queue">
