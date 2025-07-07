@@ -18,6 +18,7 @@ import DuplicateMonitor from '@/components/admin/DuplicateMonitor';
 import JobRecoveryMonitor from '@/components/admin/JobRecoveryMonitor';
 import WebhookHealthMonitor from '@/components/admin/WebhookHealthMonitor';
 import SystemHealthMonitor from '@/components/admin/SystemHealthMonitor';
+import AllJobsTable from '@/components/admin/AllJobsTable';
 
 const AdminDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -158,8 +159,12 @@ const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Main Content - Enhanced Tabbed Interface */}
-          <Tabs defaultValue="drafts" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-9">
+          <Tabs defaultValue="jobs" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-10">
+              <TabsTrigger value="jobs" className="flex items-center gap-2">
+                <BarChart3 className="w-4 h-4" />
+                All Jobs
+              </TabsTrigger>
               <TabsTrigger value="drafts" className="flex items-center gap-2">
                 <FileText className="w-4 h-4" />
                 Drafts
@@ -207,6 +212,10 @@ const AdminDashboard: React.FC = () => {
                 Monitoring
               </TabsTrigger>
             </TabsList>
+
+            <TabsContent value="jobs">
+              <AllJobsTable />
+            </TabsContent>
 
             <TabsContent value="drafts">
               <Card>
