@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { JobFormData, JobDatabaseFields } from '../../types/job.types';
 
@@ -72,7 +71,9 @@ export const updateJob = async (
   jobData: Partial<JobFormData>
 ): Promise<{ success: boolean; error?: string }> => {
   try {
-    // Prepare the update data
+    console.log('Updating job:', jobId, 'with data:', jobData);
+    
+    // Prepare the update data - always include logo if it's provided
     const updateData: Partial<JobDatabaseFields> = {
       ...(jobData.title && { title: jobData.title }),
       ...(jobData.company && { company: jobData.company }),
@@ -83,9 +84,9 @@ export const updateJob = async (
       ...(jobData.requirements && { requirements: jobData.requirements }),
       ...(jobData.benefits && { benefits: jobData.benefits }),
       ...(jobData.responsibilities && { responsibilities: jobData.responsibilities }),
-      ...(jobData.logo && { logo: jobData.logo }),
+      ...(jobData.logo !== undefined && { logo: jobData.logo }), // Always update logo when provided
       ...(jobData.featured !== undefined && { featured: jobData.featured }),
-      ...(jobData.application_url && { application_url: jobData.application_url }),
+      ...(jobData.application_url !== undefined && { application_url: jobData.application_url }),
       ...(jobData.investment_stage && { investment_stage: jobData.investment_stage }),
       ...(jobData.team_size && { team_size: jobData.team_size }),
       ...(jobData.revenue_model && { revenue_model: jobData.revenue_model }),
@@ -101,17 +102,19 @@ export const updateJob = async (
       updated_at: new Date().toISOString()
     };
 
+    console.log('Final update data being sent to database:', updateData);
+
     const { error } = await supabase
       .from('job_postings')
       .update(updateData)
       .eq('id', jobId);
 
     if (error) {
-      console.error('Error updating job:', error);
+      console.error('Database update error:', error);
       return { success: false, error: error.message };
     }
 
-    console.log('Job updated successfully');
+    console.log('Job updated successfully in database');
     return { success: true };
   } catch (error) {
     console.error('Error updating job:', error);

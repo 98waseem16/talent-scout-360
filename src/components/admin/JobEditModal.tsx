@@ -94,6 +94,7 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
   // Logo state
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoUploading, setLogoUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   // Update form data when job changes
   useEffect(() => {
@@ -124,6 +125,8 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
       logo: job.logo,
     });
     setLogoFile(null);
+    setLogoUploading(false);
+    setUploadProgress(0);
   }, [job]);
 
   // Update job mutation
@@ -134,12 +137,26 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
       // Upload new logo if selected
       if (logoFile) {
         setLogoUploading(true);
+        setUploadProgress(20);
+        
         try {
+          console.log('Starting logo upload for job:', job.id, 'with file:', logoFile.name);
+          
+          setUploadProgress(50);
           logoUrl = await uploadCompanyLogo(logoFile);
-        } catch (error) {
-          throw new Error('Failed to upload logo');
-        } finally {
+          
+          console.log('Logo uploaded successfully:', logoUrl);
+          setUploadProgress(80);
+          
+          toast({
+            title: "Logo Uploaded",
+            description: "Logo uploaded successfully, now updating job...",
+          });
+        } catch (error: any) {
+          console.error('Logo upload failed:', error);
           setLogoUploading(false);
+          setUploadProgress(0);
+          throw new Error(`Logo upload failed: ${error.message || 'Unknown error'}`);
         }
       }
 
@@ -151,27 +168,60 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
         benefits: data.benefits.split('\n').filter((item: string) => item.trim()),
       };
       
-      return updateJob(job.id, updateData);
+      console.log('Updating job with data:', updateData);
+      setUploadProgress(90);
+      
+      const result = await updateJob(job.id, updateData);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update job');
+      }
+      
+      setUploadProgress(100);
+      return result;
     },
     onSuccess: () => {
+      console.log('Job update completed successfully');
       toast({
         title: "Job Updated",
         description: "The job posting has been successfully updated.",
       });
       queryClient.invalidateQueries({ queryKey: ['admin-all-jobs'] });
+      
+      // Reset states
+      setLogoFile(null);
+      setLogoUploading(false);
+      setUploadProgress(0);
+      
       onSave();
     },
     onError: (error: any) => {
+      console.error('Job update failed:', error);
       toast({
         title: "Update Failed",
         description: error?.message || "Failed to update job posting.",
         variant: "destructive",
       });
+      
+      // Reset states on error
+      setLogoUploading(false);
+      setUploadProgress(0);
+    },
+    onSettled: () => {
+      // Always reset loading states
+      setLogoUploading(false);
+      setUploadProgress(0);
     },
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (updateMutation.isPending) {
+      console.log('Update already in progress, ignoring submit');
+      return;
+    }
+    
+    console.log('Starting job update process');
     updateMutation.mutate(formData);
   };
 
@@ -180,8 +230,12 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
   };
 
   const handleLogoChange = (file: File | null) => {
+    console.log('Logo file selected:', file?.name || 'none');
     setLogoFile(file);
+    setUploadProgress(0);
   };
+
+  const isUpdating = updateMutation.isPending || logoUploading;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -458,6 +512,7 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
                     currentLogoUrl={formData.logo}
                     onLogoChange={handleLogoChange}
                   />
+                  
                   {logoFile && (
                     <div className="mt-4 p-3 bg-blue-50 rounded-md">
                       <p className="text-sm text-blue-800">
@@ -468,9 +523,18 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
                       </p>
                     </div>
                   )}
+                  
                   {logoUploading && (
                     <div className="mt-4 p-3 bg-yellow-50 rounded-md">
-                      <p className="text-sm text-yellow-800">Uploading logo...</p>
+                      <p className="text-sm text-yellow-800">
+                        Uploading logo... {uploadProgress}%
+                      </p>
+                      <div className="w-full bg-yellow-200 rounded-full h-2 mt-2">
+                        <div 
+                          className="bg-yellow-600 h-2 rounded-full transition-all duration-300" 
+                          style={{ width: `${uploadProgress}%` }}
+                        ></div>
+                      </div>
                     </div>
                   )}
                 </CardContent>
@@ -532,11 +596,15 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
           </Tabs>
 
           <div className="flex justify-end gap-4 pt-4 border-t">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <Button type="button" variant="outline" onClick={onClose} disabled={isUpdating}>
               Cancel
             </Button>
-            <Button type="submit" disabled={updateMutation.isPending || logoUploading}>
-              {updateMutation.isPending || logoUploading ? 'Saving...' : 'Save Changes'}
+            <Button type="submit" disabled={isUpdating}>
+              {isUpdating ? (
+                logoUploading ? `Uploading... ${uploadProgress}%` : 'Saving...'
+              ) : (
+                'Save Changes'
+              )}
             </Button>
           </div>
         </form>
