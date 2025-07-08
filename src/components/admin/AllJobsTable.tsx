@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -42,7 +41,8 @@ import {
   Star, 
   Copy,
   Download,
-  RefreshCw
+  RefreshCw,
+  Image
 } from 'lucide-react';
 import { deleteJob } from '@/lib/jobs/operations/manageJobs';
 import JobEditModal from './JobEditModal';
@@ -89,9 +89,9 @@ const AllJobsTable: React.FC = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   
-  // State management
+  // State management - Changed default statusFilter to 'published'
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [statusFilter, setStatusFilter] = useState<string>('published');
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const [selectedJobs, setSelectedJobs] = useState<Set<string>>(new Set());
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -286,9 +286,9 @@ const AllJobsTable: React.FC = () => {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>All Job Postings</CardTitle>
+              <CardTitle>Live Job Postings</CardTitle>
               <CardDescription>
-                Manage all job postings in your system ({totalCount} total)
+                Manage published job postings ({totalCount} total)
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -326,9 +326,9 @@ const AllJobsTable: React.FC = () => {
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="published">Published</SelectItem>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
-                <SelectItem value="published">Published</SelectItem>
                 <SelectItem value="expired">Expired</SelectItem>
                 <SelectItem value="featured">Featured</SelectItem>
               </SelectContent>
@@ -360,6 +360,7 @@ const AllJobsTable: React.FC = () => {
                       onCheckedChange={handleSelectAll}
                     />
                   </TableHead>
+                  <TableHead className="w-16">Logo</TableHead>
                   <TableHead>Title & Company</TableHead>
                   <TableHead>Location</TableHead>
                   <TableHead>Type</TableHead>
@@ -373,14 +374,14 @@ const AllJobsTable: React.FC = () => {
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i}>
-                      <TableCell colSpan={8} className="h-16">
+                      <TableCell colSpan={9} className="h-16">
                         <div className="animate-pulse bg-muted rounded h-4 w-full"></div>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : jobs.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8">
+                    <TableCell colSpan={9} className="text-center py-8">
                       No jobs found matching your criteria.
                     </TableCell>
                   </TableRow>
@@ -392,6 +393,19 @@ const AllJobsTable: React.FC = () => {
                           checked={selectedJobs.has(job.id)}
                           onCheckedChange={(checked) => handleJobSelect(job.id, !!checked)}
                         />
+                      </TableCell>
+                      <TableCell>
+                        <div className="w-8 h-8 rounded border flex items-center justify-center bg-gray-50">
+                          {job.logo && job.logo !== '/placeholder.svg' ? (
+                            <img 
+                              src={job.logo} 
+                              alt={job.company} 
+                              className="w-full h-full object-contain rounded"
+                            />
+                          ) : (
+                            <Image className="w-4 h-4 text-gray-400" />
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <div>

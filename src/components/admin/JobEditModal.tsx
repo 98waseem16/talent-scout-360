@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useToast } from '@/hooks/use-toast';
 import { updateJob } from '@/lib/jobs/operations/manageJobs';
+import { uploadCompanyLogo } from '@/lib/jobs/logoUpload';
 import {
   Dialog,
   DialogContent,
@@ -20,6 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import LogoUpload from '@/components/LogoUpload';
 
 interface JobPosting {
   id: string;
@@ -87,7 +88,12 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
     visa_sponsorship: job.visa_sponsorship || false,
     featured: job.featured,
     is_draft: job.is_draft,
+    logo: job.logo,
   });
+
+  // Logo state
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoUploading, setLogoUploading] = useState(false);
 
   // Update form data when job changes
   useEffect(() => {
@@ -115,14 +121,31 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
       visa_sponsorship: job.visa_sponsorship || false,
       featured: job.featured,
       is_draft: job.is_draft,
+      logo: job.logo,
     });
+    setLogoFile(null);
   }, [job]);
 
   // Update job mutation
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
+      let logoUrl = data.logo;
+      
+      // Upload new logo if selected
+      if (logoFile) {
+        setLogoUploading(true);
+        try {
+          logoUrl = await uploadCompanyLogo(logoFile);
+        } catch (error) {
+          throw new Error('Failed to upload logo');
+        } finally {
+          setLogoUploading(false);
+        }
+      }
+
       const updateData = {
         ...data,
+        logo: logoUrl,
         responsibilities: data.responsibilities.split('\n').filter((item: string) => item.trim()),
         requirements: data.requirements.split('\n').filter((item: string) => item.trim()),
         benefits: data.benefits.split('\n').filter((item: string) => item.trim()),
@@ -156,6 +179,10 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleLogoChange = (file: File | null) => {
+    setLogoFile(file);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -168,10 +195,11 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <Tabs defaultValue="basic" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="company">Company</TabsTrigger>
+              <TabsTrigger value="media">Media</TabsTrigger>
               <TabsTrigger value="settings">Settings</TabsTrigger>
             </TabsList>
 
@@ -419,6 +447,36 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
               </Card>
             </TabsContent>
 
+            <TabsContent value="media" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Company Logo</CardTitle>
+                  <CardDescription>Upload or update the company logo</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <LogoUpload
+                    currentLogoUrl={formData.logo}
+                    onLogoChange={handleLogoChange}
+                  />
+                  {logoFile && (
+                    <div className="mt-4 p-3 bg-blue-50 rounded-md">
+                      <p className="text-sm text-blue-800">
+                        New logo selected: {logoFile.name}
+                      </p>
+                      <p className="text-xs text-blue-600 mt-1">
+                        Logo will be uploaded when you save the job.
+                      </p>
+                    </div>
+                  )}
+                  {logoUploading && (
+                    <div className="mt-4 p-3 bg-yellow-50 rounded-md">
+                      <p className="text-sm text-yellow-800">Uploading logo...</p>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
             <TabsContent value="settings" className="space-y-4">
               <Card>
                 <CardHeader>
@@ -477,8 +535,8 @@ const JobEditModal: React.FC<JobEditModalProps> = ({ job, open, onClose, onSave 
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={updateMutation.isPending}>
-              {updateMutation.isPending ? 'Saving...' : 'Save Changes'}
+            <Button type="submit" disabled={updateMutation.isPending || logoUploading}>
+              {updateMutation.isPending || logoUploading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </form>
