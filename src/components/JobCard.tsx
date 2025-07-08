@@ -15,6 +15,7 @@ interface JobCardProps {
 
 const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) => {
   const [isHovered, setIsHovered] = useState(false);
+  const [logoError, setLogoError] = useState(false);
   const { isSaved, toggleSave } = useSavedJobs();
   const saved = isSaved(job.id);
   
@@ -32,6 +33,16 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
     e.preventDefault();
     e.stopPropagation();
     window.open(job.application_url, '_blank');
+  };
+
+  const handleLogoError = () => {
+    console.log('Logo failed to load for job:', job.title, 'URL:', job.logo);
+    setLogoError(true);
+  };
+
+  const handleLogoLoad = () => {
+    console.log('Logo loaded successfully for job:', job.title);
+    setLogoError(false);
   };
 
   return (
@@ -85,14 +96,24 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
           </button>
 
           <div className="flex items-start gap-3 sm:gap-4 stagger-children">
-            {/* Mobile-optimized logo container */}
+            {/* Mobile-optimized logo container with fallback */}
             <div className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0 rounded-md bg-gradient-to-br from-secondary/30 to-secondary/60 flex items-center justify-center overflow-hidden">
-              <img 
-                src={job.logo} 
-                alt={`${job.company} logo`} 
-                className="h-6 w-6 sm:h-8 sm:w-8 object-contain logo-hover-scale"
-                style={{ '--stagger': '0' } as React.CSSProperties}
-              />
+              {!logoError ? (
+                <img 
+                  src={job.logo} 
+                  alt={`${job.company} logo`} 
+                  className="h-6 w-6 sm:h-8 sm:w-8 object-contain logo-hover-scale"
+                  style={{ '--stagger': '0' } as React.CSSProperties}
+                  onError={handleLogoError}
+                  onLoad={handleLogoLoad}
+                />
+              ) : (
+                <div className="h-6 w-6 sm:h-8 sm:w-8 bg-primary/20 rounded flex items-center justify-center">
+                  <span className="text-xs font-medium text-primary">
+                    {job.company.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              )}
             </div>
             
             <div className="flex-1 min-w-0">

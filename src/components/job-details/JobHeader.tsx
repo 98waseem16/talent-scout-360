@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Bookmark, Share2, MapPin, DollarSign, Briefcase } from 'lucide-react';
 import type { Job } from '@/lib/types/job.types';
@@ -10,6 +10,18 @@ interface JobHeaderProps {
 }
 
 const JobHeader: React.FC<JobHeaderProps> = ({ job, handleApply }) => {
+  const [logoError, setLogoError] = useState(false);
+
+  const handleLogoError = () => {
+    console.log('Logo failed to load in job header for:', job.title, 'URL:', job.logo);
+    setLogoError(true);
+  };
+
+  const handleLogoLoad = () => {
+    console.log('Logo loaded successfully in job header for:', job.title);
+    setLogoError(false);
+  };
+
   return (
     <>
       {/* Back button */}
@@ -25,7 +37,21 @@ const JobHeader: React.FC<JobHeaderProps> = ({ job, handleApply }) => {
       <div className="bg-white rounded-xl border border-border shadow-sm p-6 md:p-8 mb-8">
         <div className="flex flex-col md:flex-row items-start gap-6">
           <div className="h-16 w-16 flex-shrink-0 rounded-md bg-secondary/50 flex items-center justify-center overflow-hidden">
-            <img src={job.logo} alt={`${job.company} logo`} className="h-10 w-10 object-contain" />
+            {!logoError ? (
+              <img 
+                src={job.logo} 
+                alt={`${job.company} logo`} 
+                className="h-10 w-10 object-contain"
+                onError={handleLogoError}
+                onLoad={handleLogoLoad}
+              />
+            ) : (
+              <div className="h-10 w-10 bg-primary/20 rounded flex items-center justify-center">
+                <span className="text-lg font-medium text-primary">
+                  {job.company.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
           </div>
           
           <div className="flex-1">
