@@ -6,7 +6,7 @@ import { uploadFile } from '../file-upload';
  */
 export const uploadCompanyLogo = async (file: File): Promise<string> => {
   try {
-    const publicUrl = await uploadFile(file, 'Company Logos', {
+    const publicUrl = await uploadFile(file, 'logos', {
       maxWidth: 400,
       maxHeight: 400,
       maxSizeInMB: 2,
