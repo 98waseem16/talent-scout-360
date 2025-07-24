@@ -8,7 +8,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { AlertCircle, CheckCircle, Upload, Eye, EyeOff, Info, Zap, Settings, Activity } from 'lucide-react';
-import { PythonParser, ParseOptions } from './PythonParser';
+import { EnhancedPythonParser, ParseOptions, PerformanceMonitor } from './EnhancedPythonParser';
 
 interface EnhancedImportUIProps {
   onJobsParsed: (jobs: any[]) => void;
@@ -28,7 +28,7 @@ const EnhancedImportUI: React.FC<EnhancedImportUIProps> = ({ onJobsParsed, onErr
     strictMode: false
   });
 
-  const parser = useMemo(() => new PythonParser(), []);
+  const parser = useMemo(() => new EnhancedPythonParser(), []);
 
   const inputStats = useMemo(() => {
     if (!input) return null;
@@ -308,6 +308,25 @@ Paste your Python dict or JSON here...`}
                     {parseResult.metadata.tokensProcessed}
                   </div>
                   <div className="text-sm text-purple-600">Tokens Processed</div>
+                </div>
+              </div>
+            )}
+            
+            {parseResult?.metadata?.method && (
+              <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                <div className="text-sm font-medium text-gray-700 mb-2">Parse Method Details</div>
+                <div className="text-sm text-gray-600">
+                  Method used: <Badge variant="outline">{parseResult.metadata.method}</Badge>
+                  {parseResult.metadata.method === 'eval' && (
+                    <div className="mt-1 text-xs text-amber-600">
+                      ⚠️ Used eval fallback - consider improving input format
+                    </div>
+                  )}
+                  {parseResult.metadata.method === 'partial' && (
+                    <div className="mt-1 text-xs text-blue-600">
+                      ℹ️ Partial parsing recovered data from corrupted input
+                    </div>
+                  )}
                 </div>
               </div>
             )}
