@@ -55,7 +55,7 @@ export class PythonParser {
     this.warnings = [];
 
     try {
-      // Phase 1: Input validation and preprocessing
+      // Phase 1: Input validation
       const validationResult = this.validateInput(input, opts);
       if (!validationResult.valid) {
         return {
@@ -69,7 +69,31 @@ export class PythonParser {
         };
       }
 
-      // Phase 2: Tokenization
+      console.log('=== PARSE ATTEMPT 1: Direct JSON ===');
+      
+      // Phase 2: Try direct JSON parsing first (fastest and most reliable)
+      try {
+        const trimmedInput = input.trim();
+        const directResult = JSON.parse(trimmedInput);
+        console.log('✅ Direct JSON parsing successful');
+        
+        return {
+          success: true,
+          data: directResult,
+          warnings: this.warnings.length > 0 ? this.warnings : undefined,
+          metadata: {
+            parseTime: Date.now() - this.startTime,
+            inputSize: input.length,
+            tokensProcessed: 0
+          }
+        };
+      } catch (jsonError) {
+        console.log('❌ Direct JSON parsing failed:', (jsonError as Error).message);
+      }
+
+      console.log('=== PARSE ATTEMPT 2: Preprocessed JSON ===');
+      
+      // Phase 3: Try with preprocessing (for Python-style dictionaries)
       this.input = this.preprocessInput(input);
       this.position = 0;
       this.tokens = [];
@@ -77,13 +101,14 @@ export class PythonParser {
 
       await this.tokenize();
 
-      // Phase 3: Parsing with timeout protection
+      // Phase 4: Parsing with timeout protection
       const parsePromise = this.parseTokens();
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => reject(new Error('Parse timeout exceeded')), opts.timeoutMs);
       });
 
       const result = await Promise.race([parsePromise, timeoutPromise]);
+      console.log('✅ Preprocessed JSON parsing successful');
 
       return {
         success: true,
@@ -97,12 +122,14 @@ export class PythonParser {
       };
 
     } catch (error) {
-      console.error('Parse error:', error);
+      console.log('❌ Preprocessed JSON parsing failed:', (error as Error).message);
+      console.log('=== PARSE ATTEMPT 3: Advanced Partial Parsing ===');
       
       // Attempt partial parsing if enabled
       if (opts.enablePartialParsing) {
-        const partialResult = await this.attemptPartialParsing();
+        const partialResult = await this.attemptPartialParsing(input);
         if (partialResult) {
+          console.log(`✅ Partial parsing recovered ${partialResult.jobs?.length || 0} jobs`);
           return {
             success: true,
             data: partialResult,
@@ -116,6 +143,7 @@ export class PythonParser {
         }
       }
 
+      console.log('❌ All parsing attempts failed');
       return {
         success: false,
         error: (error as Error).message,
@@ -282,30 +310,102 @@ export class PythonParser {
     return JSON.parse(this.input);
   }
 
-  private async attemptPartialParsing(): Promise<any | null> {
+  private async attemptPartialParsing(originalInput: string): Promise<any | null> {
     try {
-      // Try to extract valid job objects even if the overall structure is broken
-      const jobMatches = this.input.match(/\{[^{}]*"title"[^{}]*\}/g);
-      if (jobMatches && jobMatches.length > 0) {
-        const jobs = [];
-        for (const match of jobMatches) {
-          try {
-            const job = JSON.parse(match);
-            jobs.push(job);
-          } catch {
-            // Skip invalid jobs
+      console.log('Starting advanced partial parsing...');
+      
+      // Method 1: Extract complete job objects with proper bracket matching
+      const jobs = this.extractJobObjects(originalInput);
+      if (jobs.length > 0) {
+        this.warnings.push(`Partial parsing recovered ${jobs.length} job(s) from corrupted input`);
+        return { jobs };
+      }
+
+      // Method 2: Try to find and parse the jobs array directly
+      const jobsArrayMatch = originalInput.match(/"jobs"\s*:\s*\[([\s\S]*)\]/);
+      if (jobsArrayMatch) {
+        try {
+          const jobsStr = `[${jobsArrayMatch[1]}]`;
+          const parsedJobs = JSON.parse(jobsStr);
+          if (Array.isArray(parsedJobs) && parsedJobs.length > 0) {
+            this.warnings.push(`Partial parsing extracted jobs array with ${parsedJobs.length} job(s)`);
+            return { jobs: parsedJobs };
           }
-        }
-        
-        if (jobs.length > 0) {
-          this.warnings.push(`Partial parsing recovered ${jobs.length} job(s) from corrupted input`);
-          return { jobs };
+        } catch (e) {
+          console.log('Jobs array extraction failed:', e);
         }
       }
-    } catch {
-      // Partial parsing failed
+
+      console.log('Advanced partial parsing found no recoverable data');
+    } catch (error) {
+      console.log('Partial parsing error:', error);
     }
     
     return null;
+  }
+
+  private extractJobObjects(input: string): any[] {
+    const jobs: any[] = [];
+    let depth = 0;
+    let currentJob = '';
+    let inString = false;
+    let stringChar = '';
+    let escaped = false;
+    let foundJobStart = false;
+
+    for (let i = 0; i < input.length; i++) {
+      const char = input[i];
+      const prevChar = i > 0 ? input[i - 1] : '';
+
+      // Handle string boundaries
+      if ((char === '"' || char === "'") && !escaped) {
+        if (!inString) {
+          inString = true;
+          stringChar = char;
+        } else if (char === stringChar) {
+          inString = false;
+          stringChar = '';
+        }
+      }
+
+      escaped = !escaped && char === '\\';
+
+      if (!inString) {
+        if (char === '{') {
+          depth++;
+          if (depth === 1) {
+            // Look ahead to see if this might be a job object
+            const lookAhead = input.slice(i, i + 200);
+            if (lookAhead.includes('"title"') || lookAhead.includes('"company"')) {
+              foundJobStart = true;
+              currentJob = '';
+            }
+          }
+        } else if (char === '}') {
+          depth--;
+          if (depth === 0 && foundJobStart) {
+            currentJob += char;
+            try {
+              const job = JSON.parse(currentJob);
+              if (job && typeof job === 'object' && (job.title || job.company)) {
+                jobs.push(job);
+                console.log(`Extracted job: ${job.title || 'Unknown title'}`);
+              }
+            } catch (e) {
+              console.log('Failed to parse extracted job object:', e);
+            }
+            foundJobStart = false;
+            currentJob = '';
+            continue;
+          }
+        }
+      }
+
+      if (foundJobStart) {
+        currentJob += char;
+      }
+    }
+
+    return jobs;
   }
 }
