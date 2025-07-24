@@ -187,10 +187,10 @@ export class EnhancedPythonParser {
     processed = processed.replace(/\bFalse\b/g, 'false');
     processed = processed.replace(/\bNone\b/g, 'null');
     
-    // Step 3: Handle string concatenation (enhanced from our parser)
-    processed = this.handleStringConcatenation(processed);
+    // Step 3: Handle string concatenation with simplified approach (Claude's method)
+    processed = this.handleStringConcatenationSimple(processed);
     
-    // Step 4: Convert single quotes to double quotes
+    // Step 4: Convert single quotes to double quotes more carefully
     processed = processed.replace(/'/g, '"');
     
     // Step 5: Remove trailing commas
@@ -211,61 +211,21 @@ export class EnhancedPythonParser {
       
       processed = processed.replace(`"${placeholder}"`, `"${cleanValue}"`);
     });
-
-    // Step 7: Clean strings for JSON compatibility
-    processed = this.cleanStrings(processed);
     
     return processed;
   }
 
   /**
-   * Enhanced string concatenation handling
+   * Simplified string concatenation handling (Claude's approach)
    */
-  private handleStringConcatenation(input: string): string {
-    const patterns = [
-      // Same quote types
-      { regex: /('(?:[^'\\]|\\.)*')\s+('(?:[^'\\]|\\.)*')/g, type: 'single-single' },
-      { regex: /("(?:[^"\\]|\\.)*")\s+("(?:[^"\\]|\\.)*")/g, type: 'double-double' },
-      // Mixed quote types
-      { regex: /('(?:[^'\\]|\\.)*')\s+("(?:[^"\\]|\\.)*")/g, type: 'single-double' },
-      { regex: /("(?:[^"\\]|\\.)*")\s+('(?:[^'\\]|\\.)*')/g, type: 'double-single' }
-    ];
-
-    let result = input;
-    let iterations = 0;
-    const maxIterations = 50; // Reduced for performance
-    let hasChanges = true;
-
-    while (hasChanges && iterations < maxIterations) {
-      hasChanges = false;
-      iterations++;
-
-      for (const pattern of patterns) {
-        const beforeLength = result.length;
-        
-        result = result.replace(pattern.regex, (match, str1, str2) => {
-          // Extract content from quotes
-          const content1 = str1.slice(1, -1);
-          const content2 = str2.slice(1, -1);
-          
-          // Combine and escape for JSON
-          const combined = content1 + content2;
-          const escaped = this.escapeForJSON(combined);
-          
-          return `"${escaped}"`;
-        });
-
-        if (result.length !== beforeLength) {
-          hasChanges = true;
-        }
-      }
-    }
-
-    if (iterations >= maxIterations) {
-      this.warnings.push('Maximum concatenation iterations reached - some concatenations may be incomplete');
-    }
-
-    return result;
+  private handleStringConcatenationSimple(input: string): string {
+    // Handle string concatenation with a single, more robust regex
+    // This matches adjacent strings separated by whitespace
+    return input.replace(/(['"])((?:(?!\1)[^\\]|\\.)*)?\1\s+(['"])((?:(?!\3)[^\\]|\\.)*)?\3/g, (match, quote1, content1, quote2, content2) => {
+      // Combine the content and return as a single double-quoted string
+      const combined = (content1 || '') + (content2 || '');
+      return `"${combined}"`;
+    });
   }
 
   /**
@@ -274,19 +234,27 @@ export class EnhancedPythonParser {
   private cleanStrings(input: string): string {
     return input.replace(/"([^"]*)"/g, (match, content) => {
       const cleaned = content
-        // Handle existing backslashes to prevent double escaping
+        // First handle existing backslashes to prevent double escaping
+        .replace(/\\\\/g, '__DOUBLE_BACKSLASH__')
+        .replace(/\\"/g, '__ESCAPED_QUOTE__')
+        .replace(/\\n/g, '__ESCAPED_NEWLINE__')
+        .replace(/\\r/g, '__ESCAPED_CR__')
+        .replace(/\\t/g, '__ESCAPED_TAB__')
+        // Now handle unescaped characters
         .replace(/\\/g, '\\\\')
-        // Replace smart quotes and problematic quotes
-        .replace(/[""]/g, '"')
-        .replace(/['']/g, "'")
-        // Handle contractions and apostrophes properly
-        .replace(/'/g, "'")
-        // Escape double quotes that aren't already escaped
-        .replace(/(?<!\\)"/g, '\\"')
-        // Handle newlines and control characters
+        .replace(/"/g, '\\"')
         .replace(/\n/g, '\\n')
         .replace(/\r/g, '\\r')
         .replace(/\t/g, '\\t')
+        // Restore previously escaped content
+        .replace(/__DOUBLE_BACKSLASH__/g, '\\\\')
+        .replace(/__ESCAPED_QUOTE__/g, '\\"')
+        .replace(/__ESCAPED_NEWLINE__/g, '\\n')
+        .replace(/__ESCAPED_CR__/g, '\\r')
+        .replace(/__ESCAPED_TAB__/g, '\\t')
+        // Handle smart quotes and problematic characters
+        .replace(/[""]/g, '"')
+        .replace(/['']/g, "'")
         // Replace other problematic non-ASCII characters
         .replace(/[^\x20-\x7E\n\r\t]/g, (char) => {
           return '\\u' + char.charCodeAt(0).toString(16).padStart(4, '0');
