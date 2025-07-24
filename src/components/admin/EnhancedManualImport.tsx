@@ -36,6 +36,30 @@ const EnhancedManualImport: React.FC = () => {
   const [isImporting, setIsImporting] = useState(false);
   const [importProgress, setImportProgress] = useState(0);
 
+  // Helper function to normalize equity values to database constraints
+  const normalizeEquity = useCallback((equity: string | undefined | null): string => {
+    if (!equity || typeof equity !== 'string') return 'None';
+    
+    const cleanEquity = equity.toLowerCase().trim();
+    
+    // Map common variations to allowed values
+    if (cleanEquity === 'none' || cleanEquity === 'no equity' || cleanEquity === '0%' || cleanEquity === 'n/a') {
+      return 'None';
+    }
+    if (cleanEquity.includes('0.1') && cleanEquity.includes('0.5')) {
+      return '0.1%-0.5%';
+    }
+    if (cleanEquity.includes('0.5') && cleanEquity.includes('1')) {
+      return '0.5%-1%';
+    }
+    if (cleanEquity.includes('1%') || cleanEquity.includes('above 1') || cleanEquity.includes('> 1')) {
+      return '1%+';
+    }
+    
+    // Default to 'None' for any unrecognized format
+    return 'None';
+  }, []);
+
   const validateJob = useCallback((job: any): { valid: boolean; errors: string[] } => {
     const errors: string[] = [];
 
@@ -49,11 +73,20 @@ const EnhancedManualImport: React.FC = () => {
       errors.push('Description is required');
     }
 
+    // Validate equity field against database constraints
+    if (job.equity) {
+      const normalizedEquity = normalizeEquity(job.equity);
+      const allowedEquityValues = ['None', '0.1%-0.5%', '0.5%-1%', '1%+'];
+      if (!allowedEquityValues.includes(normalizedEquity)) {
+        errors.push(`Equity value "${job.equity}" will be normalized to "None"`);
+      }
+    }
+
     return {
       valid: errors.length === 0,
       errors
     };
-  }, []);
+  }, [normalizeEquity]);
 
   const handleJobsParsed = useCallback((jobs: any[]) => {
     console.log('Processing parsed jobs:', jobs.length);
@@ -140,12 +173,12 @@ const EnhancedManualImport: React.FC = () => {
       department: job.department,
       seniority_level: job.seniority_level,
       remote_onsite: job.remote_onsite,
-      equity: job.equity,
+      equity: normalizeEquity(job.equity), // Normalize equity to prevent constraint violations
       visa_sponsorship: job.visa_sponsorship,
       is_draft: true,
       source_url: job.url
     };
-  }, [user?.id]);
+  }, [user?.id, normalizeEquity]);
 
   const handleImport = useCallback(async () => {
     const selectedJobs = processedJobs.filter(job => job.selected && job.valid);
@@ -177,12 +210,22 @@ const EnhancedManualImport: React.FC = () => {
           console.log(`✅ Successfully created job: ${job.title} at ${job.company}`);
         } else {
           errorCount++;
-          errors.push(`${job.title} at ${job.company}: ${result.error}`);
+          // Provide more detailed error message for constraint violations
+          const errorMsg = result.error?.includes('constraint') 
+            ? `Database validation error: ${result.error}` 
+            : result.error;
+          errors.push(`${job.title} at ${job.company}: ${errorMsg}`);
           console.error(`❌ Failed to create job: ${job.title}`, result.error);
         }
       } catch (error) {
         errorCount++;
-        errors.push(`${job.title} at ${job.company}: ${(error as Error).message}`);
+        const errorMsg = (error as Error).message;
+        // Check for common database constraint errors
+        if (errorMsg.includes('constraint') || errorMsg.includes('violates')) {
+          errors.push(`${job.title} at ${job.company}: Database constraint violation - ${errorMsg}`);
+        } else {
+          errors.push(`${job.title} at ${job.company}: ${errorMsg}`);
+        }
         console.error(`❌ Exception creating job: ${job.title}`, error);
       }
       
@@ -201,9 +244,14 @@ const EnhancedManualImport: React.FC = () => {
 
     if (errorCount > 0) {
       console.error('Import errors:', errors);
+      
+      // Show first few errors in the toast for better user feedback
+      const firstErrors = errors.slice(0, 2);
+      const moreErrorsText = errors.length > 2 ? ` and ${errors.length - 2} more` : '';
+      
       toast({
         title: "Some Imports Failed",
-        description: `${errorCount} job(s) failed to import. Check console for details.`,
+        description: `${errorCount} job(s) failed: ${firstErrors.join('; ')}${moreErrorsText}. See console for full details.`,
         variant: "destructive"
       });
     }
