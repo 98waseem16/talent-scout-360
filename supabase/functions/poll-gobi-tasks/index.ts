@@ -85,9 +85,9 @@ serve(async (req) => {
       console.log(`Polling job ${job.id} with task ${job.gobi_task_id}`)
       
       try {
-        // CRITICAL FIX: Use the correct Gobi API endpoint that matches the submit endpoint
-        const statusUrl = `https://gobii.ai/api/v1/tasks/browser-use/${job.gobi_task_id}`
-        console.log(`Checking status at: ${statusUrl}`)
+        // Try the result endpoint to get actual extracted data
+        const statusUrl = `https://gobii.ai/api/v1/tasks/browser-use/${job.gobi_task_id}/result`
+        console.log(`Checking result at: ${statusUrl}`)
         
         const response = await fetch(statusUrl, {
           headers: {
