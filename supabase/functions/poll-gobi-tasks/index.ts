@@ -91,7 +91,7 @@ serve(async (req) => {
         
         const response = await fetch(statusUrl, {
           headers: {
-            'Authorization': `Bearer ${gobiApiKey}`,
+            'X-Api-Key': gobiApiKey,
             'Content-Type': 'application/json'
           }
         })
