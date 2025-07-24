@@ -6,6 +6,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/contexts/AuthContext';
 import AuthErrorBoundary from '@/components/auth/AuthErrorBoundary';
 import SessionStatus from '@/components/auth/SessionStatus';
+import { Analytics } from '@vercel/analytics/react';
 
 // Pages
 import Index from '@/pages/Index';
@@ -76,6 +77,7 @@ const App: React.FC = () => {
             </div>
             <Toaster />
             <SessionStatus />
+            <Analytics />
           </AuthProvider>
         </Router>
       </AuthErrorBoundary>
