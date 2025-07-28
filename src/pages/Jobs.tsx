@@ -12,7 +12,9 @@ import FilterToggle from '@/components/jobs/FilterToggle';
 import FilterSidebar from '@/components/jobs/FilterSidebar';
 import JobsList from '@/components/jobs/JobsList';
 import JobsCount from '@/components/jobs/JobsCount';
+import CategoryBreadcrumb from '@/components/CategoryBreadcrumb';
 import { Job } from '@/lib/types/job.types';
+import { CATEGORY_MAPPINGS } from '@/lib/categories';
 
 const Jobs: React.FC = () => {
   const isMobile = useIsMobile();
@@ -28,6 +30,7 @@ const Jobs: React.FC = () => {
     isFilterOpen,
     activeFilters,
     filteredJobs,
+    currentCategory,
     setSearchQuery,
     setLocationQuery,
     setFilters,
@@ -36,6 +39,13 @@ const Jobs: React.FC = () => {
     clearAllFilters,
     removeFilter
   } = useJobFilters(jobs as Job[] | undefined);
+
+  // Get current department from category
+  const currentDepartment = currentCategory ? CATEGORY_MAPPINGS[currentCategory] : '';
+
+  const handleClearCategory = () => {
+    removeFilter('category');
+  };
 
   // Mobile-optimized padding with better safe area handling
   const contentPaddingClass = isMobile ? 'pb-20 safe-bottom' : 'pb-16';
@@ -60,6 +70,12 @@ const Jobs: React.FC = () => {
             
             {/* Main Content */}
             <div className="flex-1 w-full">
+              {/* Category Breadcrumb */}
+              <CategoryBreadcrumb 
+                currentCategory={currentDepartment}
+                onClearCategory={handleClearCategory}
+              />
+
               {/* Search Bar */}
               <JobSearchBar 
                 searchQuery={searchQuery}

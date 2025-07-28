@@ -118,8 +118,14 @@ export const jobMatchesFilters = (job: Job, filters: Record<string, string | boo
 };
 
 // Function to generate array of active filters for display
-export const generateActiveFilters = (filters: Record<string, string | boolean>, searchQuery: string, locationQuery: string): { type: string; label: string }[] => {
+export const generateActiveFilters = (
+  filters: Record<string, string | boolean>, 
+  searchQuery: string, 
+  locationQuery: string,
+  currentCategory?: string
+): { type: string; label: string }[] => {
   return [
+    ...(currentCategory ? [{ type: 'category', label: `Category: ${currentCategory}` }] : []),
     ...(searchQuery ? [{ type: 'search', label: searchQuery }] : []),
     ...(locationQuery ? [{ type: 'location', label: locationQuery }] : []),
     ...(filters.department ? [{ type: 'department', label: filters.department as string }] : []),

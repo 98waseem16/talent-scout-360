@@ -10,6 +10,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   const queryParams = new URLSearchParams(location.search);
   const initialQuery = queryParams.get('query') || '';
   const initialLocation = queryParams.get('location') || '';
+  const categoryParam = queryParams.get('category') || '';
 
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [locationQuery, setLocationQuery] = useState(initialLocation);
@@ -29,6 +30,19 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     revenueModel: '',
     visaSponsorship: false
   });
+
+  // Handle category parameter from URL
+  useEffect(() => {
+    if (categoryParam) {
+      // Import here to avoid circular dependency
+      import('@/lib/categories').then(({ CATEGORY_MAPPINGS }) => {
+        const department = CATEGORY_MAPPINGS[categoryParam];
+        if (department && filters.department !== department) {
+          setFilters(prev => ({ ...prev, department }));
+        }
+      });
+    }
+  }, [categoryParam]);
 
   // Update URL when search or location changes
   useEffect(() => {
@@ -79,6 +93,13 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
       setSearchQuery('');
     } else if (type === 'location') {
       setLocationQuery('');
+    } else if (type === 'category') {
+      // Clear department filter and remove category from URL
+      setFilters(prev => ({ ...prev, department: '' }));
+      const params = new URLSearchParams(location.search);
+      params.delete('category');
+      const newUrl = `${location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+      window.history.replaceState({}, '', newUrl);
     } else {
       setFilters(prev => ({ 
         ...prev, 
@@ -88,7 +109,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
   };
 
   // Generate array of active filters for display
-  const activeFilters = generateActiveFilters(filters, searchQuery, locationQuery);
+  const activeFilters = generateActiveFilters(filters, searchQuery, locationQuery, categoryParam);
 
   // Filter jobs based on all criteria
   const filteredJobs = jobs?.filter(job => 
@@ -102,6 +123,7 @@ export const useJobFilters = (jobs: Job[] | undefined): UseJobFiltersReturn => {
     isFilterOpen,
     activeFilters,
     filteredJobs,
+    currentCategory: categoryParam,
     setSearchQuery,
     setLocationQuery,
     setFilters: handleSetFilters,

@@ -3,35 +3,12 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import Hero from '@/components/Hero';
 import TrendingJobs from '@/components/TrendingJobs';
-import { Briefcase, Building } from 'lucide-react';
+import { Building } from 'lucide-react';
 import { AnimatedTooltipPreview } from '@/components/ui/code-demo';
 import { Carousel, CarouselContent, CarouselItem } from '@/components/ui/carousel';
+import { useCategoryData } from '@/hooks/useCategoryData';
 const Index: React.FC = () => {
-  const categories = [{
-    name: 'Software Engineering',
-    icon: <Briefcase />,
-    count: 230
-  }, {
-    name: 'Design',
-    icon: <Briefcase />,
-    count: 158
-  }, {
-    name: 'Marketing',
-    icon: <Briefcase />,
-    count: 145
-  }, {
-    name: 'Product Management',
-    icon: <Briefcase />,
-    count: 112
-  }, {
-    name: 'Sales',
-    icon: <Briefcase />,
-    count: 95
-  }, {
-    name: 'Operations',
-    icon: <Briefcase />,
-    count: 87
-  }];
+  const { categories, isLoading } = useCategoryData();
   return <>
       <Header />
       <main className="min-h-screen w-full">
@@ -54,13 +31,33 @@ const Index: React.FC = () => {
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-              {categories.map((category, idx) => <a key={idx} href={`/jobs?category=${encodeURIComponent(category.name)}`} className="bg-slate-50 hover:bg-slate-100 border border-border rounded-xl p-4 text-center transition-all group">
-                  <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm group-hover:shadow group-hover:bg-primary/5 transition-all">
-                    {category.icon}
+              {isLoading ? (
+                // Loading skeleton
+                Array.from({ length: 6 }).map((_, idx) => (
+                  <div key={idx} className="bg-slate-50 border border-border rounded-xl p-4 text-center animate-pulse">
+                    <div className="bg-slate-200 w-12 h-12 rounded-full mx-auto mb-3" />
+                    <div className="bg-slate-200 h-4 rounded mb-2" />
+                    <div className="bg-slate-200 h-3 rounded w-16 mx-auto" />
                   </div>
-                  <h3 className="font-medium mb-1">{category.name}</h3>
-                  <p className="text-sm text-muted-foreground">{category.count} jobs</p>
-                </a>)}
+                ))
+              ) : (
+                categories.map((category, idx) => {
+                  const IconComponent = category.icon;
+                  return (
+                    <a 
+                      key={idx} 
+                      href={`/jobs?category=${encodeURIComponent(category.name)}`} 
+                      className="bg-slate-50 hover:bg-slate-100 border border-border rounded-xl p-4 text-center transition-all group"
+                    >
+                      <div className="bg-white w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3 shadow-sm group-hover:shadow group-hover:bg-primary/5 transition-all">
+                        <IconComponent className="w-6 h-6 text-primary" />
+                      </div>
+                      <h3 className="font-medium mb-1">{category.name}</h3>
+                      <p className="text-sm text-muted-foreground">{category.count} jobs</p>
+                    </a>
+                  );
+                })
+              )}
             </div>
           </div>
         </section>

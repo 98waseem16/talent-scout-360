@@ -24,6 +24,7 @@ export interface UseJobFiltersReturn {
   isFilterOpen: boolean;
   activeFilters: { type: string; label: string }[];
   filteredJobs: Job[];
+  currentCategory: string;
   setSearchQuery: (query: string) => void;
   setLocationQuery: (location: string) => void;
   setFilters: (field: string, value: string | boolean) => void;
