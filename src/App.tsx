@@ -18,6 +18,7 @@ import NotFound from '@/pages/NotFound';
 import Auth from '@/pages/Auth';
 import AuthCallback from '@/pages/AuthCallback';
 import Unauthorized from '@/pages/Unauthorized';
+import SitemapRedirect from '@/pages/SitemapRedirect';
 
 // Admin Pages
 import RequireAdmin from '@/components/admin/RequireAdmin';
@@ -65,6 +66,7 @@ const App: React.FC = () => {
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/callback" element={<AuthCallback />} />
+                <Route path="/sitemap.xml" element={<SitemapRedirect />} />
                 <Route path="/unauthorized" element={<Unauthorized />} />
                 
                 {/* Admin Routes */}

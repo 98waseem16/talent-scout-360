@@ -2,7 +2,7 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://onrobtdyzakhnquevfvd.supabase.co/functions/v1/sitemap
+Sitemap: https://www.notcorporate.com/sitemap.xml
 
 # Crawl delay (optional)
 Crawl-delay: 1

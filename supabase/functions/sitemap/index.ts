@@ -38,9 +38,8 @@ serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY') ?? '',
     )
 
-    // Get the base URL from the request
-    const url = new URL(req.url);
-    const baseUrl = `${url.protocol}//${url.host}`;
+    // Use the production domain
+    const baseUrl = 'https://www.notcorporate.com';
     const currentDate = new Date().toISOString().split('T')[0];
     
     const urls: SitemapUrl[] = [
