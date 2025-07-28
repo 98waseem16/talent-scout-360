@@ -301,63 +301,100 @@ Return ONLY the JSON structure with comprehensive job data. Extract the most com
         if (gobiResult.status === 'completed') {
           // Synchronous completion - process the results immediately
           console.log(`Job ${job.id} completed synchronously`);
+          console.log('Gobi result data:', JSON.stringify(gobiResult, null, 2));
           
           let jobsData = [];
           let jobsFound = 0;
           let jobsCreated = 0;
 
           try {
-            if (gobiResult.result && gobiResult.result.jobs) {
-              jobsData = gobiResult.result.jobs;
-              jobsFound = jobsData.length;
-              
-              // Create job postings from the scraped data
-              for (const jobData of jobsData) {
-                try {
-                  const { error: insertError } = await supabaseClient
-                    .from('job_postings')
-                    .insert({
-                      title: jobData.title || 'Untitled Position',
-                      company: jobData.company || companyName,
-                      location: jobData.location || 'Location not specified',
-                      type: jobData.type || 'Full-time',
-                      salary: jobData.salary || 'Salary not specified',
-                      description: jobData.description || 'No description available',
-                      requirements: jobData.requirements || [],
-                      responsibilities: jobData.responsibilities || [],
-                      benefits: jobData.benefits || [],
-                      application_url: jobData.url || careersUrl,
-                      department: jobData.department || 'Other',
-                      seniority_level: jobData.seniority_level || 'Mid-Level',
-                      team_size: jobData.team_size || '1-10',
-                      remote_onsite: jobData.remote_onsite || 'Onsite',
-                      work_hours: jobData.work_hours || 'Fixed',
-                      visa_sponsorship: jobData.visa_sponsorship || false,
-                       equity: (jobData.equity && jobData.equity !== 'None') ? jobData.equity : null,
-                       salary_range: (jobData.salary_range && jobData.salary_range !== 'Negotiable') ? jobData.salary_range : null,
-                       investment_stage: (jobData.investment_stage && jobData.investment_stage !== 'Bootstrapped') ? jobData.investment_stage : null,
-                       revenue_model: (jobData.revenue_model && jobData.revenue_model !== 'Other') ? jobData.revenue_model : null,
-                       hiring_urgency: (jobData.hiring_urgency && jobData.hiring_urgency !== 'Open to Future Applicants') ? jobData.hiring_urgency : null,
-                      source_url: careersUrl,
-                      scraping_job_id: job.id,
-                      scraped_at: new Date().toISOString(),
-                      is_draft: true, // Mark as draft for review
-                      expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
-                      logo: '' // Will be filled later
-                    });
+            // Validate Gobi response structure
+            if (!gobiResult.result || !gobiResult.result.jobs || !Array.isArray(gobiResult.result.jobs)) {
+              console.error(`Invalid Gobi response structure for job ${job.id}:`, gobiResult);
+              throw new Error('Invalid Gobi response: missing or invalid jobs array');
+            }
 
-                  if (!insertError) {
-                    jobsCreated++;
-                  } else {
-                    console.error(`Error inserting job ${jobData.title}:`, insertError);
-                  }
-                } catch (jobError) {
-                  console.error(`Error processing job ${jobData.title}:`, jobError);
+            jobsData = gobiResult.result.jobs;
+            jobsFound = jobsData.length;
+            console.log(`Found ${jobsFound} jobs in Gobi response`);
+            
+            if (jobsFound === 0) {
+              console.warn(`No jobs found in Gobi response for ${careersUrl}`);
+            }
+              
+            // Create job postings from the scraped data
+            for (const [index, jobData] of jobsData.entries()) {
+              try {
+                console.log(`Processing job ${index + 1}/${jobsFound}:`, {
+                  title: jobData.title,
+                  url: jobData.url,
+                  equity: jobData.equity,
+                  salary_range: jobData.salary_range,
+                  investment_stage: jobData.investment_stage
+                });
+
+                // Validate required fields
+                if (!jobData.title || !jobData.company || !jobData.description) {
+                  console.error(`Skipping job ${index + 1} - missing required fields:`, {
+                    title: !!jobData.title,
+                    company: !!jobData.company,
+                    description: !!jobData.description
+                  });
+                  continue;
                 }
+
+                // Ensure application_url is valid - prefer job-specific URL over careers page
+                const applicationUrl = jobData.url && jobData.url !== careersUrl && jobData.url.startsWith('http') 
+                  ? jobData.url 
+                  : careersUrl;
+
+                console.log(`Using application URL: ${applicationUrl}`);
+
+                const { error: insertError } = await supabaseClient
+                  .from('job_postings')
+                  .insert({
+                    title: jobData.title,
+                    company: jobData.company || companyName,
+                    location: jobData.location || 'Location not specified',
+                    type: jobData.type || 'Full-time',
+                    salary: jobData.salary || 'Salary not specified',
+                    description: jobData.description,
+                    requirements: Array.isArray(jobData.requirements) ? jobData.requirements : [],
+                    responsibilities: Array.isArray(jobData.responsibilities) ? jobData.responsibilities : [],
+                    benefits: Array.isArray(jobData.benefits) ? jobData.benefits : [],
+                    application_url: applicationUrl,
+                    department: jobData.department || 'Other',
+                    seniority_level: jobData.seniority_level || 'Mid-Level',
+                    team_size: jobData.team_size || '1-10',
+                    remote_onsite: jobData.remote_onsite || 'Onsite',
+                    work_hours: jobData.work_hours || 'Fixed',
+                    visa_sponsorship: jobData.visa_sponsorship || false,
+                    equity: (jobData.equity && jobData.equity !== 'None') ? jobData.equity : null,
+                    salary_range: (jobData.salary_range && jobData.salary_range !== 'Negotiable') ? jobData.salary_range : null,
+                    investment_stage: (jobData.investment_stage && jobData.investment_stage !== 'Bootstrapped') ? jobData.investment_stage : null,
+                    revenue_model: (jobData.revenue_model && jobData.revenue_model !== 'Other') ? jobData.revenue_model : null,
+                    hiring_urgency: (jobData.hiring_urgency && jobData.hiring_urgency !== 'Open to Future Applicants') ? jobData.hiring_urgency : null,
+                    source_url: careersUrl,
+                    scraping_job_id: job.id,
+                    scraped_at: new Date().toISOString(),
+                    is_draft: true, // Mark as draft for review
+                    expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
+                    logo: '' // Will be filled later
+                  });
+
+                if (!insertError) {
+                  jobsCreated++;
+                  console.log(`Successfully created job: ${jobData.title}`);
+                } else {
+                  console.error(`Error inserting job ${jobData.title}:`, insertError);
+                }
+              } catch (jobError) {
+                console.error(`Error processing job ${index + 1} (${jobData.title}):`, jobError);
               }
             }
           } catch (parseError) {
             console.error(`Error parsing Gobi result for job ${job.id}:`, parseError);
+            throw parseError; // Re-throw to mark job as failed
           }
 
           // Update job as completed
