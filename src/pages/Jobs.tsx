@@ -44,7 +44,7 @@ const Jobs: React.FC = () => {
   const currentDepartment = currentCategory ? CATEGORY_MAPPINGS[currentCategory] : '';
 
   const handleClearCategory = () => {
-    removeFilter('category');
+    clearFilters(); // Clear all filters, not just category
   };
 
   // Mobile-optimized padding with better safe area handling
