@@ -68,6 +68,36 @@ const Header: React.FC = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMenuOpen) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.touchAction = 'none';
+    } else {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    }
+
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.touchAction = '';
+    };
+  }, [isMenuOpen]);
+
+  // Handle escape key to close menu
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isMenuOpen) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    if (isMenuOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isMenuOpen]);
+
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleSignOut = async () => {
@@ -211,29 +241,39 @@ const Header: React.FC = () => {
       {/* Mobile Navigation */}
       {isMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-[60] md:hidden isolate"
           onClick={() => setIsMenuOpen(false)}
           aria-hidden="true"
         />
       )}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-background z-50 md:hidden"
+          className="fixed inset-0 bg-background z-[70] md:hidden isolate animate-slide-in-right"
           style={{ 
             touchAction: 'none'
           }}
         >
-        {/* Close button */}
-        <button
-          className="absolute top-6 right-6 text-foreground p-3 rounded-md hover:bg-secondary touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center z-[60]"
-          onClick={() => setIsMenuOpen(false)}
-          aria-label="Close menu"
-        >
-          <X size={24} />
-        </button>
+        {/* Logo area */}
+        <div className="flex items-center justify-between p-6 border-b border-border">
+          <Link to="/" className="font-bold text-xl text-primary flex items-center gap-2">
+            <span className="bg-primary text-white p-1.5 rounded-md">
+              <Briefcase className="h-4 w-4" />
+            </span>
+            notCorporate
+          </Link>
+          
+          {/* Close button */}
+          <button
+            className="text-foreground p-3 rounded-md hover:bg-secondary touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center z-[80]"
+            onClick={() => setIsMenuOpen(false)}
+            aria-label="Close menu"
+          >
+            <X size={24} />
+          </button>
+        </div>
         
         <div className="h-full overflow-y-auto">
-          <nav className="flex flex-col space-y-4 pt-20 px-6 pb-8">
+          <nav className="flex flex-col space-y-4 pt-8 px-6 pb-8">
             <Link 
               to="/" 
               className={`text-lg font-medium transition-colors px-4 py-4 rounded-lg touch-manipulation min-h-[44px] flex items-center gap-3 ${
