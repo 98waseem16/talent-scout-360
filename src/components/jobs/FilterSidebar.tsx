@@ -26,13 +26,22 @@ const FilterSidebar: React.FC<FilterSidebarProps> = ({
   if (isMobile) {
     return (
       <Sheet open={isFilterOpen} onOpenChange={(open) => setIsFilterOpen(open)}>
-        <SheetContent side="left" className="w-[85vw] max-w-md p-0 pt-10">
-          <div className="bg-white p-5 h-full overflow-auto">
-            <JobFilters 
-              filters={filters}
-              setFilters={setFilters}
-              clearAllFilters={clearAllFilters} 
-            />
+        <SheetContent 
+          side="left" 
+          className="w-[90vw] max-w-sm p-0 pt-10 z-[9999] bg-background border-r overflow-hidden"
+          onInteractOutside={() => setIsFilterOpen(false)}
+        >
+          <div className="h-full overflow-y-auto ios-scroll">
+            <div className="p-5 pb-20">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold">Filters</h2>
+              </div>
+              <JobFilters 
+                filters={filters}
+                setFilters={setFilters}
+                clearAllFilters={clearAllFilters} 
+              />
+            </div>
           </div>
         </SheetContent>
       </Sheet>

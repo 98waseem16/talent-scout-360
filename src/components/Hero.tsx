@@ -13,7 +13,16 @@ const Hero: React.FC = () => {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    navigate(`/jobs?query=${encodeURIComponent(query)}&location=${encodeURIComponent(location)}`);
+    
+    // Build search params
+    const searchParams = new URLSearchParams();
+    if (query.trim()) searchParams.set('query', query.trim());
+    if (location.trim()) searchParams.set('location', location.trim());
+    
+    // Navigate with proper URL encoding
+    const searchString = searchParams.toString();
+    const url = searchString ? `/jobs?${searchString}` : '/jobs';
+    navigate(url);
   };
 
   return (
