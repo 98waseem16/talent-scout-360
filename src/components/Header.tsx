@@ -216,15 +216,13 @@ const Header: React.FC = () => {
           aria-hidden="true"
         />
       )}
-      <div
-        className={cn(
-          'fixed inset-0 bg-background z-50 pt-20 px-6 transition-transform duration-300 ease-in-out md:hidden overflow-y-auto',
-          isMenuOpen ? 'translate-x-0' : 'translate-x-full'
-        )}
-        style={{ 
-          touchAction: isMenuOpen ? 'none' : 'auto'
-        }}
-      >
+      {isMenuOpen && (
+        <div
+          className="fixed inset-0 bg-background z-50 pt-20 px-6 transition-transform duration-300 ease-in-out md:hidden overflow-y-auto"
+          style={{ 
+            touchAction: 'none'
+          }}
+        >
         {/* Close button inside menu */}
         <button
           className="absolute top-4 right-6 text-foreground p-3 rounded-md hover:bg-secondary touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center z-[60]"
@@ -280,7 +278,8 @@ const Header: React.FC = () => {
             {renderAuthSection(true)}
           </div>
         </nav>
-      </div>
+        </div>
+      )}
     </header>
   );
 };
