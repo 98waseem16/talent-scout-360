@@ -91,7 +91,11 @@ const Header: React.FC = () => {
       return (
         <>
           <Link to="/dashboard">
-            <Button variant="ghost" size={isMobile ? "default" : "sm"} className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size={isMobile ? "default" : "sm"} 
+              className={`flex items-center gap-2 ${isMobile ? 'w-full justify-start min-h-[48px] text-base touch-manipulation' : ''}`}
+            >
               <UserCircle className="h-5 w-5" />
               Dashboard
             </Button>
@@ -100,7 +104,7 @@ const Header: React.FC = () => {
             variant="outline"
             size={isMobile ? "default" : "sm"}
             onClick={handleSignOut}
-            className="flex items-center gap-2"
+            className={`flex items-center gap-2 ${isMobile ? 'w-full justify-start min-h-[48px] text-base touch-manipulation' : ''}`}
           >
             <LogOut className="h-4 w-4" />
             Sign Out
@@ -113,7 +117,7 @@ const Header: React.FC = () => {
       <Link to="/auth">
         <Button 
           variant="default" 
-          className={isMobile ? "w-full" : ""}
+          className={isMobile ? "w-full min-h-[48px] text-base touch-manipulation" : ""}
         >
           Sign In
         </Button>
@@ -194,46 +198,65 @@ const Header: React.FC = () => {
         </nav>
 
         {/* Mobile Menu Button */}
-        <button className="md:hidden text-foreground p-1.5 rounded-md hover:bg-secondary" onClick={toggleMenu} aria-label="Toggle menu">
-          {isMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        <button 
+          className="md:hidden text-foreground p-3 rounded-md hover:bg-secondary touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center" 
+          onClick={toggleMenu} 
+          aria-label="Toggle menu"
+          aria-expanded={isMenuOpen}
+        >
+          {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
       {/* Mobile Navigation */}
+      {isMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setIsMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
       <div
         className={cn(
-          'fixed inset-0 bg-background/98 backdrop-blur-md z-40 pt-20 px-6 transition-transform duration-300 md:hidden',
+          'fixed inset-0 bg-background z-50 pt-20 px-6 transition-transform duration-300 ease-in-out md:hidden overflow-y-auto',
           isMenuOpen ? 'translate-x-0' : 'translate-x-full'
         )}
+        style={{ 
+          touchAction: isMenuOpen ? 'none' : 'auto'
+        }}
       >
-        <nav className="flex flex-col space-y-4">
+        {/* Close button inside menu */}
+        <button
+          className="absolute top-4 right-6 text-foreground p-3 rounded-md hover:bg-secondary touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center z-[60]"
+          onClick={() => setIsMenuOpen(false)}
+          aria-label="Close menu"
+        >
+          <X size={24} />
+        </button>
+        <nav className="flex flex-col space-y-4 pt-4">
           <Link 
             to="/" 
-            className={`text-lg font-medium transition-colors px-3 py-2 rounded-md ${
-              location.pathname === '/' ? 'bg-secondary text-primary' : 'text-foreground hover:bg-secondary/60'
+            className={`text-lg font-medium transition-colors px-4 py-4 rounded-lg touch-manipulation min-h-[44px] flex items-center gap-3 ${
+              location.pathname === '/' ? 'bg-secondary text-primary' : 'text-foreground hover:bg-secondary/60 active:bg-secondary'
             }`}
           >
-            <div className="flex items-center gap-3">
-              <Home className="h-5 w-5" />
-              <span>Home</span>
-            </div>
+            <Home className="h-6 w-6" />
+            <span>Home</span>
           </Link>
           
           <Link 
             to="/jobs" 
-            className={`text-lg font-medium transition-colors px-3 py-2 rounded-md ${
-              location.pathname === '/jobs' ? 'bg-secondary text-primary' : 'text-foreground hover:bg-secondary/60'
+            className={`text-lg font-medium transition-colors px-4 py-4 rounded-lg touch-manipulation min-h-[44px] flex items-center gap-3 ${
+              location.pathname === '/jobs' ? 'bg-secondary text-primary' : 'text-foreground hover:bg-secondary/60 active:bg-secondary'
             }`}
           >
-            <div className="flex items-center gap-3">
-              <Briefcase className="h-5 w-5" />
-              <span>Browse Jobs</span>
-            </div>
+            <Briefcase className="h-6 w-6" />
+            <span>Browse Jobs</span>
           </Link>
           
           <Link to="/post-job" className="mt-2">
             <Button 
-              className="w-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg bg-gradient-to-r from-primary/90 to-primary"
+              className="w-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg bg-gradient-to-r from-primary/90 to-primary min-h-[48px] text-base touch-manipulation"
             >
               <Rocket className="h-5 w-5" />
               Post a Startup Job
@@ -245,7 +268,7 @@ const Header: React.FC = () => {
             <Link to="/admin" className="mt-2">
               <Button 
                 variant="destructive"
-                className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700"
+                className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 min-h-[48px] text-base touch-manipulation"
               >
                 <ShieldCheck className="h-5 w-5" />
                 Admin Dashboard
@@ -253,7 +276,7 @@ const Header: React.FC = () => {
             </Link>
           )}
           
-          <div className="flex flex-col space-y-3 pt-4 mt-2 border-t border-border">
+          <div className="flex flex-col space-y-3 pt-6 mt-4 border-t border-border">
             {renderAuthSection(true)}
           </div>
         </nav>
