@@ -218,66 +218,69 @@ const Header: React.FC = () => {
       )}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-background z-50 pt-20 px-6 transition-transform duration-300 ease-in-out md:hidden overflow-y-auto"
+          className="fixed inset-0 bg-background z-50 md:hidden"
           style={{ 
             touchAction: 'none'
           }}
         >
-        {/* Close button inside menu */}
+        {/* Close button */}
         <button
-          className="absolute top-4 right-6 text-foreground p-3 rounded-md hover:bg-secondary touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center z-[60]"
+          className="absolute top-6 right-6 text-foreground p-3 rounded-md hover:bg-secondary touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center z-[60]"
           onClick={() => setIsMenuOpen(false)}
           aria-label="Close menu"
         >
           <X size={24} />
         </button>
-        <nav className="flex flex-col space-y-4 pt-4">
-          <Link 
-            to="/" 
-            className={`text-lg font-medium transition-colors px-4 py-4 rounded-lg touch-manipulation min-h-[44px] flex items-center gap-3 ${
-              location.pathname === '/' ? 'bg-secondary text-primary' : 'text-foreground hover:bg-secondary/60 active:bg-secondary'
-            }`}
-          >
-            <Home className="h-6 w-6" />
-            <span>Home</span>
-          </Link>
-          
-          <Link 
-            to="/jobs" 
-            className={`text-lg font-medium transition-colors px-4 py-4 rounded-lg touch-manipulation min-h-[44px] flex items-center gap-3 ${
-              location.pathname === '/jobs' ? 'bg-secondary text-primary' : 'text-foreground hover:bg-secondary/60 active:bg-secondary'
-            }`}
-          >
-            <Briefcase className="h-6 w-6" />
-            <span>Browse Jobs</span>
-          </Link>
-          
-          <Link to="/post-job" className="mt-2">
-            <Button 
-              className="w-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg bg-gradient-to-r from-primary/90 to-primary min-h-[48px] text-base touch-manipulation"
+        
+        <div className="h-full overflow-y-auto">
+          <nav className="flex flex-col space-y-4 pt-20 px-6 pb-8">
+            <Link 
+              to="/" 
+              className={`text-lg font-medium transition-colors px-4 py-4 rounded-lg touch-manipulation min-h-[44px] flex items-center gap-3 ${
+                location.pathname === '/' ? 'bg-secondary text-primary' : 'text-foreground hover:bg-secondary/60 active:bg-secondary'
+              }`}
             >
-              <Rocket className="h-5 w-5" />
-              Post a Startup Job
-            </Button>
-          </Link>
-
-          {/* Admin Dashboard Button - Mobile */}
-          {user && isAdmin && !isCheckingAdmin && (
-            <Link to="/admin" className="mt-2">
+              <Home className="h-6 w-6" />
+              <span>Home</span>
+            </Link>
+            
+            <Link 
+              to="/jobs" 
+              className={`text-lg font-medium transition-colors px-4 py-4 rounded-lg touch-manipulation min-h-[44px] flex items-center gap-3 ${
+                location.pathname === '/jobs' ? 'bg-secondary text-primary' : 'text-foreground hover:bg-secondary/60 active:bg-secondary'
+              }`}
+            >
+              <Briefcase className="h-6 w-6" />
+              <span>Browse Jobs</span>
+            </Link>
+            
+            <Link to="/post-job" className="mt-2">
               <Button 
-                variant="destructive"
-                className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 min-h-[48px] text-base touch-manipulation"
+                className="w-full flex items-center justify-center gap-2 shadow-md hover:shadow-lg bg-gradient-to-r from-primary/90 to-primary min-h-[48px] text-base touch-manipulation"
               >
-                <ShieldCheck className="h-5 w-5" />
-                Admin Dashboard
+                <Rocket className="h-5 w-5" />
+                Post a Startup Job
               </Button>
             </Link>
-          )}
-          
-          <div className="flex flex-col space-y-3 pt-6 mt-4 border-t border-border">
-            {renderAuthSection(true)}
-          </div>
-        </nav>
+
+            {/* Admin Dashboard Button - Mobile */}
+            {user && isAdmin && !isCheckingAdmin && (
+              <Link to="/admin" className="mt-2">
+                <Button 
+                  variant="destructive"
+                  className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 min-h-[48px] text-base touch-manipulation"
+                >
+                  <ShieldCheck className="h-5 w-5" />
+                  Admin Dashboard
+                </Button>
+              </Link>
+            )}
+            
+            <div className="flex flex-col space-y-3 pt-6 mt-4 border-t border-border">
+              {renderAuthSection(true)}
+            </div>
+          </nav>
+        </div>
         </div>
       )}
     </header>
