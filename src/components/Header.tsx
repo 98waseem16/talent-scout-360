@@ -238,41 +238,18 @@ const Header: React.FC = () => {
         </button>
       </div>
 
-      {/* Mobile Bottom Sheet */}
+      {/* Mobile Dropdown Menu */}
       {isMenuOpen && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-50 md:hidden"
-          onClick={() => setIsMenuOpen(false)}
-          aria-hidden="true"
-        />
-      )}
-      {isMenuOpen && (
-        <div
-          className="fixed bottom-0 left-0 right-0 bg-background z-50 md:hidden rounded-t-3xl shadow-2xl animate-slide-up-bottom-sheet"
-          style={{ 
-            height: '70vh',
-            maxHeight: '600px'
-          }}
-        >
-          {/* Drag handle */}
-          <div className="flex justify-center pt-4 pb-2">
-            <div className="w-12 h-1 bg-muted rounded-full"></div>
-          </div>
+        <>
+          {/* Backdrop */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 md:hidden"
+            onClick={() => setIsMenuOpen(false)}
+          />
           
-          {/* Header with close */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
-            <h2 className="text-lg font-semibold">Menu</h2>
-            <button
-              className="p-2 rounded-full hover:bg-secondary touch-manipulation"
-              onClick={() => setIsMenuOpen(false)}
-              aria-label="Close menu"
-            >
-              <X size={20} />
-            </button>
-          </div>
-        
-          <div className="flex-1 overflow-y-auto px-6 py-4">
-            <nav className="space-y-2">
+          {/* Dropdown Menu */}
+          <div className="absolute top-full left-0 right-0 bg-background border-b border-border shadow-lg z-50 md:hidden animate-fade-in max-h-screen overflow-y-auto">
+            <nav className="p-4 space-y-1">
             <Link 
               to="/" 
               className={`text-lg font-medium transition-colors px-4 py-4 rounded-lg touch-manipulation min-h-[44px] flex items-center gap-3 ${
@@ -318,9 +295,9 @@ const Header: React.FC = () => {
             <div className="flex flex-col space-y-3 pt-6 mt-4 border-t border-border">
               {renderAuthSection(true)}
             </div>
-          </nav>
-        </div>
-        </div>
+            </nav>
+          </div>
+        </>
       )}
     </header>
   );
