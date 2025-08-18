@@ -238,42 +238,41 @@ const Header: React.FC = () => {
         </button>
       </div>
 
-      {/* Mobile Navigation */}
+      {/* Mobile Bottom Sheet */}
       {isMenuOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-[60] md:hidden isolate"
+          className="fixed inset-0 bg-black/50 z-50 md:hidden"
           onClick={() => setIsMenuOpen(false)}
           aria-hidden="true"
         />
       )}
       {isMenuOpen && (
         <div
-          className="fixed inset-0 bg-background z-[70] md:hidden isolate animate-slide-in-right"
+          className="fixed bottom-0 left-0 right-0 bg-background z-50 md:hidden rounded-t-3xl shadow-2xl animate-slide-up-bottom-sheet"
           style={{ 
-            touchAction: 'none'
+            height: '70vh',
+            maxHeight: '600px'
           }}
         >
-        {/* Logo area */}
-        <div className="flex items-center justify-between p-6 border-b border-border">
-          <Link to="/" className="font-bold text-xl text-primary flex items-center gap-2">
-            <span className="bg-primary text-white p-1.5 rounded-md">
-              <Briefcase className="h-4 w-4" />
-            </span>
-            notCorporate
-          </Link>
+          {/* Drag handle */}
+          <div className="flex justify-center pt-4 pb-2">
+            <div className="w-12 h-1 bg-muted rounded-full"></div>
+          </div>
           
-          {/* Close button */}
-          <button
-            className="text-foreground p-3 rounded-md hover:bg-secondary touch-manipulation min-h-[44px] min-w-[44px] flex items-center justify-center z-[80]"
-            onClick={() => setIsMenuOpen(false)}
-            aria-label="Close menu"
-          >
-            <X size={24} />
-          </button>
-        </div>
+          {/* Header with close */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+            <h2 className="text-lg font-semibold">Menu</h2>
+            <button
+              className="p-2 rounded-full hover:bg-secondary touch-manipulation"
+              onClick={() => setIsMenuOpen(false)}
+              aria-label="Close menu"
+            >
+              <X size={20} />
+            </button>
+          </div>
         
-        <div className="h-full overflow-y-auto">
-          <nav className="flex flex-col space-y-4 pt-8 px-6 pb-8">
+          <div className="flex-1 overflow-y-auto px-6 py-4">
+            <nav className="space-y-2">
             <Link 
               to="/" 
               className={`text-lg font-medium transition-colors px-4 py-4 rounded-lg touch-manipulation min-h-[44px] flex items-center gap-3 ${
