@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
-import { Briefcase, MapPin, DollarSign, Heart, ExternalLink } from 'lucide-react';
+import { Briefcase, MapPin, DollarSign, Heart, ExternalLink, Calendar } from 'lucide-react';
 import type { Job } from '@/lib/types/job.types';
 import { formatPostedDate } from '@/lib/utils/dateUtils';
 import { useSavedJobs } from '@/hooks/useSavedJobs';
@@ -150,6 +150,10 @@ const JobCard: React.FC<JobCardProps> = ({ job, index = 0, featured = false }) =
                 className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground"
                 style={{ '--stagger': '3' } as React.CSSProperties}
               >
+                <div className="flex items-center min-w-0">
+                  <Calendar className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+                  <span className="truncate">{formatPostedDate(job.posted)}</span>
+                </div>
                 <div className="flex items-center min-w-0">
                   <MapPin className="mr-1 h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
                   <span className="truncate">{job.location}</span>
